@@ -81,7 +81,7 @@ module.exports = [
       )
       .then(
         function(results) {
-          pubClient.publish("congregate:classattendanceupdate", JSON.stringify(results));
+          utils.pushMessage("classattendanceupdate", results);
           reply( results ).code( 200 );
           utils.pushLast8Attenance();
         },

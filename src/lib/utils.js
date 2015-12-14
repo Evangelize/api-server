@@ -21,5 +21,8 @@ export default {
         console.log(err);
       }
     );
+  },
+  pushMessage(channel, message) {
+    pubClient.publish("congregate:"+channel, JSON.stringify(message));
   }
 }
