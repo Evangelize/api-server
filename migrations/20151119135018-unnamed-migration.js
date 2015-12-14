@@ -59,13 +59,6 @@ module.exports = {
           }
         }
       ),
-      queryInterface.addIndex(
-        'teachers',
-        ['peopleId'],
-        {
-          indexName: 'teacherPersonIndex'
-        }
-      ),
       queryInterface.createTable(
         'students',
         {
@@ -78,13 +71,6 @@ module.exports = {
             type: Sequelize.INTEGER,
             defaultValue: 0
           }
-        }
-      ),
-      queryInterface.addIndex(
-        'students',
-        ['peopleId'],
-        {
-          indexName: 'studentPersonIndex'
         }
       ),
       queryInterface.createTable(
@@ -125,13 +111,6 @@ module.exports = {
           }
         }
       ),
-      queryInterface.addIndex(
-        'divisionYears',
-        ['divisionConfigId'],
-        {
-          indexName: 'divisionYearConfigIdIndex'
-        }
-      ),
       queryInterface.createTable(
         'divisions',
         {
@@ -148,13 +127,6 @@ module.exports = {
             type: Sequelize.INTEGER,
             defaultValue: 0
           }
-        }
-      ),
-      queryInterface.addIndex(
-        'divisions',
-        ['divisionConfigId'],
-        {
-          indexName: 'divisionConfigIdIndex'
         }
       ),
       queryInterface.createTable(
@@ -187,23 +159,6 @@ module.exports = {
           }
         }
       ),
-      queryInterface.addIndex(
-        'divisionClasses',
-        ['divisionId'],
-        {
-          indexName: 'divisionClassesIdIndex'
-        }
-      ),
-      queryInterface.addIndex(
-        'divisionClasses',
-        [
-          'divisionId',
-          'classId'
-        ],
-        {
-          indexName: 'divisionClassIdIndex'
-        }
-      ),
       queryInterface.createTable(
         'classMeetingDays',
         {
@@ -217,13 +172,6 @@ module.exports = {
             type: Sequelize.INTEGER,
             defaultValue: 0
           }
-        }
-      ),
-      queryInterface.addIndex(
-        'classMeetingDays',
-        ['divisionConfigId'],
-        {
-          indexName: 'classMeetingDaysIdIndex'
         }
       ),
       queryInterface.createTable(
@@ -243,15 +191,6 @@ module.exports = {
           }
         }
       ),
-      queryInterface.addIndex(
-        'divisionClassTeachers',
-        [
-          'divisionClassId'
-        ],
-        {
-          indexName: 'divisionClassTeachersIndex'
-        }
-      ),
       queryInterface.createTable(
         'divisionClassStudents',
         {
@@ -265,15 +204,6 @@ module.exports = {
             type: Sequelize.INTEGER,
             defaultValue: 0
           }
-        }
-      ),
-      queryInterface.addIndex(
-        'divisionClassStudents',
-        [
-          'divisionClassId'
-        ],
-        {
-          indexName: 'divisionClassStudentsIndex'
         }
       ),
       queryInterface.createTable(
@@ -291,24 +221,6 @@ module.exports = {
             type: Sequelize.INTEGER,
             defaultValue: 0
           }
-        }
-      ),
-      queryInterface.addIndex(
-        'divisionClassAttendance',
-        [
-          'divisionClassId'
-        ],
-        {
-          indexName: 'divisionClassAttendanceIdIndex'
-        }
-      ),
-      queryInterface.addIndex(
-        'divisionClassAttendance',
-        [
-          'attendanceDate'
-        ],
-        {
-          indexName: 'divisionClassAttendanceIndex'
         }
       ),
       queryInterface.createTable(
