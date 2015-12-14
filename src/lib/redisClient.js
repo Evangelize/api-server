@@ -1,9 +1,10 @@
 import redis from 'redis';
+import path from 'path';
 import nconf from 'nconf';
 import Promise from 'bluebird';
 const config = nconf.argv()
     .env()
-    .file({ file: '../../config/settings.json' });
+    .file({ file: path.join(__dirname, '../../config/settings.json') });
 
 export default {
   createClient(cb) {
