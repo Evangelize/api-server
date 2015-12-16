@@ -77,23 +77,7 @@ export default function( HOST, PORT, callback ) {
   };
 
   // Register Hapi plugins
-  server.register([
-    {
-      register: Inert
-    },
-    {
-      register: hapiRouter,
-      options: {
-        routes: 'routes/**/*.js' // uses glob to include files
-      }
-    },
-    {
-      register: h2o2
-    },
-    {
-      register: WebpackPlugin,
-      options: { compiler, assets, hot }
-    }
+  server.register(
   ], ( error ) => {
     if ( error ) {
       return console.error( error );

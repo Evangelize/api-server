@@ -31,7 +31,8 @@ function todos(state = [], action) {
 
 function notes(state, action) {
   console.log("notes", state);
-  let newstate = Object.assign({}, state);
+  let newstate = Object.assign({}, state),
+      db, record;
   switch (action.type) {
     case types.GET_NOTES_FULFILLED:
       newstate.notes = {
@@ -39,6 +40,16 @@ function notes(state, action) {
         hydrated: true
       };
       return newstate.notes;
+    case types.ADD_NOTE_FULFILLED:
+    case types.UPDATE_NOTE_FULFILLED:
+      db = spahql.db(newstate.data);
+      record = db.select("/*[/id == "+action.payload.data.id+"]");
+      if (record.length) {
+        record.replace(action.payload.data);
+      } else {
+        newstate.data.unshift(action.payload.data);
+      }
+      return newstate;
     default:
       return state || initialState().notes;
   }
@@ -71,13 +82,9 @@ function divisionConfigs(state, action) {
       };
       return newstate.divisionConfigs;
     case types.UPDATE_DIVISION_CLASS_TEACHER_FULFILLED:
-          db = spahql.db(newstate.data);
-          divClass = db.select("/*[/id == "+action.payload.divisionConfigId+"]/divisionYears/*[/id == "+action.payload.yearId+"]/divisions/*[/id == "+action.payload.divisionId+"]/divisionClasses/*[/id == "+action.payload.divisionClassId+"]");
-      divClass.replace(action.payload.data);
-      return newstate;
     case types.UPDATE_DIVISION_CLASS_ATTENDANCE_FULFILLED:
-          db = spahql.db(newstate.data);
-          divClass = db.select("/*/divisionYears/*/divisions/*/divisionClasses/*[/id == "+action.payload.data.id+"]");
+      db = spahql.db(newstate.data);
+      divClass = db.select("/*/divisionYears/*/divisions/*/divisionClasses/*[/id == "+action.payload.data.id+"]");
       divClass.replace(action.payload.data);
       return newstate;
     default:
@@ -97,6 +104,9 @@ function attendance(state, action) {
       return newstate.attendance;
     case types.UPDATE_ATTENDANCE_FULFILLED:
       newstate.data.latest = action.payload.data;
+      return newstate;
+    case types.UPDATE_AVG_ATTENDANCE_FULFILLED:
+      newstate.data.average = action.payload.data;
       return newstate;
     default:
       return state || initialState().attendance;

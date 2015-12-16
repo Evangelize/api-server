@@ -37,8 +37,10 @@ export default {
           if (error) {
             console.log(error);
             reject(error);
+            return null;
           } else {
             resolve(result);
+            return null;
           }
         }
       );
@@ -60,6 +62,7 @@ export default {
       .then(
         function(results) {
           resolve(results);
+          return null;
         }
       );
     });

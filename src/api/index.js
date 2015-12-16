@@ -1,9 +1,11 @@
 import people from './people';
 import divisions from './divisions';
 import classes from './classes';
+import notes from './notes';
 
 module.exports = {
   people: people,
   divisions: divisions,
-  classes: classes
+  classes: classes,
+  notes: notes
 };

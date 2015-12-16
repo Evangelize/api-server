@@ -8,7 +8,7 @@ module.exports = [
     handler: function (request, reply) {
       api
       .people
-      .add(
+      .find(
         request.params.searchType,
         request.params.search
       )

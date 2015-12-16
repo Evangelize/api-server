@@ -16,6 +16,7 @@ module.exports = [
       )
       .then(
         function(results) {
+          utils.pushMessage("classes.UPDATE_DIVISION_CLASS_TEACHER_FULFILLED", results);
           reply( results ).code( 200 );
         },
         function(err) {
@@ -37,6 +38,7 @@ module.exports = [
       )
       .then(
         function(results) {
+          utils.pushMessage("classes.UPDATE_DIVISION_CLASS_TEACHER_FULFILLED", results);
           reply( results ).code( 200 );
         },
         function(err) {
@@ -81,9 +83,24 @@ module.exports = [
       )
       .then(
         function(results) {
-          utils.pushMessage("classattendanceupdate", results);
+          utils.pushMessage("attendance.UPDATE_DIVISION_CLASS_ATTENDANCE_FULFILLED", results);
+          utils.pushLast8Attenance().then(
+            function(results) {
+              console.log(results);
+            },
+            function(err) {
+              console.log(err);
+            }
+          );
+          utils.pushAvgAttendance().then(
+            function(results) {
+              console.log(results);
+            },
+            function(err) {
+              console.log(err);
+            }
+          );
           reply( results ).code( 200 );
-          utils.pushLast8Attenance();
         },
         function(err) {
           console.log(err);

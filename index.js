@@ -14,13 +14,7 @@ const enviroment = process.env.NODE_ENV || 'development';
 const HOST = process.env.IP || 'localhost';
 const PORT = process.env.PORT || 3001;
 
-// Load server depending on the enviroment
-if ( enviroment === 'development' ) {
-  require( './webpack/devServer' )( HOST, PORT, server => {
-    console.info( chalk.bold.green( '==> Hapi Development Server is listening on', server.info.uri ));
-  });
-} else {
-  require( './src/server' )( HOST, PORT, ( server ) => {
-    console.info( chalk.bold.green( '==> Hapi Production Server is listening on', server.info.uri ));
-  });
-}
+
+require( './src/server' )( HOST, PORT, ( server ) => {
+  console.info( chalk.bold.green( '==> Hapi '+enviroment+' server is listening on', server.info.uri ));
+});

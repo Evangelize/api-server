@@ -70,3 +70,21 @@ export function updateClassAttendance(divisionClassId, day, attendanceDate, coun
     }
   };
 }
+
+export function updateNote(note, changes) {
+  return {
+    type: types.UPDATE_NOTE,
+    payload: {
+      promise: api.notes.update(note, changes)
+    }
+  };
+}
+
+export function addNote(note) {
+  return {
+    type: types.ADD_NOTE,
+    payload: {
+      promise: api.notes.add(note)
+    }
+  };
+}

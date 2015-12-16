@@ -22,7 +22,9 @@ syncReduxAndRouter(history, store);
 
 const rootElement = document.getElementById('root');
 
-let wsclient = new Nes.Client('ws://'+window.__websocketUri__);
+let websocketUri = (window.__websocketUri__) ? window.__websocketUri__ : "localhost:3002";
+console.log("websocket",'ws://'+websocketUri );
+let wsclient = new Nes.Client('ws://'+websocketUri);
 wsclient.connect(function (err) {
 
   let handler = function (update) {
@@ -32,6 +34,22 @@ wsclient.connect(function (err) {
 
   wsclient.subscribe(
     '/attendance',
+    handler,
+    (err) => {
+      console.log("websocket error:", err);
+    }
+  );
+
+  wsclient.subscribe(
+    '/classes',
+    handler,
+    (err) => {
+      console.log("websocket error:", err);
+    }
+  );
+
+  wsclient.subscribe(
+    '/notes',
     handler,
     (err) => {
       console.log("websocket error:", err);

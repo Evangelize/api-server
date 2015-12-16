@@ -16,10 +16,12 @@ export default {
         ]
       }).then(
         function(people) {
-          reply( people ).code( 200 );
+          resolve( people );
+          return null;
         },
         function(err){
-          reply( err ).code( 500 );
+          reject( err );
+          return null;
         }
       )
     });

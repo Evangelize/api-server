@@ -13,16 +13,25 @@ import Paper from 'material-ui/lib/paper';
 import Styles from 'material-ui/lib/styles';
 import Card from 'material-ui/lib/card/card';
 import CardHeader from 'material-ui/lib/card/card-header';
+import CardTitle from 'material-ui/lib/card/card-title';
 import CardMedia from 'material-ui/lib/card/card-media';
 import CardText from 'material-ui/lib/card/card-text';
+import CardActions from 'material-ui/lib/card/card-actions';
 import TextField from 'material-ui/lib/text-field';
 import Avatar from 'material-ui/lib/avatar';
 import Dialog from 'material-ui/lib/dialog';
+import Toolbar from 'material-ui/lib/toolbar/toolbar';
+import ToolbarGroup from 'material-ui/lib/toolbar/toolbar-group';
+import ToolbarSeparator from 'material-ui/lib/toolbar/toolbar-separator';
+import ToolbarTitle from 'material-ui/lib/toolbar/toolbar-title';
 import FlatButton from 'material-ui/lib/flat-button';
+import RaisedButton from 'material-ui/lib/raised-button';
+import IconButton from 'material-ui/lib/icon-button';
 import Editor from 'react-medium-editor';
+import { Grid, Row, Col } from 'react-bootstrap';
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/medium-editor.css';
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/themes/default.css';
-import { updateClassAttendance } from '../actions';
+import { updateClassAttendance, updateNote, addNote } from '../actions';
 let Masonry = MasonryCtl(React);
 
 @Radium
@@ -33,8 +42,10 @@ class Dashboard extends Component {
 
   resize() {
     _.throttle(() => {
+      const { masonryOptions } = this.state;
       const graphDiv = this.refs.graphDiv;
       console.log(graphDiv.clientWidth);
+      masonryOptions.updated = true;
       this.setState({
           sparklineWidth: graphDiv.offsetWidth - 40
       });
@@ -57,12 +68,21 @@ class Dashboard extends Component {
       dispatch(updateClassAttendance(divClass.id, today, moment().format('YYYY-MM-DD 00:00:00'), event.target.value));
     }, 1000);
 
+    this.delayedNoteUpdate = _.debounce(function (note, changes) {
+      dispatch(updateNote(note, changes));
+    }, 1000);
+
+
     this.setState({
       sparklineWidth: 100,
       attendanceDay: attendanceDay,
       showDialog: false,
-      dialogText: 'This is a test',
-      dialogTitle: ''
+      currentNote: {
+        id: null,
+        title: null,
+        text: null
+      },
+      masonryOptions: {}
     });
   }
 
@@ -123,20 +143,81 @@ class Dashboard extends Component {
 
   handleCardTouchTap(note, e) {
     this.setState({
-      dialogText: note.text,
-      dialogTitle: note.title,
+      currentNote: note,
       showDialog: true
     });
   }
 
   handleDialogClose(e) {
+    const { dispatch } = this.props;
+    if (!this.state.currentNote.id) {
+      let title = (this.refs.title.getValue().length) ? this.refs.title.getValue() : null;
+      this.setState({
+        currentNote: {
+          id: this.state.currentNote.id,
+          text: this.state.currentNote.text,
+          title: title
+        }
+      });
+      dispatch(
+        addNote(
+          this.state.currentNote
+        )
+      );
+    }
     this.setState({
       showDialog: false
     });
   }
 
+  handleEditorChange(text) {
+    if (this.state.currentNote.id) {
+      this.delayedNoteUpdate(this.state.currentNote, {text: text});
+    } else {
+      this.setState({
+        currentNote: {
+          id: this.state.currentNote.id,
+          text: text,
+          title: this.state.currentNote.title
+        }
+      });
+    }
+  }
+
+  handleTitleChange(e) {
+    let title = (this.refs.title.getValue().length) ? this.refs.title.getValue() : null;
+    if (this.state.currentNote.id) {
+      this.delayedNoteUpdate(this.state.currentNote, {title: title});
+    } else {
+      this.setState({
+        currentNote: {
+          id: this.state.currentNote.id,
+          text: this.state.currentNote.text,
+          title: title
+        }
+      });
+    }
+  }
+
+  handleNewNote(e) {
+    this.setState({
+      currentNote: {
+        id: null,
+        title: null,
+        text: null
+      },
+      showDialog: true
+    });
+  }
+
+  handleNoteDelete(e) {
+    e.stopPropagation();
+    console.log("Delete", e);
+  }
+
   render() {
     const { dispatch, configs, attendance, notes, ...props } = this.props;
+    const { masonryOptions } = this.state;
     let paperStyle = {
           display: 'flex',
           flexDirection: 'row',
@@ -169,74 +250,101 @@ class Dashboard extends Component {
       console.log(displayAttendance);
     return (
       <div>
-        <div className={"mdl-grid"}>
+        <Grid fluid={true}>
           {displayAttendance.map((attendance, index) =>
-            <div key={index} className={"mdl-cell mdl-cell--12-col-desktop mdl-cell--8-col-tablet mdl-cell--4-col-phone"}>
-              <Card>
-                <CardHeader
-                  title={attendance.config.title+" Attendance"}
-                  subtitle={moment().format("dddd MM/DD/YYYY")}
-                  avatar={<Avatar>{moment().format("dd")}</Avatar>}>
-                </CardHeader>
-                  <div className={"mdl-grid"}>
-                    {attendance.classes.map((divClass, index) =>
-                      <div key={divClass.id} className={"mdl-cell mdl-cell--4-col-desktop mdl-cell--4-col-tablet mdl-cell--4-col-phone"}>
-                        <div className={"mdl-typography--subhead"}>{divClass.class.title}</div>
-                        <TextField
-                          type="number"
-                          hintText="Enter attendance"
-                          defaultValue={::this.getClassAttendance(divClass)}
-                          min="0"
-                          max="500"
-                          onChange={((...args)=>this.attendanceUpdate(divClass, ...args))}
-                          floatingLabelText="Class Attendance" />
-                      </div>
-                    )}
-                  </div>
-                <CardMedia>
-                </CardMedia>
-              </Card>
-            </div>
+            <Row>
+              <Col xs={12} sm={12} md={12} lg={12}>
+                <Card>
+                  <CardHeader
+                    title={attendance.config.title+" Attendance"}
+                    subtitle={moment().format("dddd MM/DD/YYYY")}
+                    avatar={<Avatar>{moment().format("dd")}</Avatar>}>
+                  </CardHeader>
+                  <CardMedia>
+                    <Grid fluid={true}>
+                      {attendance.classes.map((divClass, index) =>
+                        <Col key={divClass.id} xs={12} sm={6} md={4} lg={3}>
+                          <div className={"mdl-typography--subhead"}>{divClass.class.title}</div>
+                          <TextField
+                            type="number"
+                            hintText="Enter attendance"
+                            defaultValue={::this.getClassAttendance(divClass)}
+                            min="0"
+                            max="500"
+                            onChange={((...args)=>this.attendanceUpdate(divClass, ...args))}
+                            floatingLabelText="Class Attendance" />
+                        </Col>
+                      )}
+                    </Grid>
+                  </CardMedia>
+                </Card>
+              </Col>
+            </Row>
           )}
-          <div className={"mdl-cell mdl-cell--6-col-desktop mdl-cell--8-col-tablet mdl-cell--4-col-phone"}>
-            <DashboardMediumGraph
-              title={"Attendance"}
-              subtitle={"Past 8 weeks"}
-              avatar={<Avatar>A</Avatar>}
-              lineChartData={lineChartData}
-              lineChartOptions={lineChartOptions}
-            />
-          </div>
-          <div className={"mdl-cell mdl-cell--6-col-desktop mdl-cell--8-col-tablet mdl-cell--4-col-phone"}>
-            <Masonry>
-              {notes.data.map((note, index) =>
-                <div key={index} style={styles.noteSmall}>
-                  <Card
-                    onClick={((...args)=>this.handleCardTouchTap(note, ...args))}>
-                    <CardText>
-                      {note.text}
-                    </CardText>
-                  </Card>
-                </div>
-              )}
-            </Masonry>
-          </div>
-          <div className={"mdl-cell mdl-cell--3-col-desktop mdl-cell--4-col-tablet mdl-cell--4-col-phone"}>
-            <DashboardComponentSmall
-              zDepth={1}
-              sparkLineData={[5, 10, 5, 20, 5, 30, 25, 10, 18, 32, 22, 28, 30, 21, 45, 29, 33, 18, 10, 15]}
-              title={"Avg. Attendance"}
-              body={attendance.data.average[0].attendance}
-              style={paperStyle}
-            />
-          </div>
-        </div>
+          <Masonry className={"row"} options={masonryOptions}>
+            <Col xs={12} sm={12} md={6} lg={6}>
+              <DashboardMediumGraph
+                title={"Attendance"}
+                subtitle={"Past 8 weeks"}
+                avatar={<Avatar>A</Avatar>}
+                lineChartData={lineChartData}
+                lineChartOptions={lineChartOptions}
+              />
+            </Col>
+            <Col xs={12} sm={12} md={6} lg={6}>
+              <Toolbar>
+                <ToolbarGroup key={0} float="left">
+                  <ToolbarTitle text="Notes" />
+                </ToolbarGroup>
+                <ToolbarGroup key={1} float="right">
+                  <RaisedButton
+                    label="Add Note"
+                    primary={true}
+                    onTouchTap={::this.handleNewNote}
+                  />
+                </ToolbarGroup>
+              </Toolbar>
+              <Masonry>
+                {notes.data.map((note, index) =>
+                  <Col xs={12} sm={6} md={6} lg={6} key={index}>
+                    <Card>
+                      <CardTitle title={note.title} style={(note.title) ? null : {display: 'none'}} />
+                      <CardText onClick={((...args)=>this.handleCardTouchTap(note, ...args))}>
+                        <div dangerouslySetInnerHTML={{__html: note.text}} />
+                      </CardText>
+                      <CardActions style={{float: "right"}}>
+                        <IconButton
+                          iconClassName="material-icons"
+                          tooltipPosition="top-center"
+                          tooltip="Delete"
+                          onTouchTap={::this.handleNoteDelete}>
+                            delete
+                        </IconButton>
+                      </CardActions>
+                    </Card>
+                  </Col>
+                )}
+              </Masonry>
+            </Col>
+            <Col xs={6} sm={4} md={3} lg={3}>
+              <DashboardComponentSmall
+                zDepth={1}
+                sparkLineData={[5, 10, 5, 20, 5, 30, 25, 10, 18, 32, 22, 28, 30, 21, 45, 29, 33, 18, 10, 15]}
+                title={"Avg. Attendance"}
+                body={attendance.data.average[0].attendance.toFixed(2)}
+                style={paperStyle}
+              />
+            </Col>
+          </Masonry>
+        </Grid>
         <Dialog
           title={
             <TextField
               style={{margin: "25px"}}
+              ref="title"
               hintText="Title"
-              defaultValue={this.state.dialogTitle} />
+              onChange={::this.handleTitleChange}
+              defaultValue={this.state.currentNote.title} />
           }
           actions={customActions}
           autoDetectWindowHeight={true}
@@ -245,7 +353,9 @@ class Dashboard extends Component {
           onRequestClose={::this.handleDialogClose}>
           <Editor
             className="editor"
-            text={this.state.dialogText}
+            ref="editor"
+            text={this.state.currentNote.text}
+            onChange={::this.handleEditorChange}
             options={{toolbar: {buttons: ['bold', 'italic', 'underline', 'unorderedlist']}}}
           />
         </Dialog>
@@ -266,6 +376,14 @@ const styles = {
     '@media (max-width: 839px)': {
       paddingRight: '0',
       width: '100%'
+    }
+  },
+  smallCell: {
+    width: '31%',
+    padding:'1% 2% 1% 0',
+    '@media (min-width: 480px)': {
+      padding: '0',
+      width: '%'
     }
   }
 };

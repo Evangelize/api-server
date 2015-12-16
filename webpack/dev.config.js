@@ -1,7 +1,7 @@
 const webpack = require("webpack");
 const path = require("path");
 
-const config = {
+module.exports = {
 	target:  "web",
 	cache:   false,
 	context: __dirname,
@@ -13,8 +13,7 @@ const config = {
 	output:  {
 		path:          path.join(__dirname, '../static/dist'),
 		filename:      "client.js",
-		chunkFilename: "[name].[id].js",
-		publicPath:    "/"
+		publicPath:    "/hot"
 	},
 	plugins: [
 		new webpack.DefinePlugin({__CLIENT__: true, __SERVER__: false}),
@@ -74,9 +73,7 @@ const config = {
       extensions: ["", ".json", ".js"]
 	},
 	node:    {
-		__dirname: true,
-		fs:        'empty'
+      __dirname: true,
+      fs:        'empty'
 	}
 };
-
-export default config;

@@ -10,19 +10,37 @@ createClient().then(
 
 export default {
   pushLast8Attenance() {
-    api
+    return api
     .attendance
     .latest()
     .then(
       function(results) {
-        pubClient.publish("congregate:last8attendanceupdate", JSON.stringify(results));
+        pubClient.publish("congregate:attendance.GET_ATTENDANCE_FULFILLED", JSON.stringify(results));
+        return results;
       },
       function(err) {
         console.log(err);
+        return err;
+      }
+    );
+  },
+  pushAvgAttendance() {
+    return api
+    .attendance
+    .average()
+    .then(
+      function(results) {
+        pubClient.publish("congregate:attendance.UPDATE_AVG_ATTENDANCE_FULFILLED", JSON.stringify(results));
+        return results;
+      },
+      function(err) {
+        console.log(err);
+        return err;
       }
     );
   },
   pushMessage(channel, message) {
     pubClient.publish("congregate:"+channel, JSON.stringify(message));
+    return null;
   }
 }

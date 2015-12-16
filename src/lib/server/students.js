@@ -52,8 +52,10 @@ export default {
           if (error) {
             console.log(error);
             reject(error);
+            return null;
           } else {
             resolve(result);
+            return null;
           }
         }
       );
@@ -120,8 +122,10 @@ export default {
           if (error) {
             console.log(error);
             reject(error);
+            return null;
           } else {
             resolve(result);
+            return null;
           }
         }
       );

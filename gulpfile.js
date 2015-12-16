@@ -1,9 +1,33 @@
 // gulpfile.js
 var gulp = require('gulp'),
+    exec = require('child_process').exec,
+    runSequence = require('run-sequence'),
     nodemon = require('gulp-nodemon');
 
 gulp.task(
-  'develop',
+  'dev',
+  function(callback) {
+    runSequence(
+      'build-dev',
+      'nodemon',
+      callback
+    );
+  }
+);
+
+gulp.task(
+  'build-dev',
+  function(cb) {
+    exec('npm run build-dev', function (err, stdout, stderr) {
+      console.log(stdout);
+      console.log(stderr);
+      cb(err);
+    });
+  }
+);
+
+gulp.task(
+  'nodemon',
   function () {
     nodemon(
       {
@@ -13,7 +37,7 @@ gulp.task(
           'src/containers',
           'src/models',
           'routes',
-          'webpack/devServer.js'
+          'src/server.js'
         ]
       }
     )
@@ -22,6 +46,6 @@ gulp.task(
       function () {
         console.log('restarted!')
       }
-    )
+    );
   }
 );

@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+const env = process.env.NODE_ENV || 'development';
 
 import path from 'path';
 import async from 'async';
@@ -33,11 +34,32 @@ import api from '../src/lib/server';
 import createLocation from 'history/lib/createLocation';
 import createHistory from 'history/lib/createMemoryHistory';
 
+if (env === 'development') {
+  // Webpack imports
+  var webpack = require('webpack'),
+      WebpackPlugin = require('hapi-webpack-plugin'),
+      webpackConfig = require('../webpack/dev.config');
+}
+
 // Start server function
 export default function( HOST, PORT, callback ) {
-  let settings = nconf.argv()
-   .env()
-   .file({ file: path.join(__dirname, '../config/settings.json') });
+  let plugins = [
+        {
+          register: Inert
+        },
+        {
+          register: hapiRouter,
+          options: {
+            routes: 'routes/**/*.js' // uses glob to include files
+          }
+        },
+        {
+          register: h2o2
+        }
+      ],
+      settings = nconf.argv()
+       .env()
+       .file({ file: path.join(__dirname, '../config/settings.json') });
   console.log("mysql", settings.get("mysql"));
   const server = new Hapi.Server();
   server.connection(
@@ -46,21 +68,39 @@ export default function( HOST, PORT, callback ) {
       port: settings.get("port") || PORT
     }
   );
-  // Register Hapi plugins
-  server.register([
-    {
-      register: Inert
-    },
-    {
-      register: hapiRouter,
-      options: {
-        routes: 'routes/**/*.js' // uses glob to include files
+
+  if (env === 'development') {
+    const compiler = webpack( webpackConfig );
+    const assets = {
+      // webpack-dev-middleware options
+      // See https://github.com/webpack/webpack-dev-middleware
+      publicPath: '/hot',
+      contentBase: 'src',
+      stats: {
+        colors: true,
+        hash: false,
+        timings: true,
+        chunks: false,
+        chunkModules: false,
+        modules: false
       }
-    },
-    {
-      register: h2o2
-    }
-  ], ( error ) => {
+    };
+    const hot = {
+      // webpack-hot-middleware options
+      // See https://github.com/glenjamin/webpack-hot-middleware
+      timeout: '20000',
+      reload: false
+    };
+    plugins.push({
+      register: WebpackPlugin,
+      options: { compiler, assets, hot }
+    });
+  }
+
+  // Register Hapi plugins
+  server.register(
+    plugins,
+    ( error ) => {
     if ( error ) {
       return console.error( error );
     }
@@ -106,8 +146,8 @@ export default function( HOST, PORT, callback ) {
             let settings = nconf.argv()
                .env()
                .file({ file: path.join(__dirname, '../config/settings.json') });
-            console.log("websocket",  settings.get("websocket"));
-            const webserver = process.env.NODE_ENV === 'production' ? '' : '//' + HOST + ':' + PORT,
+            console.log("websocket",  path.join(__dirname, '../config/settings.json'), settings.get("websocket"));
+            const script = process.env.NODE_ENV === 'production' ? '/dist/client.min.js' : '//' + HOST + ':' + PORT + '/hot/client.js',
                   websocketUri =  settings.get("websocket:host")+":"+settings.get("websocket:port");
             let output = (
               `<!doctype html>
@@ -132,7 +172,7 @@ export default function( HOST, PORT, callback ) {
                     window.__INITIAL_STATE__ = ${finalState};
                     window.__websocketUri = "${websocketUri}";
                   </script>
-                  <script src=${webserver}/dist/client.min.js></script>
+                  <script src=${script}></script>
                 </body>
               </html>`
             );

@@ -1,5 +1,6 @@
 import models from '../../models';
 import Promise from 'bluebird';
+import async from 'async';
 
 export default {
   get() {
@@ -11,12 +12,44 @@ export default {
       }).then(
         function(results) {
           resolve(results);
+          return null;
         },
         function(err){
           console.log(error);
           reject(error);
+          return null;
         }
       )
+    });
+  },
+  add(note) {
+    return new Promise(function(resolve, reject){
+      async.waterfall(
+        [
+          function(callback) {
+            models.Notes.create(
+              note
+            ).then(
+              function(note) {
+                callback(null, note);
+              },
+              function(err){
+                callback(err);
+              }
+            );
+          }
+        ],
+        function(error, result) {
+          if (error) {
+            console.log(error);
+            reject(error);
+            return null;
+          } else {
+            resolve(result);
+            return null;
+          }
+        }
+      );
     });
   },
   updateNote(noteId, fields) {
@@ -56,8 +89,10 @@ export default {
           if (error) {
             console.log(error);
             reject(error);
+            return null;
           } else {
             resolve(result);
+            return null;
           }
         }
       );
