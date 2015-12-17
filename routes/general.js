@@ -6,6 +6,11 @@ module.exports = [
       directory: {
         path: __dirname+'/../static'
       }
+    },
+    config: {
+      cache: {
+        privacy: 'public'
+      }
     }
   },
   {
@@ -14,6 +19,11 @@ module.exports = [
     handler: {
       directory: {
         path: __dirname+'/../static/images'
+      }
+    },
+    config: {
+      cache: {
+        privacy: 'public'
       }
     }
   },
@@ -24,6 +34,11 @@ module.exports = [
       directory: {
         path:  __dirname+'/../node_modules/material-design-lite'
       }
+    },
+    config: {
+      cache: {
+        privacy: 'public'
+      }
     }
   },
   {
@@ -33,6 +48,11 @@ module.exports = [
       directory: {
         path:  __dirname+'/../node_modules/react-chartist/node_modules/chartist/dist/'
       }
+    },
+    config: {
+      cache: {
+        privacy: 'public'
+      }
     }
   },
   {
@@ -41,6 +61,11 @@ module.exports = [
     handler: {
       directory: {
         path:  __dirname+'/../src/css/'
+      }
+    },
+    config: {
+      cache: {
+        privacy: 'public'
       }
     }
   }
