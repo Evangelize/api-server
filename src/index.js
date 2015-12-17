@@ -22,7 +22,7 @@ syncReduxAndRouter(history, store);
 
 const rootElement = document.getElementById('root');
 
-let websocketUri = (window.__websocketUri__) ? window.__websocketUri__ : "localhost:3002";
+let websocketUri = (window.__websocketUri) ? window.__websocketUri : "localhost:3002";
 console.log("websocket",'ws://'+websocketUri );
 let wsclient = new Nes.Client('ws://'+websocketUri);
 wsclient.connect(function (err) {
