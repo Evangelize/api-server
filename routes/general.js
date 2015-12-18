@@ -1,3 +1,6 @@
+let expiresIn = 86400000,
+    privacy = 'public';
+
 module.exports = [
   {
     method: 'GET',
@@ -9,7 +12,8 @@ module.exports = [
     },
     config: {
       cache: {
-        privacy: 'public'
+        expiresIn: expiresIn,
+        privacy: privacy
       }
     }
   },
@@ -23,7 +27,8 @@ module.exports = [
     },
     config: {
       cache: {
-        privacy: 'public'
+        expiresIn: expiresIn,
+        privacy: privacy
       }
     }
   },
@@ -37,7 +42,8 @@ module.exports = [
     },
     config: {
       cache: {
-        privacy: 'public'
+        expiresIn: expiresIn,
+        privacy: privacy
       }
     }
   },
@@ -51,7 +57,8 @@ module.exports = [
     },
     config: {
       cache: {
-        privacy: 'public'
+        expiresIn: expiresIn,
+        privacy: privacy
       }
     }
   },
@@ -65,7 +72,8 @@ module.exports = [
     },
     config: {
       cache: {
-        privacy: 'public'
+        expiresIn: expiresIn,
+        privacy: privacy
       }
     }
   }
