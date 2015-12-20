@@ -4,6 +4,7 @@ const env = process.env.NODE_ENV || 'development';
 import path from 'path';
 import async from 'async';
 import nconf from 'nconf';
+import etag from 'etag';
 
 // Hapi server imports
 import Hapi from 'hapi';
@@ -176,7 +177,8 @@ export default function( HOST, PORT, callback ) {
                 </body>
               </html>`
             );
-            reply(output).header('cache-control', 'max-age=0, must-revalidate');
+            let eTag = etag(output);
+            reply(output).header('cache-control', 'max-age=0, must-revalidate').header('etag', eTag);
           }
         });
       };
