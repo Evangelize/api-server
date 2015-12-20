@@ -178,7 +178,7 @@ export default function( HOST, PORT, callback ) {
               </html>`
             );
             let eTag = etag(output);
-            reply(output).header('cache-control', 'max-age=0, must-revalidate').header('etag', eTag);
+            reply(output).header('cache-control', 'max-age=0, private, must-revalidate').header('etag', eTag);
           }
         });
       };
