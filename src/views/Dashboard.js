@@ -129,10 +129,10 @@ class Dashboard extends Component {
     const { attendance } = this.props;
     let labels = attendance.data.latest.map(function(day, index){
           return moment(day.attendanceDate, "YYYY-MM-DD HH:mm:ss").format("MM/DD");
-        }),
+        }).reverse(),
         series = attendance.data.latest.map(function(day, index){
           return parseInt(day.attendance,10);
-        });
+        }).reverse();
     console.log(labels, series);
     return {
       labels: labels,
