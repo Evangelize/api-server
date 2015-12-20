@@ -6,3 +6,4 @@ dist/
 *.dist
 config/settings.json
 config/config.json
+/style.js

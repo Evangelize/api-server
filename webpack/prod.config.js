@@ -4,7 +4,7 @@ const StatsPlugin = require('stats-webpack-plugin');
 const path = require("path");
 
 module.exports = {
-  devtool: 'eval',
+  devtool: 'source-map',
   entry: [
     './src/index.js'
   ],

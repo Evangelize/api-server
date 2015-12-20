@@ -89,7 +89,7 @@ class Schedules extends Component {
   formatYears() {
     const { configs } = this.props;
     let years = configs.data[this.state.divisionConfig].divisionYears;
-    console.log("years", years);
+    //console.log("years", years);
     return years.map(function(year, index){
       return {
         'id': year.id,
@@ -117,7 +117,7 @@ class Schedules extends Component {
     const { configs } = this.props;
     let days = configs.data[this.state.divisionConfig].classMeetingDays,
         classTeachers = [];
-    console.log(divClass);
+    //console.log(divClass);
     days.forEach(function(day, index){
       let results = _.where(divClass.divisionClassTeachers, {day: day.day});
       if (results.length) {
@@ -164,7 +164,7 @@ class Schedules extends Component {
   }
 
   handleTeacherTouchTap(teacher, divisionClass, e, el) {
-    console.log(teacher);
+    //console.log(teacher);
     this.refs.snackbar.setState({
       teacher: teacher,
       divClass: divisionClass

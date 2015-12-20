@@ -53,7 +53,6 @@ class Dashboard extends Component {
   }
 
   componentDidMount() {
-    this.resize();
     window.addEventListener('resize', this.resize);
   }
 

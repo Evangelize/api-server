@@ -7,7 +7,6 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
 import { Router, Route, Link } from 'react-router';
 import { syncReduxAndRouter } from 'redux-simple-router';
 import { Provider, connect } from 'react-redux';
-import { DebugPanel, LogMonitor } from 'redux-devtools/lib/react';
 import promiseMiddleware from 'redux-promise-middleware';
 import routes from './routes';
 import { createHistory } from 'history';
