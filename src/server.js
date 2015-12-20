@@ -172,11 +172,11 @@ export default function( HOST, PORT, callback ) {
                     window.__INITIAL_STATE__ = ${finalState};
                     window.__websocketUri = "${websocketUri}";
                   </script>
-                  <script src=${script}></script>
+                  <script async=async src=${script}></script>
                 </body>
               </html>`
             );
-            reply(output);
+            reply(output).header('cache-control', 'max-age=0, must-revalidate');
           }
         });
       };

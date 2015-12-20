@@ -4,10 +4,10 @@ let expiresIn = 86400000,
 module.exports = [
   {
     method: 'GET',
-    path: '/{param*}',
+    path: '/dist/{param*}',
     handler: {
       directory: {
-        path: __dirname+'/../static'
+        path: __dirname+'/../static/dist'
       }
     },
     config: {
