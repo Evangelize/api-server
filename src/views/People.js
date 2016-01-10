@@ -14,6 +14,7 @@ import TableRow from 'material-ui/lib/table/table-row';
 import TableRowColumn from 'material-ui/lib/table/table-row-column';
 import TextField from 'material-ui/lib/text-field';
 import DropDownMenu from 'material-ui/lib/drop-down-menu';
+import MenuItem from 'material-ui/lib/menus/menu-item';
 import Toolbar from 'material-ui/lib/toolbar/toolbar';
 import ToolbarGroup from 'material-ui/lib/toolbar/toolbar-group';
 import ToolbarSeparator from 'material-ui/lib/toolbar/toolbar-separator';
@@ -26,6 +27,9 @@ class People extends Component {
   constructor(props, context) {
     super(props, context);
     const { dispatch } = this.props;
+    this.state = {
+      searchType: "lastName"
+    };
   }
 
   _handleInputChange(e) {
@@ -36,10 +40,9 @@ class People extends Component {
     }
   }
 
-  _handleSelectValueChange(e) {
+  handleSelectValueChange(e, index, value) {
     const { people } = this.props;
-    people.key = e.target.value;
-    console.log(people.key);
+    people.key = value;
   }
 
   _handlePersonToggle(e, toggle, index) {
@@ -70,6 +73,7 @@ class People extends Component {
   }
 
   render() {
+    const { searchType } = this.state;
     let grid = {
           className: "layout",
           isDraggable: false,
@@ -78,19 +82,14 @@ class People extends Component {
           rowHeight: 50
         },
         dropDownStyle = {
-          marginTop: "15px"
+          marginTop: "16px"
         },
         divStyle = {
           display: "flex",
           flexDirection: 'row',
           alignItems: 'flex-start',
           justifyContent: 'flex-start'
-        },
-        menuItems = [
-           { payload: 'lastName', text: 'Last Name' },
-           { payload: 'firstName', text: 'First Name' },
-           { payload: 'emailAddress', text: 'Email' }
-        ];
+        };
     const { dispatch, people, ...props } = this.props;
            console.log(people);
     return (
@@ -102,9 +101,13 @@ class People extends Component {
           <DashboardMedium title={"Find Members"} subtitle={"Search for members to provision as students and teachers"}>
             <div style={divStyle}>
               <DropDownMenu
-                onChange={::this._handleSelectValueChange}
-                style={dropDownStyle}
-                menuItems={menuItems} />
+                value={searchType}
+                onChange={::this.handleSelectValueChange}
+                style={dropDownStyle}>
+                <MenuItem value={"lastName"} primaryText="Last Name" />
+                <MenuItem value={"firstName"} primaryText="First Name" />
+                <MenuItem value={"emailAddress"} primaryText="Email" />
+              </DropDownMenu>
               <TextField
                 ref="searchField"
                 floatingLabelText="Search"
