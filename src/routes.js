@@ -5,6 +5,7 @@ import App from './containers/App';
 import Dashboard from './views/Dashboard';
 import People from './views/People';
 import Schedules from './views/Schedules';
+import Attendance from './views/Attendance';
 import AddClassDayTeacher from './views/AddClassDayTeacher';
 
 const routes = (
@@ -13,6 +14,7 @@ const routes = (
     <Route path="dashboard" component={Dashboard} />
     <Route path="people" component={People} />
     <Route path="schedules" component={Schedules} />
+    <Route path="attendance" component={Attendance} />
     <Route path="schedule/:divisionConfigId/:yearId/:divisionId/:classId/:day" component={AddClassDayTeacher} />
   </Route>
 );
