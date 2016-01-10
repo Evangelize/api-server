@@ -50,7 +50,7 @@ class Attendance extends Component {
   handleEditAttendance(day, e) {
     const { configs, dispatch } = this.props;
     //let db = spahql.db(configs.data);
-    let path = "/attendance/" + moment(day.attendanceDate).format("YYYY-MM-DD");
+    let path = "/attendance/" + moment.utc(day.attendanceDate).format("YYYY-MM-DD");
     dispatch(updatePath(path));
     //console.log(day);
   }
@@ -95,8 +95,8 @@ class Attendance extends Component {
                       <ListItem
                         rightAvatar={<Avatar>{day.attendance}</Avatar>}
                         onTouchTap={((...args)=>this.handleEditAttendance(day, ...args))}
-                        primaryText={moment(day.attendanceDate).format("dddd")}
-                        secondaryText={moment(day.attendanceDate).format("MMMM Do YYYY")} />
+                        primaryText={moment.utc(day.attendanceDate).format("dddd")}
+                        secondaryText={moment.utc(day.attendanceDate).format("MMMM Do YYYY")} />
                     )}
                   </List>
                 </CardMedia>
