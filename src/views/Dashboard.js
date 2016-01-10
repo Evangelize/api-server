@@ -27,7 +27,7 @@ import ToolbarTitle from 'material-ui/lib/toolbar/toolbar-title';
 import FlatButton from 'material-ui/lib/flat-button';
 import RaisedButton from 'material-ui/lib/raised-button';
 import IconButton from 'material-ui/lib/icon-button';
-import CircularProgress from 'material-ui/lib/circular-progress'
+import CircularProgress from 'material-ui/lib/circular-progress';
 import Editor from 'react-medium-editor';
 import { Grid, Row, Col } from 'react-bootstrap';
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/medium-editor.css';
@@ -67,14 +67,14 @@ class Dashboard extends Component {
         today = moment().weekday(),
         attendanceDay = db.select("/*/classMeetingDays/*[/day == "+today+"]").value();
 
-    this.delayedAttendanceUpdate = _.debounce(function (divClass, event) {
+    this.delayedAttendanceUpdate = _.debounce(function (divClass, count, event) {
       //console.log(divClass, event.target.value, attendanceDay);
-      dispatch(updateClassAttendance(divClass.id, today, moment().format('YYYY-MM-DD 00:00:00'), event.target.value));
-    }, 1000);
+      dispatch(updateClassAttendance(divClass.id, today, moment().format('YYYY-MM-DD 00:00:00'), count));
+    }, 500);
 
     this.delayedNoteUpdate = _.debounce(function (note, changes) {
       dispatch(updateNote(note, changes));
-    }, 1000);
+    }, 500);
 
 
     this.setState({
@@ -120,14 +120,15 @@ class Dashboard extends Component {
           { attendanceDay } = this.state,
           attendance = divClass.divisionClassAttendances,
           attendanceDate = (attendance.length) ? moment(attendance[0].attendanceDate, "YYYY-MM-DDTHH:mm:ss.SSSZ") : false,
-          exists = (attendanceDate) ? attendanceDate.isSame(moment(), 'day') : false;
+          exists = (attendanceDate) ? attendanceDate.isSame(moment(), 'day') : false,
+          count = parseInt(e.target.value, 10);
     let attend = {},
         today = moment().format("YYYY-MM-DD")+"T00:00:00.000Z";
     e.persist();
     if (!exists) {
       attend = {
         attendanceDate: today,
-        count: e.target.value,
+        count: count,
         createdAt: today,
         day: moment().weekday(),
         deletedAt: null,
@@ -139,11 +140,11 @@ class Dashboard extends Component {
       }
       divClass.divisionClassAttendances.unshift(attend);
     } else {
-      divClass.divisionClassAttendances[0].count = e.target.value;
+      divClass.divisionClassAttendances[0].count = count;
       divClass.divisionClassAttendances[0].updating = true;
     }
     dispatch(updateClassAttendanceLocal(divClass));
-    this.delayedAttendanceUpdate(divClass, e);
+    this.delayedAttendanceUpdate(divClass, count, e);
   }
 
   getClassAttendance(divClass) {
