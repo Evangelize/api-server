@@ -71,6 +71,15 @@ export function updateClassAttendance(divisionClassId, day, attendanceDate, coun
   };
 }
 
+export function updateClassAttendanceLocal(divisionClass) {
+  return {
+    type: types.UPDATE_DIVISION_CLASS_ATTENDANCE_FULFILLED,
+    payload: {
+      data: divisionClass
+    }
+  };
+}
+
 export function updateNote(note, changes) {
   return {
     type: types.UPDATE_NOTE,
