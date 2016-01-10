@@ -32,6 +32,10 @@ class DashboardMediumGraph extends Component {
     }, 30)
   }
 
+  componentWillReceiveProps(nextProps) {
+    console.log("componentWillReceiveProps:mediumGraph", nextProps);
+  }
+
   componentDidMount() {
     this.resize();
     window.addEventListener('resize', this.resize);
