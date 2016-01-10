@@ -27,11 +27,12 @@ import ToolbarTitle from 'material-ui/lib/toolbar/toolbar-title';
 import FlatButton from 'material-ui/lib/flat-button';
 import RaisedButton from 'material-ui/lib/raised-button';
 import IconButton from 'material-ui/lib/icon-button';
+import CircularProgress from 'material-ui/lib/circular-progress'
 import Editor from 'react-medium-editor';
 import { Grid, Row, Col } from 'react-bootstrap';
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/medium-editor.css';
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/themes/default.css';
-import { updateClassAttendance, updateNote, addNote } from '../actions';
+import { updateClassAttendance, updateNote, addNote, updateClassAttendanceLocal } from '../actions';
 let Masonry = MasonryCtl(React);
 
 @Radium
@@ -44,7 +45,7 @@ class Dashboard extends Component {
     _.throttle(() => {
       const { masonryOptions } = this.state;
       const graphDiv = this.refs.graphDiv;
-      console.log(graphDiv.clientWidth);
+      //console.log(graphDiv.clientWidth);
       masonryOptions.updated = true;
       this.setState({
           sparklineWidth: graphDiv.offsetWidth - 40
@@ -56,6 +57,10 @@ class Dashboard extends Component {
     window.addEventListener('resize', this.resize);
   }
 
+  componentWillReceiveProps(nextProps) {
+    //console.log("componentWillReceiveProps", nextProps);
+  }
+
   componentWillMount() {
     const { dispatch, configs } = this.props;
     let db = spahql.db(configs.data),
@@ -63,7 +68,7 @@ class Dashboard extends Component {
         attendanceDay = db.select("/*/classMeetingDays/*[/day == "+today+"]").value();
 
     this.delayedAttendanceUpdate = _.debounce(function (divClass, event) {
-      console.log(divClass, event.target.value, attendanceDay);
+      //console.log(divClass, event.target.value, attendanceDay);
       dispatch(updateClassAttendance(divClass.id, today, moment().format('YYYY-MM-DD 00:00:00'), event.target.value));
     }, 1000);
 
@@ -75,6 +80,7 @@ class Dashboard extends Component {
     this.setState({
       sparklineWidth: 100,
       attendanceDay: attendanceDay,
+      displayAttendance: this.displayAttendance(),
       showDialog: false,
       currentNote: {
         id: null,
@@ -83,6 +89,11 @@ class Dashboard extends Component {
       },
       masonryOptions: {}
     });
+  }
+
+  handleAttendanceUpdate() {
+    let currentValue = select(store.getState());
+    //console.log("handleAttendance", currentValue);
   }
 
   displayAttendance() {
@@ -100,21 +111,47 @@ class Dashboard extends Component {
           classes = db.select("/*[/id == "+day.divisionConfigId+"]/divisionYears/0/divisions/0/divisionClasses");
       day.classes = classes.value();
       day.config = config.value();
-    })
+    });
     return classDay;
   }
 
   attendanceUpdate(divClass, e) {
-    const { attendanceDay } = this.state;
+    const { dispatch } = this.props,
+          { attendanceDay } = this.state,
+          attendance = divClass.divisionClassAttendances,
+          attendanceDate = (attendance.length) ? moment(attendance[0].attendanceDate, "YYYY-MM-DDTHH:mm:ss.SSSZ") : false,
+          exists = (attendanceDate) ? attendanceDate.isSame(moment(), 'day') : false;
+    let attend = {},
+        today = moment().format("YYYY-MM-DD")+"T00:00:00.000Z";
     e.persist();
+    if (!exists) {
+      attend = {
+        attendanceDate: today,
+        count: e.target.value,
+        createdAt: today,
+        day: moment().weekday(),
+        deletedAt: null,
+        divisionClassId: divClass.id,
+        id: null,
+        revision: null,
+        updatedAt: today,
+        updating: true
+      }
+      divClass.divisionClassAttendances.unshift(attend);
+    } else {
+      divClass.divisionClassAttendances[0].count = e.target.value;
+      divClass.divisionClassAttendances[0].updating = true;
+    }
+    dispatch(updateClassAttendanceLocal(divClass));
     this.delayedAttendanceUpdate(divClass, e);
   }
 
   getClassAttendance(divClass) {
     let attendance = (divClass.divisionClassAttendances.length) ? divClass.divisionClassAttendances[0].count : 0,
         isToday = false;
+    //console.log("getClassAttendance", divClass, attendance);
     if (attendance) {
-      isToday = moment(divClass.divisionClassAttendances[0].attendanceDate, "YYYY-MM-DD").isSame(moment(), 'day');
+      isToday = moment(divClass.divisionClassAttendances[0].attendanceDate, "YYYY-MM-DDTHH:mm:ss.SSSZ").isSame(moment(), 'day');
       if (isToday) {
         return attendance.toString();
       } else {
@@ -133,11 +170,21 @@ class Dashboard extends Component {
         series = attendance.data.latest.map(function(day, index){
           return parseInt(day.attendance,10);
         }).reverse();
-    console.log(labels, series);
+    //console.log("graphAttendance", labels, series);
     return {
       labels: labels,
       series: [series]
     };
+  }
+
+  isUpdating(divClass) {
+    if (divClass.divisionClassAttendances.length && "updating" in divClass.divisionClassAttendances[0]) {
+      console.log("isUpdating", true);
+      return true;
+    } else {
+      console.log("isUpdating", false);
+      return false;
+    }
   }
 
   handleCardTouchTap(note, e) {
@@ -214,9 +261,15 @@ class Dashboard extends Component {
     console.log("Delete", e);
   }
 
+  highlightText(e) {
+    if (e) {
+      e.target.select();
+    }
+  }
+
   render() {
     const { dispatch, configs, attendance, notes, ...props } = this.props;
-    const { masonryOptions } = this.state;
+    const { masonryOptions, displayAttendance } = this.state;
     let paperStyle = {
           display: 'flex',
           flexDirection: 'row',
@@ -233,8 +286,6 @@ class Dashboard extends Component {
           cols: 12,
           rowHeight: 50
         },
-        displayAttendance = this.displayAttendance(),
-        lineChartData = this.getGraphAttendance(),
         lineChartOptions = {
           low: 0,
           showArea: true
@@ -245,13 +296,20 @@ class Dashboard extends Component {
             label="Done"
             primary={true}
             onTouchTap={::this.handleDialogClose} />
-        ];
-      console.log(displayAttendance);
+        ],
+        halogenContainer = {
+          height: "25px",
+          width: "25px"
+        },
+        halogen = {
+          color: '#4DAF7C',
+          size: '8px'
+        };
     return (
       <div>
         <Grid fluid={true}>
           {displayAttendance.map((attendance, index) =>
-            <Row>
+            <Row key={attendance.id}>
               <Col xs={12} sm={12} md={12} lg={12}>
                 <Card>
                   <CardHeader
@@ -262,16 +320,20 @@ class Dashboard extends Component {
                   <CardMedia>
                     <Grid fluid={true}>
                       {attendance.classes.map((divClass, index) =>
-                        <Col key={divClass.id} xs={12} sm={6} md={4} lg={3}>
-                          <div className={"mdl-typography--subhead"}>{divClass.class.title}</div>
-                          <TextField
-                            type="number"
-                            hintText="Enter attendance"
-                            defaultValue={::this.getClassAttendance(divClass)}
-                            min="0"
-                            max="500"
-                            onChange={((...args)=>this.attendanceUpdate(divClass, ...args))}
-                            floatingLabelText="Class Attendance" />
+                        <Col style={{display: "flex", alignItems: "center", justifyContent: "center"}} key={divClass.id} xs={12} sm={6} md={4} lg={3}>
+                          <div style={{width: "85%"}}>
+                            <TextField
+                              type="number"
+                              hintText="Enter attendance"
+                              value={::this.getClassAttendance(divClass)}
+                              min="0"
+                              max="500"
+                              ref={"inputAttendance"+divClass.id}
+                              onFocus={((...args)=>this.highlightText(...args))}
+                              onChange={((...args)=>this.attendanceUpdate(divClass, ...args))}
+                              floatingLabelText={divClass.class.title} />
+                          </div>
+                          <div style={{width: "13%", margin: "0 1%", height: "50px", overflow: "hidden"}}><CircularProgress style={{display: (this.isUpdating(divClass)) ? "block" : "none"}} size={0.35} mode="indeterminate" /></div>
                         </Col>
                       )}
                     </Grid>
@@ -286,7 +348,7 @@ class Dashboard extends Component {
                 title={"Attendance"}
                 subtitle={"Past 8 weeks"}
                 avatar={<Avatar>A</Avatar>}
-                lineChartData={lineChartData}
+                lineChartData={::this.getGraphAttendance()}
                 lineChartOptions={lineChartOptions}
               />
             </Col>
@@ -305,7 +367,7 @@ class Dashboard extends Component {
               </Toolbar>
               <Masonry>
                 {notes.data.map((note, index) =>
-                  <Col xs={12} sm={6} md={6} lg={6} key={index}>
+                  <Col key={note.id} xs={12} sm={6} md={6} lg={6} key={index}>
                     <Card>
                       <CardTitle title={note.title} style={(note.title) ? null : {display: 'none'}} />
                       <CardText onClick={((...args)=>this.handleCardTouchTap(note, ...args))}>
