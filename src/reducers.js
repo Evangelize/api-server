@@ -102,7 +102,7 @@ function attendance(state, action) {
         hydrated: true
       };
       return newstate.attendance;
-    case types.UPDATE_ATTENDANCE_FULFILLED:
+    case types.UPDATE_LATEST_ATTENDANCE_FULFILLED:
       newstate.data.latest = action.payload.data;
       return newstate;
     case types.UPDATE_AVG_ATTENDANCE_FULFILLED:
