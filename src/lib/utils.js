@@ -15,7 +15,7 @@ export default {
     .latest()
     .then(
       function(results) {
-        pubClient.publish("congregate:attendance.GET_ATTENDANCE_FULFILLED", JSON.stringify(results));
+        pubClient.publish("congregate:attendance.UPDATE_LATEST_ATTENDANCE_FULFILLED", JSON.stringify(results));
         return results;
       },
       function(err) {
