@@ -297,7 +297,9 @@ export default {
                     ]
                   },
                   {
-                    model: models.DivisionClassAttendance
+                    model: models.DivisionClassAttendance,
+                    separate: true,
+                    order: "attendanceDate DESC"
                   }
                 ]
               }
