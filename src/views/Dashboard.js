@@ -148,7 +148,8 @@ class Dashboard extends Component {
   }
 
   getClassAttendance(divClass) {
-    let attendance = (divClass.divisionClassAttendances.length) ? divClass.divisionClassAttendances[0].count : 0,
+    let db = spahql.db(divClass),
+        attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ '^"+moment().format("YYYY-MM-DD")+"']").values(),
         isToday = false;
     //console.log("getClassAttendance", divClass, attendance);
     if (attendance) {
