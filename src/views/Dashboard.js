@@ -152,10 +152,10 @@ class Dashboard extends Component {
         attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ '^"+moment().format("YYYY-MM-DD")+"']").values(),
         isToday = false;
     console.log("getClassAttendance", divClass, attendance);
-    if (attendance) {
+    if (attendance.length) {
       isToday = moment.utc(attendance[0].attendanceDate, "YYYY-MM-DDTHH:mm:ss.SSSZ").isSame(moment(), 'day');
       if (isToday) {
-        return attendance.toString();
+        return attendance[0].count.toString();
       } else {
         return "0";
       }
