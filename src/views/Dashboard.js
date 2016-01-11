@@ -151,7 +151,7 @@ class Dashboard extends Component {
     let db = spahql.db(divClass),
         attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ '^"+moment().format("YYYY-MM-DD")+"']").values(),
         isToday = false;
-    //console.log("getClassAttendance", divClass, attendance);
+    console.log("getClassAttendance", divClass, attendance);
     if (attendance) {
       isToday = moment.utc(attendance[0].attendanceDate, "YYYY-MM-DDTHH:mm:ss.SSSZ").isSame(moment(), 'day');
       if (isToday) {
