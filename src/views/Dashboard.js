@@ -153,7 +153,7 @@ class Dashboard extends Component {
         isToday = false;
     //console.log("getClassAttendance", divClass, attendance);
     if (attendance) {
-      isToday = moment(divClass.divisionClassAttendances[0].attendanceDate, "YYYY-MM-DDTHH:mm:ss.SSSZ").isSame(moment(), 'day');
+      isToday = moment.utc(attendance[0].attendanceDate, "YYYY-MM-DDTHH:mm:ss.SSSZ").isSame(moment(), 'day');
       if (isToday) {
         return attendance.toString();
       } else {
