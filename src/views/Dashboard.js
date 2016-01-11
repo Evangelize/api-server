@@ -118,9 +118,9 @@ class Dashboard extends Component {
   attendanceUpdate(divClass, e) {
     const { dispatch } = this.props,
           { attendanceDay } = this.state,
-          attendance = divClass.divisionClassAttendances,
-          attendanceDate = (attendance.length) ? moment(attendance[0].attendanceDate, "YYYY-MM-DDTHH:mm:ss.SSSZ") : false,
-          exists = (attendanceDate) ? attendanceDate.isSame(moment(), 'day') : false,
+          db = spahql.db(divClass),
+          attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ '^"+moment().format("YYYY-MM-DD")+"']"),
+          exists = attendance.values.length,
           count = parseInt(e.target.value, 10);
     let attend = {},
         today = moment().format("YYYY-MM-DD")+"T00:00:00.000Z";
@@ -140,8 +140,8 @@ class Dashboard extends Component {
       }
       divClass.divisionClassAttendances.unshift(attend);
     } else {
-      divClass.divisionClassAttendances[0].count = count;
-      divClass.divisionClassAttendances[0].updating = true;
+      attendance.values[0].count = count;
+      attendance.values[0].updating = true;
     }
     dispatch(updateClassAttendanceLocal(divClass));
     this.delayedAttendanceUpdate(divClass, count, e);
