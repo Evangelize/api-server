@@ -5,6 +5,7 @@ module.exports = function (sequelize, DataTypes) {
       "id": { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
       "divisionConfigId": DataTypes.INTEGER,
       "divisionYear": DataTypes.INTEGER,
+      "position": DataTypes.INTEGER,
       "title": DataTypes.STRING,
       "start": DataTypes.DATE,
       "end": DataTypes.DATE,
