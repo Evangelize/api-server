@@ -117,6 +117,7 @@ module.exports = {
           "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
           "divisionConfigId": Sequelize.INTEGER,
           "divisionYear": Sequelize.INTEGER,
+          "position": Sequelize.INTEGER,
           "title": Sequelize.STRING,
           "start": Sequelize.DATE,
           "end": Sequelize.DATE,
