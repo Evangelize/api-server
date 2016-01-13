@@ -28,6 +28,10 @@ import FlatButton from 'material-ui/lib/flat-button';
 import RaisedButton from 'material-ui/lib/raised-button';
 import IconButton from 'material-ui/lib/icon-button';
 import CircularProgress from 'material-ui/lib/circular-progress';
+import List from 'material-ui/lib/lists/list';
+import ListItem from 'material-ui/lib/lists/list-item';
+import Divider from 'material-ui/lib/divider';
+import ActionGrade from 'material-ui/lib/svg-icons/action/grade';
 import Editor from 'react-medium-editor';
 import { Grid, Row, Col } from 'react-bootstrap';
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/medium-editor.css';
@@ -113,6 +117,22 @@ class Dashboard extends Component {
       day.config = config.value();
     });
     return classDay;
+  }
+
+  getClasses(day) {
+    const { configs } = this.props;
+    let db = spahql.db(configs.data),
+        today = moment().weekday();
+    let classDays = db.select("/0/divisionYears/0/divisions/0/divisionClasses/*").values();
+    return classDays;
+  }
+
+  displayTeachers(divClass) {
+    const { configs } = this.props;
+    let db = spahql.db(configs.data),
+        today = moment().weekday(),
+        teachers = db.select("/0/divisionYears/0/divisions/0/divisionClasses/*[/id =="+divClass.id+"]/divisionClassTeachers/*/[/day == "+today+"]").values();
+    return teachers;
   }
 
   attendanceUpdate(divClass, e) {
@@ -307,7 +327,10 @@ class Dashboard extends Component {
         halogen = {
           color: '#4DAF7C',
           size: '8px'
-        };
+        },
+        db = spahql.db(configs.data),
+        today = moment().weekday(),
+        classDay = db.select("/*/classMeetingDays/*[/day == "+today+"]").value()
     return (
       <div>
         <Grid fluid={true}>
@@ -356,6 +379,44 @@ class Dashboard extends Component {
               />
             </Col>
             <Col xs={12} sm={12} md={6} lg={6}>
+              <Card>
+                <CardHeader
+                  title={"Teachers"}
+                  subtitle={moment().isoWeekday(classDay.day).format("dddd")}
+                  avatar={<Avatar>T</Avatar>}>
+                </CardHeader>
+                <CardMedia>
+                  {::this.getClasses().map((divClass, index) =>
+                    <div key={divClass.id}>
+                      <Divider />
+                      <List subheader={divClass.class.title}>
+                        {this.displayTeachers(divClass).map((teacher, index) =>
+                          <ListItem
+                            key={teacher.id}
+                            primaryText={teacher.person.firstName+" "+teacher.person.lastName}
+                            leftIcon={
+                              <ActionGrade
+                                onTouchTap={((...args)=>this.confirmTeacher(divisionClass, teacherDay, teacher, ...args))}
+                                color={(teacher.confirmed) ? Styles.Colors.deepOrange500 : Styles.Colors.grey400} />
+                            }
+                          />
+                        )}
+                      </List>
+                    </div>
+                  )}
+                </CardMedia>
+              </Card>
+            </Col>
+            <Col xs={6} sm={4} md={3} lg={3}>
+              <DashboardComponentSmall
+                zDepth={1}
+                sparkLineData={[5, 10, 5, 20, 5, 30, 25, 10, 18, 32, 22, 28, 30, 21, 45, 29, 33, 18, 10, 15]}
+                title={"Avg. Attendance"}
+                body={attendance.data.average[0].attendance.toFixed(2)}
+                style={paperStyle}
+              />
+            </Col>
+            <Col xs={12} sm={12} md={6} lg={6}>
               <Toolbar>
                 <ToolbarGroup key={0} float="left">
                   <ToolbarTitle text="Notes" />
@@ -389,15 +450,6 @@ class Dashboard extends Component {
                   </Col>
                 )}
               </Masonry>
-            </Col>
-            <Col xs={6} sm={4} md={3} lg={3}>
-              <DashboardComponentSmall
-                zDepth={1}
-                sparkLineData={[5, 10, 5, 20, 5, 30, 25, 10, 18, 32, 22, 28, 30, 21, 45, 29, 33, 18, 10, 15]}
-                title={"Avg. Attendance"}
-                body={attendance.data.average[0].attendance.toFixed(2)}
-                style={paperStyle}
-              />
             </Col>
           </Masonry>
         </Grid>
