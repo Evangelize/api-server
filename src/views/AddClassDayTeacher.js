@@ -11,22 +11,28 @@ import DashboardMedium from '../components/DashboardMedium';
 import ReactGridLayout from 'react-grid-layout';
 import Slider from 'react-slick';
 import Styles from 'material-ui/lib/styles';
+import Avatar from 'material-ui/lib/avatar';
+import Card from 'material-ui/lib/card/card';
+import CardHeader from 'material-ui/lib/card/card-header';
+import CardMedia from 'material-ui/lib/card/card-media';
 import List from 'material-ui/lib/lists/list';
 import ListDivider from 'material-ui/lib/lists/list-divider';
 import ListItem from 'material-ui/lib/lists/list-item';
 import CheckCircle from 'material-ui/lib/svg-icons/action/check-circle';
 import TextField from 'material-ui/lib/text-field';
-import DropDownMenu from 'material-ui/lib/drop-down-menu';
 import RaisedButton from 'material-ui/lib/raised-button';
 import FontIcon from 'material-ui/lib/font-icon';
 import DropDownIcon from 'material-ui/lib/drop-down-icon';
 import IconMenu from 'material-ui/lib/menus/icon-menu';
 import IconButton from 'material-ui/lib/icon-button';
 import MoreVertIcon from 'material-ui/lib/svg-icons/navigation/more-vert';
-import Menu from 'material-ui/lib/menu/menu';
+import Menu from 'material-ui/lib/menus/menu';
 import MenuItem from 'material-ui/lib/menus/menu-item';
+import DropDownMenu from 'material-ui/lib/drop-down-menu';
 import FlatButton from 'material-ui/lib/flat-button';
 import Snackbar from 'material-ui/lib/snackbar';
+import ActionGrade from 'material-ui/lib/svg-icons/action/grade';
+import { Grid, Row, Col } from 'react-bootstrap';
 import { manageDivisionClassTeacher, getPeople } from '../actions';
 
 class AddClassDayTeacher extends Component {
@@ -37,14 +43,15 @@ class AddClassDayTeacher extends Component {
   componentWillMount() {
     const { configs, params } = this.props;
 
-    let db = spahql.db(configs.data),
-      config = db.select("/"+params.divisionConfigId),
+    let db = spahql.db(configs.data);
+    let config = db.select("/*[/id == "+params.divisionConfigId+"]"),
       classDay = config.select("/classMeetingDays/*[/day == "+parseInt(params.day,10)+"]"),
-      year = config.select("/divisionYears/"+parseInt(params.yearId,10)),
+      year = config.select("/divisionYears/*[/id == "+parseInt(params.yearId,10)+"]"),
       division = year.select("/divisions/*[/id == "+parseInt(params.divisionId,10)+"]"),
       divClass = division.select("/divisionClasses/*[/id == "+parseInt(params.classId,10)+"]");
 
     this.setState({
+      searchType: "lastName",
       fixedHeader: true,
       fixedFooter: true,
       stripedRows: false,
@@ -63,7 +70,6 @@ class AddClassDayTeacher extends Component {
         action: "Add Teacher",
         selectedItem: null
       },
-      spahql: spahql,
       config: config.value(),
       classDay: classDay.value(),
       year: year.value(),
@@ -119,7 +125,7 @@ class AddClassDayTeacher extends Component {
   }
 
   handleTeacherTouchTap(teacher, divisionClass, e, el) {
-    this.refs.snackbar.setState({
+    this.setState({
       teacher: teacher,
       divClass: divisionClass
     })
@@ -142,11 +148,10 @@ class AddClassDayTeacher extends Component {
     }
   }
 
-  _handleSelectValueChange(e) {
+  handleSelectValueChange(e, index, value) {
     const { people } = this.props;
-    people.key = e.target.value;
+    people.key = value;
   }
-
   menuItemTap(person, item, event) {
     const { dispatch, params, configs } = this.props;
     const { config, classDay, year, division, divClassPath } = this.state;
@@ -178,9 +183,15 @@ class AddClassDayTeacher extends Component {
     );
   }
 
+  navigate(path, e) {
+    const { dispatch } = this.props;
+    dispatch(updatePath(path));
+  }
+
   render() {
-    const { dispatch, params, configs, people, ...props } = this.props;
-    const { spahql, config, classDay, year, division, divClassPath } = this.state;
+    const { dispatch, params, configs, people, ...props } = this.props,
+          { config, classDay, year, division, divClassPath, searchType } = this.state;
+    console.log("divClassPath", divClassPath);
     let db = spahql.db(configs.data),
         divClass = db.select(divClassPath).value(),
         iconMenuStyle = {
@@ -211,63 +222,84 @@ class AddClassDayTeacher extends Component {
           </IconMenu>
         );
     return (
-      <div className={"mdl-grid"}>
-        <Snackbar
-          ref="snackbar"
-          message={this.state.snackBar.message}
-          action={this.state.snackBar.action}
-          autoHideDuration={this.state.snackBar.autoHideDuration}
-          onActionTouchTap={::this.handleSnackbarAction}/>
-        <div className={"mdl-cell mdl-cell--12-col-desktop mdl-cell mdl-cell--8-col-tablet mdl-cell--4-col-phone"}>
-          <div className={"mdl-typography--title-color-contrast"} style={{opacity: ".57", marginTop: "12px"}}>Manage Teacher(s)</div>
-          <div className={"mdl-typography--menu-color-contrast"} style={{opacity: ".57", marginTop: "4px"}}>{config.academicYearTitle} {moment(year.endDate).format("YYYY")} &raquo; {divClass.class.title} &raquo; {division.title} &raquo; {moment().isoWeekday(classDay.day).format("dddd")}</div>
-        </div>
-        <div className={"mdl-cell mdl-cell--2-col-desktop mdl-cell mdl-cell--3-col-tablet mdl-cell--4-col-phone"}>
-          <DropDownMenu
-            onChange={::this._handleSelectValueChange}
-            style={dropDownStyle}
-            menuItems={menuItems} />
-        </div>
-        <div className={"mdl-cell mdl-cell--10-col-desktop mdl-cell--5-col-tablet mdl-cell--4-col-phone"}>
-          <TextField
-            ref="searchField"
-            floatingLabelText="Search"
-            style={{paddingLeft: "24px"}}
-            onChange={::this._handleInputChange} />
-        </div>
-        <div className={"mdl-cell mdl-cell--12-col"}>
-          <List subheader="Assigned">
-            {this.renderClassTeachers().map((teacher, index) =>
-              <ListItem
-                key={teacher.id}
-                leftIcon={(teacher.confirmed) ? <CheckCircle color={Styles.Colors.green500} /> : null}
-                rightIconButton={
-                  <IconMenu iconButtonElement={iconButtonElement}>
-                    <MenuItem style={(teacher.confirmed) ? null : {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'unconfirm', ...args))}>Unconfirm</MenuItem>
-                    <MenuItem style={(!teacher.confirmed) ? null : {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'confirm', ...args))}>Confirm</MenuItem>
-                    <MenuItem style={(teacher.id) ? null: {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'delete', ...args))}>Delete</MenuItem>
-                  </IconMenu>
-                }
-                primaryText={teacher.person.lastName+', '+teacher.person.firstName} >
-              </ListItem>
+      <Grid fluid={true}>
+         <Row>
+          <Col xs={12} sm={12} md={12} lg={12}>
+            <nav className={"grey darken-1"}>
+              <div className={"nav-wrapper"}>
+                <div className={"col s12 m12 l12 truncate"}>
+                  <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
+                  <a href="#!" onTouchTap={((...args)=>this.navigate("/schedules", ...args))} className={"breadcrumb"}>Schedules</a>
+                  <a href="#!" className={"breadcrumb"}>Edit</a>
+                </div>
+              </div>
+            </nav>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs={12} sm={3} md={4} lg={2}>
+            <DropDownMenu
+              value={searchType}
+              onChange={::this.handleSelectValueChange}
+              style={dropDownStyle}>
+              <MenuItem value={"lastName"} primaryText="Last Name" />
+              <MenuItem value={"firstName"} primaryText="First Name" />
+              <MenuItem value={"emailAddress"} primaryText="Email" />
+            </DropDownMenu>
+          </Col>
+          <Col xs={12} sm={9} md={8} lg={10}>
+            <TextField
+              className={"searchBox"}
+              ref="searchField"
+              floatingLabelText="Search"
+              defaultValue={people.filter}
+              onChange={::this._handleInputChange} />
+          </Col>
+        </Row>
+        <Row>
+          <Col xs={12} sm={12} md={12} lg={12}>
+            <Card>
+              <CardHeader
+                title={divClass.class.title}
+                subtitle={moment().isoWeekday(classDay.day).format("dddd") + " " + division.title + " " +  moment(year.endDate).format("YYYY")}
+                avatar={<Avatar>{moment().isoWeekday(classDay.day).format("dd")}</Avatar>}>
+              </CardHeader>
+              <CardMedia>
+                <List subheader="Assigned">
+                  {this.renderClassTeachers().map((teacher, index) =>
+                    <ListItem
+                      key={teacher.id}
+                      leftIcon={(teacher.confirmed) ? <ActionGrade color={Styles.Colors.deepOrange500} /> : null}
+                      rightIconButton={
+                        <IconMenu iconButtonElement={iconButtonElement}>
+                          <MenuItem style={(teacher.confirmed) ? null : {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'unconfirm', ...args))}>Unconfirm</MenuItem>
+                          <MenuItem style={(!teacher.confirmed) ? null : {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'confirm', ...args))}>Confirm</MenuItem>
+                          <MenuItem style={(teacher.id) ? null: {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'delete', ...args))}>Delete</MenuItem>
+                        </IconMenu>
+                      }
+                      primaryText={teacher.person.lastName+', '+teacher.person.firstName} >
+                    </ListItem>
 
-            )}
-          </List>
-          <List>
-            {this.renderPeople().map((person, index) =>
-              <ListItem
-                key={person.id}
-                rightIconButton={
-                  <IconMenu iconButtonElement={iconButtonElement}>
-                    <MenuItem onTouchTap={((...args)=>this.menuItemTap(person, 'add', ...args))}>Add</MenuItem>
-                  </IconMenu>
-                }
-                primaryText={person.lastName+', '+person.firstName} >
-              </ListItem>
-            )}
-          </List>
-        </div>
-      </div>
+                  )}
+                </List>
+                <List>
+                  {this.renderPeople().map((person, index) =>
+                    <ListItem
+                      key={person.id}
+                      rightIconButton={
+                        <IconMenu iconButtonElement={iconButtonElement}>
+                          <MenuItem onTouchTap={((...args)=>this.menuItemTap(person, 'add', ...args))}>Add</MenuItem>
+                        </IconMenu>
+                      }
+                      primaryText={person.lastName+', '+person.firstName} >
+                    </ListItem>
+                  )}
+                </List>
+              </CardMedia>
+            </Card>
+          </Col>
+        </Row>
+      </Grid>
     );
   }
 }
