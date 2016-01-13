@@ -41,10 +41,11 @@ class EditDayAttendance extends Component {
   }
 
   componentWillMount() {
+    console.log("EditDayAttendance:componentWillMount");
     const { configs, params, dispatch } = this.props;
 
-    let db = spahql.db(configs.data),
-        attendances = db.select("//divisionClassAttendances/*[/attendanceDate =~ '^"+params.date+"']").values(),
+    let db = spahql.db(configs.data);
+    let attendances = db.select("/*/divisionYears/*/divisions/*/divisionClasses/*/divisionClassAttendances/*[/attendanceDate =~ '^"+params.date+"']").values(),
         weekday = attendances[0].day;
 
     this.delayedAttendanceUpdate = _.debounce(function (divClass, count, event) {
@@ -53,7 +54,6 @@ class EditDayAttendance extends Component {
     }, 500);
 
     this.setState({
-      spahql: spahql,
       attendances: attendances,
       weekday: weekday,
       displayAttendance: this.displayAttendance(weekday)
@@ -84,6 +84,7 @@ class EditDayAttendance extends Component {
   }
 
   displayAttendance(weekday) {
+    console.log("displayAttendance");
     const { configs } = this.props;
 
     let db = spahql.db(configs.data),
@@ -221,7 +222,7 @@ class EditDayAttendance extends Component {
 
   render() {
     const { dispatch, params, configs, ...props } = this.props,
-          { spahql, weekday, displayAttendance, attendances } = this.state;
+          { weekday, displayAttendance, attendances } = this.state;
 
     let db = spahql.db(configs.data);
     return (
@@ -229,8 +230,15 @@ class EditDayAttendance extends Component {
         <Grid fluid={true}>
           <Row>
             <Col xs={12} sm={12} md={12} lg={12}>
-              <div className={"mdl-typography--title-color-contrast"} style={{opacity: ".57", marginTop: "12px"}}>Edit Attendance - {params.date}</div>
-              <div className={"mdl-typography--menu-color-contrast"} style={{opacity: ".57", marginTop: "4px"}}>Attendance</div>
+              <nav className={"grey darken-1"}>
+                <div className={"nav-wrapper"}>
+                  <div className={"col s12 m12 l12"}>
+                    <a href="#!" className={"breadcrumb"}>Dashboard</a>
+                    <a href="#!" className={"breadcrumb"}>Attendance</a>
+                    <a href="#!" className={"breadcrumb"}>Edit</a>
+                  </div>
+                </div>
+              </nav>
             </Col>
           </Row>
           {displayAttendance.map((attendance, index) =>
