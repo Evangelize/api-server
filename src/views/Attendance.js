@@ -78,7 +78,14 @@ class Attendance extends Component {
         <Grid fluid={true}>
           <Row>
             <Col xs={12} sm={12} md={12} lg={12}>
-              <div className={"mdl-typography--title-color-contrast"} style={{opacity: ".57", marginTop: "12px"}}>Attendance</div>
+              <nav className={"grey darken-1"}>
+                <div className={"nav-wrapper"}>
+                  <div className={"col s12 m12 l12"}>
+                    <a href="#!" className={"breadcrumb"}>Dashboard</a>
+                    <a href="#!" className={"breadcrumb"}>Attendance</a>
+                  </div>
+                </div>
+              </nav>
             </Col>
           </Row>
           <Row>
@@ -93,6 +100,7 @@ class Attendance extends Component {
                   <List>
                     {attendance.data.latest.map((day, index) =>
                       <ListItem
+                        key={day.id}
                         rightAvatar={<Avatar>{day.attendance}</Avatar>}
                         onTouchTap={((...args)=>this.handleEditAttendance(day, ...args))}
                         primaryText={moment.utc(day.attendanceDate).format("dddd")}
