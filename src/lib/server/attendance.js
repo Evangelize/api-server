@@ -13,6 +13,7 @@ export default {
               {
                 group: ['attendanceDate'],
                 order: "attendanceDate DESC",
+                limit: 8,
                 attributes: [
                   'day',
                   'attendanceDate',
