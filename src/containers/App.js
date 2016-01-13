@@ -18,9 +18,9 @@ import { getPeople } from '../actions';
 class App extends Component {
   constructor(props, context) {
     super(props, context);
-    this._showLeftNavClick = this._showLeftNavClick.bind(this);
     this.state = {
-      muiTheme: ThemeManager.getMuiTheme(CustomColors)
+      muiTheme: ThemeManager.getMuiTheme(CustomColors),
+      open: false
     };
     const { dispatch } = this.props;
   }
@@ -33,12 +33,17 @@ class App extends Component {
 
   handleLeftNavChange = function(url, e) {
     const { dispatch } = this.props;
-    this.refs.leftNav.toggle();
+    this.setState({open: !this.state.open});
     dispatch(updatePath(url));
+  }
+
+  showLeftNavClick = function(e) {
+    this.setState({open: !this.state.open});
   }
 
   render() {
     const { dispatch, visibleTodos, visibilityFilter } = this.props,
+          { open } = this.state,
           textColor = this.state.muiTheme.rawTheme.palette.alternateTextColor,
           navHeader = {
             backgroundColor: this.state.muiTheme.rawTheme.palette.primary1Color,
@@ -66,9 +71,9 @@ class App extends Component {
         <div>
           <AppBar
             title="Classes"
-            iconElementLeft={<IconButton onTouchTap={this._showLeftNavClick}><NavigationMenu /></IconButton>}>
+            iconElementLeft={<IconButton onTouchTap={::this.showLeftNavClick}><NavigationMenu /></IconButton>}>
             <div style={brandingStyle}>
-              <div className={"mdl-typography--subhead"}>Twin City church of Christ</div>
+              <h6>Twin City church of Christ</h6>
             </div>
           </AppBar>
         </div>
@@ -76,6 +81,8 @@ class App extends Component {
           <LeftNav
             ref="leftNav"
             docked={false}
+            open={this.state.open}
+            onRequestChange={open => this.setState({open})}
           >
             <div
               style={navHeader}>
@@ -95,10 +102,6 @@ class App extends Component {
         {this.props.children}
       </AppCanvas>
     );
-  }
-
-  _showLeftNavClick() {
-    this.refs.leftNav.toggle();
   }
 }
 
