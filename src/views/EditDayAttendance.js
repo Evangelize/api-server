@@ -220,6 +220,11 @@ class EditDayAttendance extends Component {
     }
   }
 
+  navigate(path, e) {
+    const { dispatch } = this.props;
+    dispatch(updatePath(path));
+  }
+
   render() {
     const { dispatch, params, configs, ...props } = this.props,
           { weekday, displayAttendance, attendances } = this.state;
@@ -233,9 +238,9 @@ class EditDayAttendance extends Component {
               <nav className={"grey darken-1"}>
                 <div className={"nav-wrapper"}>
                   <div className={"col s12 m12 l12"}>
-                    <a href="#!" className={"breadcrumb"}>Dashboard</a>
-                    <a href="#!" className={"breadcrumb"}>Attendance</a>
-                    <a href="#!" className={"breadcrumb"}>Edit</a>
+                    <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
+                    <a href="#!" onTouchTap={((...args)=>this.navigate("/attendance", ...args))} className={"breadcrumb"}>Attendance</a>
+                    <a className={"breadcrumb"}>Edit</a>
                   </div>
                 </div>
               </nav>

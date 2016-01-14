@@ -69,8 +69,9 @@ class People extends Component {
     });
   }
 
-  componentDidMount() {
-
+  navigate(path, e) {
+    const { dispatch } = this.props;
+    dispatch(updatePath(path));
   }
 
   render() {
@@ -100,8 +101,8 @@ class People extends Component {
             <nav className={"grey darken-1"}>
               <div className={"nav-wrapper"}>
                 <div className={"col s12 m12 l12"}>
-                  <a href="#!" className={"breadcrumb"}>Dashboard</a>
-                  <a href="#!" className={"breadcrumb"}>People</a>
+                  <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
+                  <a className={"breadcrumb"}>People</a>
                 </div>
               </div>
             </nav>

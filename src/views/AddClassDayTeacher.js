@@ -230,7 +230,7 @@ class AddClassDayTeacher extends Component {
                 <div className={"col s12 m12 l12 truncate"}>
                   <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
                   <a href="#!" onTouchTap={((...args)=>this.navigate("/schedules", ...args))} className={"breadcrumb"}>Schedules</a>
-                  <a href="#!" className={"breadcrumb"}>Edit</a>
+                  <a className={"breadcrumb"}>Edit</a>
                 </div>
               </div>
             </nav>

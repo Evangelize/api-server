@@ -70,6 +70,11 @@ class Attendance extends Component {
     });
   }
 
+  navigate(path, e) {
+    const { dispatch } = this.props;
+    dispatch(updatePath(path));
+  }
+
   render() {
     const { dispatch, configs, attendance, ...props } = this.props;
     console.log("render", attendance);
@@ -81,8 +86,8 @@ class Attendance extends Component {
               <nav className={"grey darken-1"}>
                 <div className={"nav-wrapper"}>
                   <div className={"col s12 m12 l12"}>
-                    <a href="#!" className={"breadcrumb"}>Dashboard</a>
-                    <a href="#!" className={"breadcrumb"}>Attendance</a>
+                    <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
+                    <a className={"breadcrumb"}>Attendance</a>
                   </div>
                 </div>
               </nav>
