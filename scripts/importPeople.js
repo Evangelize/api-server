@@ -1,5 +1,5 @@
 var _ = require('lodash'),
-    moment = require('moment'),
+    moment = require('moment-timezone'),
     models  = require('../src/models'),
     fieldMap = {
       "id": "id",

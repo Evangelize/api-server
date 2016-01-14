@@ -1,4 +1,4 @@
-var moment = require('moment'),
+var moment = require('moment-timezone'),
     sunday = moment()
       .year(2016)
       .month(2)

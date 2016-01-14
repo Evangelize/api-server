@@ -1,4 +1,4 @@
-var moment = require('moment'),
+var moment = require('moment-timezone'),
     beginYear = 2015,
     beginYearMonth = 8,
     lengthDivision = 3,

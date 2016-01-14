@@ -2,7 +2,7 @@ import models from '../../models';
 import attendance from './attendance'
 import async from 'async';
 import Promise from 'bluebird';
-import moment from 'moment';
+import moment from 'moment-timezone';
 
 export default {
   addTeacher(divisionClassId, day, personId) {

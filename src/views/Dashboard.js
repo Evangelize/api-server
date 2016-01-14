@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import _ from 'lodash';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import spahql from 'spahql';
 import MasonryCtl from 'react-masonry-component';
 import Radium from 'radium';
@@ -382,7 +382,7 @@ class Dashboard extends Component {
               <Card>
                 <CardHeader
                   title={"Teachers"}
-                  subtitle={moment().isoWeekday(classDay.day).format("dddd")}
+                  subtitle={moment().format("dddd")}
                   avatar={<Avatar>T</Avatar>}>
                 </CardHeader>
                 <CardMedia>

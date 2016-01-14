@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 import _ from 'lodash';
 import async from 'async';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import spahql from 'spahql';
 import { connect } from 'react-redux';
 import { updatePath } from 'redux-simple-router';
