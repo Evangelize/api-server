@@ -382,7 +382,7 @@ class Dashboard extends Component {
               <Card>
                 <CardHeader
                   title={"Teachers"}
-                  subtitle={moment().isoWeekday(classDay.day).format("dddd")}
+                  subtitle={moment().format("dddd")}
                   avatar={<Avatar>T</Avatar>}>
                 </CardHeader>
                 <CardMedia>
