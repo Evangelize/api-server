@@ -218,7 +218,7 @@ class Schedules extends Component {
       teacher: teacher,
       divClass: divisionClass
     })
-    this.refs.snackbar.show();
+    this.handleEditDay(divClass, teacher, e);
   }
 
   handleSnackbarAction(e) {
@@ -265,6 +265,11 @@ class Schedules extends Component {
         {confirmed: !teacher.confirmed}
       )
     );
+  }
+
+  navigate(path, e) {
+    const { dispatch } = this.props;
+    dispatch(updatePath(path));
   }
 
   render() {
@@ -370,8 +375,8 @@ class Schedules extends Component {
             <nav className={"grey darken-1"}>
               <div className={"nav-wrapper"}>
                 <div className={"col s12 m12 l12"}>
-                  <a href="#!" className={"breadcrumb"}>Dashboard</a>
-                  <a href="#!" className={"breadcrumb"}>Schedules</a>
+                  <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
+                  <a className={"breadcrumb"}>Schedules</a>
                 </div>
               </div>
             </nav>
@@ -401,7 +406,7 @@ class Schedules extends Component {
         </Row>
         <Row>
               {::this.state.schedule.map((division, index) =>
-              <Col xs={12} sm={12} md={12} lg={6} key={division.id}>
+              <Col xs={12} sm={12} md={12} lg={12} key={division.id}>
                 <div style={{marginBottom: "10px"}}>
                   <Card>
                     <CardHeader
@@ -442,7 +447,27 @@ class Schedules extends Component {
                                 </TableRowColumn>
                                 {this.renderClassTeachers(divisionClass).map((teacherDay, index) =>
                                   <TableRowColumn key={teacherDay.day.day}>{teacherDay.teachers.map((teacher, index) =>
-                                    <FlatButton key={teacher.id} label={teacher.person.firstName+" "+teacher.person.lastName} secondary={true} onTouchTap={(...args) =>this.handleTeacherTouchTap(teacher, divisionClass, ...args)} labelPosition="after"><FontIcon style={(teacher.confirmed) ? {fontSize: "12px", color: Styles.Colors.green500} : {display: 'none'}} className="material-icons">check_circle</FontIcon></FlatButton>
+                                    <div key={teacherDay.id}>
+                                      <IconButton
+                                        style={{
+                                          float: "left"
+                                        }}
+                                        touch={true}
+                                        onTouchTap={((...args)=>this.confirmTeacher(divisionClass, teacherDay, teacher, ...args))}>
+                                      <ActionGrade
+                                        color={(teacher.confirmed) ? Styles.Colors.deepOrange500 : Styles.Colors.grey400} />
+                                      </IconButton>
+                                      <FlatButton
+                                        style={{
+                                          float: "left",
+                                          marginTop: "8px"
+                                        }}
+                                        key={teacher.id}
+                                        label={teacher.person.firstName+" "+teacher.person.lastName}
+                                        secondary={true}
+                                        onTouchTap={(...args) =>this.handleEditDay(divisionClass, teacherDay, ...args)}
+                                        labelPosition="after" />
+                                    </div>
                                   )}
                                   </TableRowColumn>
                                 )}
