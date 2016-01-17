@@ -382,7 +382,7 @@ class Dashboard extends Component {
               <Card>
                 <CardHeader
                   title={"Teachers"}
-                  subtitle={moment().format("dddd")}
+                  subtitle={moment().tz("America/Chicago").format("dddd")}
                   avatar={<Avatar>T</Avatar>}>
                 </CardHeader>
                 <CardMedia>
