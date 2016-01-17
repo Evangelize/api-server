@@ -32,6 +32,7 @@ import DropDownMenu from 'material-ui/lib/drop-down-menu';
 import FlatButton from 'material-ui/lib/flat-button';
 import Snackbar from 'material-ui/lib/snackbar';
 import ActionGrade from 'material-ui/lib/svg-icons/action/grade';
+import Divider from 'material-ui/lib/divider';
 import { Grid, Row, Col } from 'react-bootstrap';
 import { manageDivisionClassTeacher, getPeople } from '../actions';
 
@@ -282,7 +283,8 @@ class AddClassDayTeacher extends Component {
 
                   )}
                 </List>
-                <List>
+                <Divider />
+                <List subheader="Search Results">
                   {this.renderPeople().map((person, index) =>
                     <ListItem
                       key={person.id}
