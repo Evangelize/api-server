@@ -16,7 +16,7 @@ const routes = (
     <Route path="people" component={People} />
     <Route path="schedules" component={Schedules} />
     <Route path="attendance" component={Attendance} />
-    <Route path="attendance/:date" component={EditDayAttendance} />
+    <Route path="attendance/:dayId" component={EditDayAttendance} />
     <Route path="schedule/:divisionConfigId/:yearId/:divisionId/:classId/:day" component={AddClassDayTeacher} />
   </Route>
 );

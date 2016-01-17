@@ -43,14 +43,14 @@ class EditDayAttendance extends Component {
   componentWillMount() {
     console.log("EditDayAttendance:componentWillMount");
     const { configs, params, dispatch } = this.props;
-
+    //console.log("date", params.date);
     let db = spahql.db(configs.data);
-    let attendances = db.select("/*/divisionYears/*/divisions/*/divisionClasses/*/divisionClassAttendances/*[/attendanceDate =~ '^"+params.date+"']").values(),
-        weekday = attendances[0].day;
+    let attendances = db.select("/*/divisionYears/*/divisions/*/divisionClasses/*/divisionClassAttendances/"+params.dayId).values();
+    let weekday = attendances[0].day;
 
     this.delayedAttendanceUpdate = _.debounce(function (divClass, count, event) {
       //console.log(divClass, event.target.value, attendanceDay);
-      dispatch(updateClassAttendance(divClass.id, weekday, moment.utc(params.date+" 00:00:00Z").format('YYYY-MM-DD 00:00:00'), count));
+      dispatch(updateClassAttendance(divClass.id, weekday, moment.utc(attendances[0].attendanceDate).format("YYYY-MM-DD 00:00:00"), count));
     }, 500);
 
     this.setState({
@@ -105,9 +105,10 @@ class EditDayAttendance extends Component {
   }
 
   getClassAttendance(divClass) {
-    const { params } = this.props;
+    const { params } = this.props,
+          { attendances } = this.state;
     let db = spahql.db(divClass),
-        attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ '^"+params.date+"']").values();
+        attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ '^"+moment.utc(attendances[0].attendanceDate).format("YYYY-MM-DD")+"']").values();
     //console.log("getClassAttendance", divClass, attendance);
     if (attendance.length) {
       return attendance[0].count.toString();
@@ -120,11 +121,11 @@ class EditDayAttendance extends Component {
     const { dispatch, configs, params } = this.props,
           { attendances, weekday } = this.state,
           db = spahql.db(divClass),
-          attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ '^"+params.date+"']"),
+          attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ '^"+moment.utc(attendances[0].attendanceDate).format("YYYY-MM-DD")+"']"),
           exists = attendance.values.length,
           count = parseInt(e.target.value, 10);
     let attend = {},
-        today = moment.utc(params.date+" 00:00:00Z").format("YYYY-MM-DD")+"T00:00:00.000Z";
+        today = moment.utc(attendances[0].attendanceDate+" 00:00:00Z").format("YYYY-MM-DD")+"T00:00:00.000Z";
     e.persist();
     if (!exists) {
       attend = {
@@ -202,8 +203,9 @@ class EditDayAttendance extends Component {
 
   isUpdating(divClass) {
     const { params } = this.props;
+    const { attendances, weekday } = this.state;
     let db = spahql.db(divClass),
-        attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ '^"+params.date+"']").values();
+        attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ '^"+moment.utc(attendances[0].attendanceDate).format("YYYY-MM-DD")+"']").values();
 
     if (attendance.length && "updating" in attendance) {
       console.log("isUpdating", true);
@@ -252,8 +254,8 @@ class EditDayAttendance extends Component {
                 <Card>
                   <CardHeader
                     title={attendance.config.title+" Attendance"}
-                    subtitle={moment.utc(params.date+" 00:00:00Z").format("dddd MM/DD/YYYY")}
-                    avatar={<Avatar>{moment.utc(params.date+" 00:00:00Z").format("dd")}</Avatar>}>
+                    subtitle={moment.utc(attendances[0].attendanceDate+" 00:00:00Z").format("dddd MM/DD/YYYY")}
+                    avatar={<Avatar>{moment.utc(attendances[0].attendanceDate+" 00:00:00Z").format("dd")}</Avatar>}>
                   </CardHeader>
                   <CardMedia>
                     <Grid fluid={true}>
