@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 import Promise from 'bluebird';
 import Nes from 'nes/client';
+import moment from 'moment';
 import { createStore, compose, combineReducers, applyMiddleware } from 'redux';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import { Router, Route, Link } from 'react-router';
@@ -11,9 +12,21 @@ import promiseMiddleware from 'redux-promise-middleware';
 import routes from './routes';
 import { createHistory } from 'history';
 import app from './reducers';
+import loki from 'lokijs';
 import initialState from './initialState';
 
 // Grab the state from a global injected into server-generated HTML
+db = new loki('sandbox');
+collections.averageAttendance = db.addCollection('averageAttendance',{asyncListeners: true, disableChangesApi: true});
+collections.averageAttendance.insert(window.__initialData__.attendance.average);
+let latest = window.__initialData__.attendance.latest.map(function (item) {
+  item.attendanceDate = moment.utc(item.attendanceDate);
+  return item;
+});
+console.log(latest);
+collections.latestAttendance = db.addCollection('latestAttendance',{asyncListeners: true, disableChangesApi: true});
+collections.latestAttendance.insert(latest);
+
 const initState = window.__INITIAL_STATE__ || initialState();
 const store = applyMiddleware(promiseMiddleware())(createStore)(app, initState);
 const history = createHistory();

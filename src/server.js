@@ -170,6 +170,8 @@ export default function( HOST, PORT, callback ) {
                 <body>
                   <div id="root"><div>${reactString}</div></div>
                   <script>
+                    var db, collections = {};
+                    window.__initialData__ = ${JSON.stringify(data)};
                     window.__INITIAL_STATE__ = ${finalState};
                     window.__websocketUri = "${websocketUri}";
                   </script>
