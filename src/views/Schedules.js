@@ -160,11 +160,13 @@ class Schedules extends Component {
     const { configs } = this.props,
           { divisionConfig, academicYear } = this.state;
     let db = spahql.db(configs.data),
+        classDb = spahql.db(divClass),
         days = db.select("/*[/id == "+divisionConfig+"]/classMeetingDays/*").values(),
         classTeachers = [];
     //console.log(divClass);
     days.forEach(function(day, index){
-      let results = _.where(divClass.divisionClassTeachers, {day: day.day});
+      let results = classDb.select("//divisionClassTeachers/*/[/day == "+day.day+"]").values();
+      //console.log("teachers", day.day, results);
       if (results.length) {
         classTeachers.push({
           viewing: false,
@@ -447,7 +449,7 @@ class Schedules extends Component {
                                 </TableRowColumn>
                                 {this.renderClassTeachers(divisionClass).map((teacherDay, index) =>
                                   <TableRowColumn key={teacherDay.day.day}>{teacherDay.teachers.map((teacher, index) =>
-                                    <div key={teacherDay.id}>
+                                    <div key={teacher.id} style={{width: "100%"}}>
                                       <IconButton
                                         style={{
                                           float: "left"
@@ -496,7 +498,7 @@ class Schedules extends Component {
                                   }
                                   nestedItems={teacherDay.teachers.map((teacher, index) =>
                                       <ListItem
-                                        key={1}
+                                        key={teacher.id}
                                         primaryText={teacher.person.firstName+" "+teacher.person.lastName}
                                         leftIcon={
                                           <ActionGrade
