@@ -129,7 +129,8 @@ export default function( HOST, PORT, callback ) {
           type: types.GET_NOTES_FULFILLED,
           payload: data
         });
-        const finalState = JSON.stringify(store.getState());
+        const finalState = JSON.stringify(store.getState()),
+              finalData = JSON.stringify(data);
 
         match({ routes, location }, ( error, redirectLocation, renderProps ) => {
           if ( error || !renderProps ) {
@@ -171,7 +172,7 @@ export default function( HOST, PORT, callback ) {
                   <div id="root"><div>${reactString}</div></div>
                   <script>
                     var db, collections = {};
-                    window.__initialData__ = ${JSON.stringify(data)};
+                    window.__initialData__ = ${finalData};
                     window.__INITIAL_STATE__ = ${finalState};
                     window.__websocketUri = "${websocketUri}";
                   </script>
