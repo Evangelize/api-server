@@ -26,6 +26,7 @@
     "babel-runtime": "5.8.25",
     "bluebird": "^3.0.6",
     "chalk": "^1.1.1",
+    "deepcopy": "^0.6.1",
     "etag": "^1.7.0",
     "h2o2": "^4.0.1",
     "halogen": "^0.1.10",
