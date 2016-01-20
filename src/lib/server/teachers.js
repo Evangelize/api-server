@@ -131,4 +131,23 @@ export default {
       );
     });
   },
+  teachers() {
+    return new Promise(function(resolve, reject){
+      models.Teachers.findAll(
+        {
+          order: "id ASC"
+        }
+      ).then(
+        function(result) {
+          resolve(result);
+          return null;
+        },
+        function(err){
+          console.log(err);
+          reject(err);
+          return null;
+        }
+      );
+    });
+  }
 };

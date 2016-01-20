@@ -67,6 +67,23 @@ export default {
         }
       );
     });
+  },
+  divisionClassAttenance() {
+    return new Promise(function(resolve, reject){
+      models.DivisionClassAttendance.findAll(
+        {
+          order: "id ASC"
+        }
+      ).then(
+        function(attendance) {
+          resolve(attendance);
+        },
+        function(err){
+          console.log(err)
+          reject(err);
+        }
+      );
+    });
   }
 };
 

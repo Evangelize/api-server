@@ -327,4 +327,61 @@ export default {
       );
     });
   },
+  classes() {
+    return new Promise(function(resolve, reject){
+      models.Classes.findAll(
+        {
+          order: "id ASC"
+        }
+      ).then(
+        function(result) {
+          resolve(result);
+          return null;
+        },
+        function(err){
+          console.log(err);
+          reject(err);
+          return null;
+        }
+      );
+    });
+  },
+  divisionClasses() {
+    return new Promise(function(resolve, reject){
+      models.DivisionClasses.findAll(
+        {
+          order: "id ASC"
+        }
+      ).then(
+        function(result) {
+          resolve(result);
+          return null;
+        },
+        function(err){
+          console.log(err);
+          reject(err);
+          return null;
+        }
+      );
+    });
+  },
+  classMeetingDays() {
+    return new Promise(function(resolve, reject){
+      models.ClassMeetingDays.findAll(
+        {
+          order: "id ASC"
+        }
+      ).then(
+        function(result) {
+          resolve(result);
+          return null;
+        },
+        function(err){
+          console.log(err);
+          reject(err);
+          return null;
+        }
+      );
+    });
+  }
 };

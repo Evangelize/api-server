@@ -77,6 +77,63 @@ export default {
         }
       );
     });
+  },
+  divisionConfigs() {
+    return new Promise(function(resolve, reject){
+      models.DivisionConfigs.findAll(
+        {
+          order: "id ASC"
+        }
+      ).then(
+        function(result) {
+          resolve(result);
+          return null;
+        },
+        function(err){
+          console.log(err);
+          reject(err);
+          return null;
+        }
+      );
+    });
+  },
+  divisions() {
+    return new Promise(function(resolve, reject){
+      models.Divisions.findAll(
+        {
+          order: "id ASC"
+        }
+      ).then(
+        function(result) {
+          resolve(result);
+          return null;
+        },
+        function(err){
+          console.log(err);
+          reject(err);
+          return null;
+        }
+      );
+    });
+  },
+  divisionYears() {
+    return new Promise(function(resolve, reject){
+      models.DivisionYears.findAll(
+        {
+          order: "id ASC"
+        }
+      ).then(
+        function(result) {
+          resolve(result);
+          return null;
+        },
+        function(err){
+          console.log(err);
+          reject(err);
+          return null;
+        }
+      );
+    });
   }
 };
 
