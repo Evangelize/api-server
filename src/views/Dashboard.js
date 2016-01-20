@@ -188,7 +188,7 @@ class Dashboard extends Component {
   getGraphAttendance() {
     const { attendance } = this.props;
     let labels = attendance.data.latest.map(function(day, index){
-          return moment(day.attendanceDate, "YYYY-MM-DD HH:mm:ss").format("MM/DD");
+          return moment(day.attendanceDate).tz("America/Chicago").format("MM/DD");
         }).reverse(),
         series = attendance.data.latest.map(function(day, index){
           return parseInt(day.attendance,10);
@@ -378,7 +378,7 @@ class Dashboard extends Component {
                 lineChartOptions={lineChartOptions}
               />
             </Col>
-            <Col xs={12} sm={12} md={6} lg={6}>
+            <Col xs={12} sm={12} md={6} lg={6} style={(attendance.length) ? null : {display: 'none'}}>
               <Card>
                 <CardHeader
                   title={"Teachers"}
