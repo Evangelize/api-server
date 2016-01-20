@@ -17,16 +17,38 @@ module.exports = function (sequelize, DataTypes) {
       "workPhoneNumber": DataTypes.STRING,
       "cellPhoneNumber": DataTypes.STRING,
       "emailAddress": DataTypes.STRING,
-      "birthday": DataTypes.DATE,
+      "birthday": {
+        type: DataTypes.DATE,
+        get: function()  {
+          if (this.getDataValue('birthday')) {
+            return this.getDataValue('birthday').getTime();
+          } else {
+            return null;
+          }
+        }
+      },
       "nonChristian": { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
       "nonMember": { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
       "membershipStatus": DataTypes.STRING(1),
       "collegeStudent": { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
       "individualPhotoUrl": DataTypes.STRING,
       "familyPhotoUrl": DataTypes.STRING,
-      "createdAt": DataTypes.DATE,
+      "createdAt": {
+        type: DataTypes.DATE,
+        get: function()  {
+          if (this.getDataValue('createdAt')) {
+            return this.getDataValue('createdAt').getTime();
+          } else {
+            return null;
+          }
+        }
+      },
       "updatedAt": DataTypes.DATE,
-      "deletedAt": DataTypes.DATE
+      "deletedAt": DataTypes.DATE,
+      "revision": {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
+      }
     },
     {
       paranoid: true,

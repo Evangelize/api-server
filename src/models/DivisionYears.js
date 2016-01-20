@@ -4,11 +4,42 @@ module.exports = function (sequelize, DataTypes) {
     {
       "id": { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
       "divisionConfigId": DataTypes.INTEGER,
-      "startDate": DataTypes.DATE,
-      "endDate": DataTypes.DATE,
-      "createdAt": DataTypes.DATE,
+      "startDate": {
+        type: DataTypes.DATE,
+        get: function()  {
+          if (this.getDataValue('startDate')) {
+            return this.getDataValue('startDate').getTime();
+          } else {
+            return null;
+          }
+        }
+      },
+      "endDate": {
+        type: DataTypes.DATE,
+        get: function()  {
+          if (this.getDataValue('endDate')) {
+            return this.getDataValue('endDate').getTime();
+          } else {
+            return null;
+          }
+        }
+      },
+      "createdAt": {
+        type: DataTypes.DATE,
+        get: function()  {
+          if (this.getDataValue('createdAt')) {
+            return this.getDataValue('createdAt').getTime();
+          } else {
+            return null;
+          }
+        }
+      },
       "updatedAt": DataTypes.DATE,
-      "deletedAt": DataTypes.DATE
+      "deletedAt": DataTypes.DATE,
+      "revision": {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
+      }
     },
     {
       paranoid: true,

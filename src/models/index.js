@@ -12,7 +12,15 @@ var db        = {};
 if (config.use_env_variable) {
   var sequelize = new Sequelize(process.env[config.use_env_variable]);
 } else {
-  var sequelize = new Sequelize(config.mysql.database, config.mysql.username, config.mysql.password, config.mysql);
+  var sequelize = new Sequelize(
+    config.mysql.database,
+    config.mysql.username,
+    config.mysql.password,
+    config.mysql,
+    {
+      "timezone": "+00:00"
+    }
+  );
 }
 
 var Revisions = require("sequelize-revisions")(sequelize, {

@@ -14,8 +14,26 @@ module.exports = function (sequelize, DataTypes) {
       "typeId": DataTypes.INTEGER,
       "text": DataTypes.TEXT,
       "title": DataTypes.TEXT,
-      "reminderDate": DataTypes.DATE,
-      "createdAt": DataTypes.DATE,
+      "reminderDate": {
+        type: DataTypes.DATE,
+        get: function()  {
+          if (this.getDataValue('reminderDate')) {
+            return this.getDataValue('reminderDate').getTime();
+          } else {
+            return null;
+          }
+        }
+      },
+      "createdAt": {
+        type: DataTypes.DATE,
+        get: function()  {
+          if (this.getDataValue('createdAt')) {
+            return this.getDataValue('createdAt').getTime();
+          } else {
+            return null;
+          }
+        }
+      },
       "updatedAt": DataTypes.DATE,
       "deletedAt": DataTypes.DATE,
       "revision": {

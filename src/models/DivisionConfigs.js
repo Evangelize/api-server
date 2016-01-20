@@ -12,9 +12,22 @@ module.exports = function (sequelize, DataTypes) {
       "divisionDayStartText": { type: DataTypes.STRING, defaultValue: 'sunday' },
       "divisionDayEndOrdinal": { type: DataTypes.INTEGER, defaultValue: -1 },
       "divisionDayEndText": { type: DataTypes.STRING, defaultValue: 'wednesday' },
-      "createdAt": DataTypes.DATE,
+      "createdAt": {
+        type: DataTypes.DATE,
+        get: function()  {
+          if (this.getDataValue('createdAt')) {
+            return this.getDataValue('createdAt').getTime();
+          } else {
+            return null;
+          }
+        }
+      },
       "updatedAt": DataTypes.DATE,
-      "deletedAt": DataTypes.DATE
+      "deletedAt": DataTypes.DATE,
+      "revision": {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
+      }
     },
     {
       paranoid: true,
