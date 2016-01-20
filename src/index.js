@@ -19,13 +19,8 @@ import initialState from './initialState';
 db = new loki('sandbox');
 collections.averageAttendance = db.addCollection('averageAttendance',{asyncListeners: true, disableChangesApi: true});
 collections.averageAttendance.insert(window.__initialData__.attendance.average);
-let latest = window.__initialData__.attendance.latest.map(function (item) {
-  item.attendanceDate = moment.utc(item.attendanceDate);
-  return item;
-});
-console.log(latest);
 collections.latestAttendance = db.addCollection('latestAttendance',{asyncListeners: true, disableChangesApi: true});
-collections.latestAttendance.insert(latest);
+collections.latestAttendance.insert(window.__initialData__.attendance.latest);
 
 const initState = window.__INITIAL_STATE__ || initialState();
 const store = applyMiddleware(promiseMiddleware())(createStore)(app, initState);
