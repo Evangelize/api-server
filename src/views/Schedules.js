@@ -449,7 +449,7 @@ class Schedules extends Component {
                                 </TableRowColumn>
                                 {this.renderClassTeachers(divisionClass).map((teacherDay, index) =>
                                   <TableRowColumn key={teacherDay.day.day}>{teacherDay.teachers.map((teacher, index) =>
-                                    <div key={teacher.id} style={{width: "100%"}}>
+                                    <div key={teacher.id} style={{width: "100%", clear: "both"}}>
                                       <IconButton
                                         style={{
                                           float: "left"
