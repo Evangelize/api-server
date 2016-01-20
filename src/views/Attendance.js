@@ -33,6 +33,8 @@ class Attendance extends Component {
 
   componentDidMount() {
     const { dispatch, configs } = this.props;
+    let test = moment(window.__initialData__.attendance.latest[0].attendanceDate);
+    let t = test;
   }
 
   formatYears() {
