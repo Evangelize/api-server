@@ -18,14 +18,7 @@ module.exports = function (sequelize, DataTypes) {
       "cellPhoneNumber": DataTypes.STRING,
       "emailAddress": DataTypes.STRING,
       "birthday": {
-        type: DataTypes.DATE,
-        get: function()  {
-          if (this.getDataValue('birthday')) {
-            return this.getDataValue('birthday').getTime();
-          } else {
-            return null;
-          }
-        }
+        type: DataTypes.DATE
       },
       "nonChristian": { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
       "nonMember": { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
