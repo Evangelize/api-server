@@ -2,35 +2,79 @@ import { combineReducers } from 'redux';
 import undoable, { distinctState } from 'redux-undo';
 import { routeReducer as router } from 'redux-simple-router';
 import spahql from 'spahql';
-
+import loki from 'lokijs';
 import { VisibilityFilters } from './actions';
 import * as types from './constants';
 import initialState from './initialState.js';
 
 const { SHOW_ALL } = VisibilityFilters;
 
-function todos(state = [], action) {
+function divisionClassAttendance(state, action) {
+  //console.log("divisionClassAttendance", action, state);
   switch (action.type) {
-    case types.ADD_TODO:
-      return [...state, {
-        text: action.text,
-        completed: false
-      }];
-    case types.COMPLETE_TODO:
-      return [
-        ...state.slice(0, action.index),
-        Object.assign({}, state[action.index], {
-          completed: true
-        }),
-        ...state.slice(action.index + 1)
-      ];
     default:
-      return state;
-    }
+      return state || initialState().divisionClassAttendance;
+  }
+}
+
+function classes(state, action) {
+  switch (action.type) {
+    default:
+      return state || initialState().classes;
+  }
+}
+
+function classMeetingDays(state, action) {
+  switch (action.type) {
+    default:
+      return state || initialState().classMeetingDays;
+  }
+}
+
+function divisionClasses(state, action) {
+  switch (action.type) {
+    default:
+      return state || initialState().divisionClasses;
+  }
+}
+
+function divisionClassTeachers(state, action) {
+  switch (action.type) {
+    default:
+      return state || initialState().divisionClassTeachers;
+  }
+}
+
+function divisions(state, action) {
+  switch (action.type) {
+    default:
+      return state || initialState().divisionClasses;
+  }
+}
+
+function divisionYears(state, action) {
+  switch (action.type) {
+    default:
+      return state || initialState().divisionClasses;
+  }
+}
+
+function students(state, action) {
+  switch (action.type) {
+    default:
+      return state || initialState().divisionClasses;
+  }
+}
+
+function teachers(state, action) {
+  switch (action.type) {
+    default:
+      return state || initialState().divisionClasses;
+  }
 }
 
 function notes(state, action) {
-  console.log("notes", state);
+  //console.log("notes", action, state);
   let newstate = Object.assign({}, state),
       db, record;
   switch (action.type) {
@@ -56,7 +100,7 @@ function notes(state, action) {
 }
 
 function people(state, action) {
-  console.log("people", state);
+  //console.log("people", state);
   let newstate = Object.assign({}, state);
   switch (action.type) {
     case types.RECEIVE_PEOPLE_FULFILLED:
@@ -71,7 +115,7 @@ function people(state, action) {
 }
 
 function divisionConfigs(state, action) {
-  console.log("divisionConfigs", state);
+  //console.log("divisionConfigs", state);
   let newstate = Object.assign({}, state),
       db, divClass;
   switch (action.type) {
@@ -93,7 +137,7 @@ function divisionConfigs(state, action) {
 }
 
 function attendance(state, action) {
-  console.log("attendance", state);
+  //console.log("attendance", state);
   let newstate = Object.assign({}, state);
   switch (action.type) {
     case types.GET_ATTENDANCE_FULFILLED:
@@ -115,10 +159,18 @@ function attendance(state, action) {
 
 const app = combineReducers({
   routing: router,
-  notes: undoable(notes, { filter: distinctState(), debug: true }),
-  people: undoable(people, { filter: distinctState(), debug: true }),
-  divisionConfigs: undoable(divisionConfigs, { filter: distinctState(), debug: true }),
-  attendance: undoable(attendance, { filter: distinctState(), debug: true })
+  notes: notes,
+  divisionClassAttendance: divisionClassAttendance,
+  people: people,
+  divisionClasses: divisionClasses,
+  divisionClassTeachers: divisionClassTeachers,
+  divisionConfigs: divisionConfigs,
+  classMeetingDays: classMeetingDays,
+  classes: classes,
+  divisions: divisions,
+  divisionYears: divisionYears,
+  students: students,
+  teachers: teachers
 });
 
 export default app;

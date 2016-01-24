@@ -35,24 +35,27 @@ class DashboardComponentSmall extends Component {
 
   render() {
     let attendanceStyle = {
-          margin: '0',
-          lineHeight: '100%',
-          fontSize: '22px',
-          fontWeight: '300',
-          color: '#fff'
-        },
-        graphDivStyle = {
           backgroundColor: Styles.Colors.cyan500,
-          width: "45%",
+          width: "50%",
           display: 'flex',
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          height: "100%"
+          height: "100%",
+          fontSize: '35px',
+          fontWeight: '500',
+          color: '#fff'
         },
         statsDivStyle = {
-          padding: "10%",
-          width: "35%"
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: "100%",
+          padding: "0 0.5em",
+          width: "50%",
+          fontSize: '14px',
+          color: '#fff'
         },
         iconMenuStyle = {
           float: 'right',
@@ -77,14 +80,11 @@ class DashboardComponentSmall extends Component {
     } = this.props;
     return (
       <Paper zDepth={this.props.zDepth} style={this.props.style}>
-        <div ref="graphDiv" style={graphDivStyle}>
-          <Sparklines data={sparkLineData} width={120}>
-            <SparklinesBars style={{ stroke: Styles.Colors.cyan300, strokeWidth: "1", fill: "#fff" }} height={50} />
-          </Sparklines>
+        <div ref="graphDiv" style={attendanceStyle}>
+          {body}
         </div>
         <div style={statsDivStyle}>
-          <small>{title}</small>
-          <p style={attendanceStyle}>{body}</p>
+          {title}
         </div>
       </Paper>
     );

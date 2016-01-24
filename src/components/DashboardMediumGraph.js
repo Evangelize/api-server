@@ -64,13 +64,6 @@ class DashboardMediumGraph extends Component {
           title={this.props.title}
           subtitle={this.props.subtitle}
           avatar={this.props.avatar}>
-            <IconMenu style={iconMenuStyle} iconButtonElement={
-              <IconButton><MoreVertIcon /></IconButton>
-            }>
-              <MenuItem primaryText="Refresh" />
-              <MenuItem primaryText="Help" />
-              <MenuItem primaryText="Sign out" />
-            </IconMenu>
         </CardHeader>
         <CardMedia>
           <ChartistGraph data={this.props.lineChartData} options={this.props.lineChartOptions} type={'Line'} />

@@ -68,7 +68,7 @@ export default {
       );
     });
   },
-  divisionClassAttenance() {
+  divisionClassAttendance() {
     return new Promise(function(resolve, reject){
       models.DivisionClassAttendance.findAll(
         {

@@ -5,6 +5,7 @@ import path from 'path';
 import async from 'async';
 import nconf from 'nconf';
 import etag from 'etag';
+import loki from 'lokijs';
 
 // Hapi server imports
 import Hapi from 'hapi';
@@ -32,6 +33,7 @@ import models from '../src/models';
 import * as types from '../src/constants';
 import initialState from '../src/initialState';
 import api from '../src/lib/server';
+import utils from '../src/lib/utils';
 import createLocation from 'history/lib/createLocation';
 import createHistory from 'history/lib/createMemoryHistory';
 
@@ -111,26 +113,28 @@ export default function( HOST, PORT, callback ) {
     */
 
     server.ext( 'onPreResponse', ( request, reply ) => {
-      let retFunc = function(data) {
-        console.log("Initial Data:", data);
-        let initState = initialState();
+      let retFunc = function(data, db) {
+        let initState = (data) ? data : initialState();
         const store = applyMiddleware(promiseMiddleware())(createStore)(app, initState);
-        store.dispatch({
-          type: types.GET_DIVISION_CONFIGS_FULFILLED,
-          payload: data
-        });
+        /*
+          store.dispatch({
+            type: types.GET_DIVISION_CONFIGS_FULFILLED,
+            payload: data
+          });
 
-        store.dispatch({
-          type: types.GET_ATTENDANCE_FULFILLED,
-          payload: data
-        });
+          store.dispatch({
+            type: types.GET_ATTENDANCE_FULFILLED,
+            payload: data
+          });
 
-        store.dispatch({
-          type: types.GET_NOTES_FULFILLED,
-          payload: data
-        });
+          store.dispatch({
+            type: types.GET_NOTES_FULFILLED,
+            payload: data
+          });
+        */
         const finalState = JSON.stringify(store.getState()),
-              finalData = JSON.stringify(data);
+              finalData = JSON.stringify(data),
+              finalDb = db.serialize();
 
         match({ routes, location }, ( error, redirectLocation, renderProps ) => {
           if ( error || !renderProps ) {
@@ -148,7 +152,7 @@ export default function( HOST, PORT, callback ) {
             let settings = nconf.argv()
                .env()
                .file({ file: path.join(__dirname, '../config/settings.json') });
-            console.log("websocket",  path.join(__dirname, '../config/settings.json'), settings.get("websocket"));
+            //console.log("websocket",  path.join(__dirname, '../config/settings.json'), settings.get("websocket"));
             const script = process.env.NODE_ENV === 'production' ? '/dist/client.min.js' : '/hot/client.js',
                   websocketUri =  settings.get("websocket:host")+":"+settings.get("websocket:port");
             let output = (
@@ -171,7 +175,8 @@ export default function( HOST, PORT, callback ) {
                 <body>
                   <div id="root"><div>${reactString}</div></div>
                   <script>
-                    var db, collections = {};
+                    var dbJson = ${finalDb},
+                        db;
                     window.__initialData__ = ${finalData};
                     window.__INITIAL_STATE__ = ${finalState};
                     window.__websocketUri = "${websocketUri}";
@@ -200,117 +205,30 @@ export default function( HOST, PORT, callback ) {
       };
       const location = createLocation( request.path );
 
-      async.parallel(
-        {
-          divisionConfigs: function(callback){
-            api
-            .divisions
-            .getDivisionConfigs()
-            .then(
-              function(configs) {
-                async.map(
-                  configs,
-                  function(config, cb) {
-                    cb(null, config.get({ plain: true }))
-                  },
-                  function(err, result) {
-                    callback(null, result);
-                  }
-                );
-              },
-              function(err) {
-                console.log("Got division configs");
-                console.log(err);
-                callback(err);
-              }
-            );
-          },
-          attendance: function(callback) {
-            async.parallel(
-              {
-                latest: function(cback){
-                  api
-                  .attendance
-                  .latest()
-                  .then(
-                    function(results) {
-                      async.map(
-                        results,
-                        function(item, cb) {
-                          cb(null, item.get({ plain: true }))
-                        },
-                        function(err, result) {
-                          cback(null, result);
-                        }
-                      );
-                    },
-                    function(err) {
-                      console.log("Got latest attendance");
-                      console.log(err);
-                      cback(err);
-                    }
-                  );
-                },
-                average: function(cback){
-                  api
-                  .attendance
-                  .average()
-                  .then(
-                    function(results) {
-                      cback(null, results);
-                    },
-                    function(err) {
-                      console.log(err);
-                      cback(err);
-                    }
-                  );
-                }
-              },
-              function(err, results) {
-                console.log("Got attendance avg.");
-                if (err) {
-                  callback(err);
-                } else {
-                  callback(null, results);
-                }
-              }
-            );
-          },
-          notes: function(callback){
-            api
-            .notes
-            .get()
-            .then(
-              function(results) {
-                console.log("notes", results);
-                async.map(
-                  results,
-                  function(item, cb) {
-                    cb(null, item.get({ plain: true }))
-                  },
-                  function(err, result) {
-                    callback(null, result);
-                  }
-                );
-              },
-              function(err) {
-                console.log(err);
-                callback(err);
-              }
-            );
-          }
+      utils
+      .getAllTables()
+      .then(
+        function(results) {
+          let db = new loki('classes'),
+              data = {};
+          async.forEachOf(
+            results,
+            function (value, key, callback) {
+              let coll = db.addCollection(key,{asyncListeners: true, disableChangesApi: false});
+              coll.insert(value);
+              data[key] = coll;
+              callback(null);
+            },
+            function (err) {
+              retFunc(data, db);
+            }
+          )
         },
-        function(err, results) {
-          console.log("data", results);
-          if (err) {
-            console.log(err);
-            retFunc(null);
-          } else {
-            retFunc(results);
-          }
+        function(err) {
+          console.log(err);
+          retFunc(null);
         }
       );
-
     });
   });
   // Start Development Server

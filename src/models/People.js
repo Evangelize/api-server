@@ -20,7 +20,8 @@ module.exports = function (sequelize, DataTypes) {
       "birthday": {
         type: DataTypes.DATE,
         get: function()  {
-          if (this.getDataValue('birthday')) {
+
+          if (this.getDataValue('birthday') && this.getDataValue('birthday') !== "0000-00-00 00:00:00") {
             return this.getDataValue('birthday').getTime();
           } else {
             return null;

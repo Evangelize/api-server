@@ -149,5 +149,24 @@ export default {
         }
       );
     });
+  },
+  divisionClassTeachers() {
+    return new Promise(function(resolve, reject){
+      models.DivisionClassTeachers.findAll(
+        {
+          order: "id ASC"
+        }
+      ).then(
+        function(result) {
+          resolve(result);
+          return null;
+        },
+        function(err){
+          console.log(err);
+          reject(err);
+          return null;
+        }
+      );
+    });
   }
 };
