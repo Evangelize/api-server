@@ -15,14 +15,16 @@ import { createHistory } from 'history';
 import app from './reducers';
 import initialState from './initialState';
 let rehydrate = function() {
-  let collections = [
-    "notes",
-    "divisionClassAttendance"
-  ];
   db = new loki();
   db.loadJSON(JSON.stringify(window.dbJson));
   db.collections.forEach(function(coll, index){
     window.__INITIAL_STATE__[coll.name] = coll;
+    coll.on('update', function (target) {
+      console.log(coll, "update", target);
+    });
+    coll.on('insert', function (target) {
+      console.log(coll, "update", target);
+    });
   });
 
   return window.__INITIAL_STATE__;

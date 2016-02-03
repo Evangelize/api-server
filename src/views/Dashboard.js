@@ -36,7 +36,7 @@ import Editor from 'react-medium-editor';
 import { Grid, Row, Col } from 'react-bootstrap';
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/medium-editor.css';
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/themes/default.css';
-import { updateClassAttendance, updateNote, addNote, updateClassAttendanceLocal } from '../actions';
+import { updateClassAttendance, updateNote, addNote, divisionClassAttendanceAction } from '../actions';
 let Masonry = MasonryCtl(React);
 
 @Radium
@@ -88,7 +88,7 @@ class Dashboard extends Component {
         text: null
       },
       masonryOptions: {},
-      now: moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
+      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
     });
   }
 
@@ -197,34 +197,46 @@ class Dashboard extends Component {
   }
 
   attendanceUpdate(divClass, e) {
-    const { dispatch } = this.props,
+    const { dispatch, divisionClassAttendance } = this.props,
           { now } = this.state,
-          attendance = db.select("//divisionClassAttendances/*[/attendanceDate >= "+now+"]"),
-          exists = attendance.values().length,
+          oldObj = divisionClassAttendance.chain()
+                      .find(
+                        {
+                          '$and': [
+                            {
+                              'attendanceDate': {'$gte': now}
+                            },
+                            {
+                              'divisionClassId': {'$eq': divClass.id}
+                            }
+                          ]
+                        }
+                      ),
+          exists = oldObj.data().length,
           count = parseInt(e.target.value, 10);
-    let attend = {},
-        today = moment().format("YYYY-MM-DD")+"T00:00:00.000Z";
+    let type = "insert",
+        newObj = {},
+        today = moment().format("YYYY-MM-DD")+"T00:00:00.000Z",
+        ts = moment.utc().format("YYYY-MM-DDTHH:mm:ss.sssZ");
     e.persist();
     if (!exists) {
-      attend = {
-        attendanceDate: today,
+      newObj = {
+        attendanceDate: now,
         count: count,
-        createdAt: today,
+        createdAt: ts,
         day: moment().weekday(),
         deletedAt: null,
         divisionClassId: divClass.id,
         id: null,
         revision: null,
-        updatedAt: today,
-        updating: true
-      }
-      divClass.divisionClassAttendances.unshift(attend);
+        updatedAt: ts
+      };
     } else {
-      attendance[0].value.count = count;
-      attendance[0].value.updating = true;
+      type = "update";
+      newObj.count = count;
     }
-    dispatch(updateClassAttendanceLocal(divClass));
-    this.delayedAttendanceUpdate(divClass, count, e);
+    dispatch(divisionClassAttendanceAction(type, oldObj, newObj));
+    //this.delayedAttendanceUpdate(divClass, count, e);
   }
 
   getClassAttendance(divClass) {
@@ -416,8 +428,8 @@ class Dashboard extends Component {
       <div>
         <Grid fluid={true}>
           {divisionConfigs.data.map((divisionConfig, index) =>
+            <Row key={divisionConfig.id}>
             {this.displayAttendance(divisionConfig).map((attendance, index) =>
-              <Row key={attendance.config.id}>
                 <Col xs={12} sm={12} md={12} lg={12}>
                   <Card>
                     <CardHeader
@@ -448,8 +460,8 @@ class Dashboard extends Component {
                     </CardMedia>
                   </Card>
                 </Col>
-              </Row>
             )}
+            </Row>
           )}
           <Masonry className={"row"} options={masonryOptions}>
             <Col xs={12} sm={12} md={6} lg={6}>
@@ -462,7 +474,7 @@ class Dashboard extends Component {
               />
             </Col>
             {divisionConfigs.data.map((divisionConfig, index) =>
-              <Col xs={12} sm={12} md={6} lg={6} key={divisionConfig.id} style={(this.displayAttendance.length) ? null : {display: 'none'}}>
+              <Col xs={12} sm={12} md={6} lg={6} key={divisionConfig.id} style={(this.displayAttendance(divisionConfig).length) ? null : {display: 'none'}}>
                 <Card>
                   <CardHeader
                     title={"Teachers"}

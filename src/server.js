@@ -214,7 +214,7 @@ export default function( HOST, PORT, callback ) {
           async.forEachOf(
             results,
             function (value, key, callback) {
-              let coll = db.addCollection(key,{asyncListeners: true, disableChangesApi: false});
+              let coll = db.addCollection(key,{asyncListeners: true, disableChangesApi: false, clone: true});
               coll.insert(value);
               data[key] = coll;
               callback(null);

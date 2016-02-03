@@ -71,6 +71,15 @@ export function updateClassAttendance(divisionClassId, day, attendanceDate, coun
   };
 }
 
+export function divisionClassAttendanceAction(type, oldObj, newObj) {
+  type = type.toUpperCase() + "_DIVISION_CLASS_ATTENDANCE";
+  return {
+    type: types[type],
+    old: oldObj,
+    new: newObj
+  };
+}
+
 export function updateClassAttendanceLocal(divisionClass) {
   return {
     type: types.UPDATE_DIVISION_CLASS_ATTENDANCE_FULFILLED,
