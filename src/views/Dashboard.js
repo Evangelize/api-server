@@ -141,7 +141,7 @@ class Dashboard extends Component {
           db = spahql.db(divClass),
           attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ '^"+moment().format("YYYY-MM-DD")+"']"),
           exists = attendance.values.length,
-          count = parseInt(e.target.value, 10) || 0;
+          count = parseInt(e.target.value, 10);
     let attend = {},
         today = moment().format("YYYY-MM-DD")+"T00:00:00.000Z";
     e.persist();
