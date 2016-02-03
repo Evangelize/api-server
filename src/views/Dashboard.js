@@ -177,7 +177,7 @@ class Dashboard extends Component {
     if (attendance.length) {
       isToday = moment.utc(attendance[0].attendanceDate).isSame(day, 'day');
       if (isToday) {
-        let count = (attendance[0].count) ? attendance[0].count.toString() : "0";
+        let count = (attendance[0].count === null) ? "0" : attendance[0].count.toString();
         return count;
       } else {
         return "0";
