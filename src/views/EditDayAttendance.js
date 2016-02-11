@@ -115,13 +115,8 @@ class EditDayAttendance extends Component {
         isToday = false;
     console.log("getClassAttendance", divClass, attendance);
     if (attendance.length) {
-      isToday = moment.utc(attendance[0].attendanceDate).isSame(theDay, 'day');
-      if (isToday) {
-        let count = (attendance[0].count === null) ? "0" : attendance[0].count.toString();
-        return count;
-      } else {
-        return "0";
-      }
+      let count = (attendance[0].count) ? attendance[0].count.toString() : "0";
+      return count;
     } else {
       return "0";
     }
