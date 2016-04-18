@@ -2,8 +2,25 @@ module.exports = function (sequelize, DataTypes) {
   var Students = sequelize.define(
     'students',
     {
-      "id": { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-      "peopleId": DataTypes.INTEGER,
+      "id": {
+        type: DataTypes.BLOB,
+        primaryKey: true,
+        get: function()  {
+          return this.getDataValue('id').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('id', new Buffer(val, "hex"));
+        }
+      },
+      "peopleId":  {
+        type: DataTypes.BLOB,
+        get: function()  {
+          return this.getDataValue('peopleId').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('peopleId', new Buffer(val, "hex"));
+        }
+      },
       "createdAt": {
         type: DataTypes.DATE,
         get: function()  {

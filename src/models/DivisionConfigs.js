@@ -2,7 +2,16 @@ module.exports = function (sequelize, DataTypes) {
   var DivisionConfigs = sequelize.define(
     'divisionConfigs',
     {
-      "id": { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      "id": {
+        type: DataTypes.BLOB,
+        primaryKey: true,
+        get: function()  {
+          return this.getDataValue('id').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('id', new Buffer(val, "hex"));
+        }
+      },
       "title": { type: DataTypes.STRING, defaultValue: 'Children\'s Classes' },
       "divisionName": { type: DataTypes.ENUM('semester', 'quarter'), defaultValue: 'quarter' },
       "academicYearTitle": { type: DataTypes.STRING, defaultValue: 'Academic Year' },

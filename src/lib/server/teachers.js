@@ -168,5 +168,35 @@ export default {
         }
       );
     });
-  }
+  },
+  update(record) {
+    console.log(record);
+    return new Promise(function(resolve, reject){
+      record.id = new Buffer(record.id, 'hex');
+      models.DivisionClassTeachers.update(
+        record,
+        {
+          where: {
+            id: record.id
+          }
+        }
+      ).then(
+        function(rows) {
+          models.DivisionClassTeachers.findOne({
+            where: {
+              id: record.id
+            }
+          }).then(
+            function(result) {
+              resolve(result);
+            }
+          );
+        },
+        function(err){
+          console.log(err)
+          reject(err);
+        }
+      );
+    });
+  },
 };

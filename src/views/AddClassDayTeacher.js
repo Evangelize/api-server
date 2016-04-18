@@ -4,25 +4,26 @@ import _ from 'lodash';
 import async from 'async';
 import moment from 'moment-timezone';
 import spahql from 'spahql';
-import { connect } from 'react-redux';
-import { updatePath } from 'redux-simple-router';
-import { ActionCreators } from 'redux-undo';
+import { observer } from "mobx-react";
+import connect from '../components/connect';
+import { browserHistory } from 'react-router';
+
 import DashboardMedium from '../components/DashboardMedium';
 import ReactGridLayout from 'react-grid-layout';
 import Slider from 'react-slick';
-import Styles from 'material-ui/lib/styles';
+import * as Colors from 'material-ui/lib/styles/colors';
 import Avatar from 'material-ui/lib/avatar';
 import Card from 'material-ui/lib/card/card';
 import CardHeader from 'material-ui/lib/card/card-header';
 import CardMedia from 'material-ui/lib/card/card-media';
 import List from 'material-ui/lib/lists/list';
-import ListDivider from 'material-ui/lib/lists/list-divider';
+import ListDivider from 'material-ui/lib/divider';
 import ListItem from 'material-ui/lib/lists/list-item';
+import Subheader from 'material-ui/lib/Subheader/Subheader';
 import CheckCircle from 'material-ui/lib/svg-icons/action/check-circle';
 import TextField from 'material-ui/lib/text-field';
 import RaisedButton from 'material-ui/lib/raised-button';
 import FontIcon from 'material-ui/lib/font-icon';
-import DropDownIcon from 'material-ui/lib/drop-down-icon';
 import IconMenu from 'material-ui/lib/menus/icon-menu';
 import IconButton from 'material-ui/lib/icon-button';
 import MoreVertIcon from 'material-ui/lib/svg-icons/navigation/more-vert';
@@ -36,23 +37,24 @@ import Divider from 'material-ui/lib/divider';
 import { Grid, Row, Col } from 'react-bootstrap';
 import { manageDivisionClassTeacher, getPeople } from '../actions';
 
+@connect(state => ({
+  classes: state.classes
+}))
+@observer
 class AddClassDayTeacher extends Component {
   constructor(props, context) {
     super(props, context);
   }
 
   componentWillMount() {
-    const { configs, params } = this.props;
-
-    let db = spahql.db(configs.data);
-    let config = db.select("/*[/id == "+params.divisionConfigId+"]"),
-      classDay = config.select("/classMeetingDays/*[/day == "+parseInt(params.day,10)+"]"),
-      year = config.select("/divisionYears/*[/id == "+parseInt(params.yearId,10)+"]"),
-      division = year.select("/divisions/*[/id == "+parseInt(params.divisionId,10)+"]"),
-      divClass = division.select("/divisionClasses/*[/id == "+parseInt(params.classId,10)+"]");
-
+    const { classes, params } = this.props;
+    let divClass = classes.getDivisionClass(params.classId),
+        division = classes.getDivision(divClass.divisionClass.divisionId);
     this.setState({
+      divClass: divClass,
+      division: division,
       searchType: "lastName",
+      people: [],
       fixedHeader: true,
       fixedFooter: true,
       stripedRows: false,
@@ -70,26 +72,21 @@ class AddClassDayTeacher extends Component {
         message: "No teacher selected",
         action: "Add Teacher",
         selectedItem: null
-      },
-      config: config.value(),
-      classDay: classDay.value(),
-      year: year.value(),
-      division: division.value(),
-      divClassPath: divClass.paths()[0],
-      divClass: divClass.value()
+      }
     });
   }
 
   componentWillReceiveProps(nextProps) {
-    console.log(nextProps);
+    //console.log(nextProps);
   }
 
   componentDidMount() {
-    const { dispatch } = this.props;
+
   }
 
   formatYears() {
     const { configs } = this.props;
+
     let years = configs.data[this.state.divisionConfig].divisionYears;
     return years.map(function(year, index){
       return {
@@ -104,24 +101,9 @@ class AddClassDayTeacher extends Component {
   }
 
   renderClassTeachers() {
-    const { configs, params } = this.props;
-    const { divClassPath } = this.state;
-    let classTeachers = [],
-        db = spahql.db(configs.data),
-        divClass = db.select(divClassPath).value();
-    let results = _.where(divClass.divisionClassTeachers, {day: parseInt(params.day,10)});
-    return results;
-  }
-
-  renderPeople() {
-    const { configs, params, people } = this.props;
-    const { divClassPath } = this.state;
-    let classTeachers = [],
-        db = spahql.db(configs.data),
-        divClass = db.select(divClassPath).value();
-    let results = people.data.filter(function(person, index, array){
-      return !_.where(divClass.divisionClassTeachers, {peopleId: person.id}).length;
-    });
+    const { classes, params } = this.props;
+    const day = parseInt(params.day,10);
+    let results = classes.getDivisionClassTeachers(params.classId, day);
     return results;
   }
 
@@ -134,73 +116,67 @@ class AddClassDayTeacher extends Component {
   }
 
   handleSnackbarAction(e) {
-    const { dispatch } = this.props;
+
     let { divisionConfig, academicYear} = this.state,
         { teacher, divClass } = this.refs.snackbar.state,
         path = "/schedule/" + divisionConfig + "/" + academicYear + "/" + divClass.divisionId + "/" + divClass.id+ "/" + divClass.day.day;
-    dispatch(updatePath(path));
+    browserHistory.push(path);
   }
 
   _handleInputChange(e) {
-    const { people, dispatch } = this.props,
+    const { classes } = this.props,
           filter = e.target.value;
     if (filter.length > 1) {
-      dispatch(getPeople(people.key, e.target.value));
+      this.setState(
+        {people: classes.findPeople(filter, this.state.searchType)}
+      );
     }
   }
 
   handleSelectValueChange(e, index, value) {
     const { people } = this.props;
-    people.key = value;
+    this.setState({
+      searchType: value
+    });
   }
-  menuItemTap(person, item, event) {
-    const { dispatch, params, configs } = this.props;
-    const { config, classDay, year, division, divClassPath } = this.state;
-    let db = spahql.db(configs.data),
-        divClass = db.select(divClassPath).value(),
-        opts;
+  menuItemTap(teacher, item, event) {
+    const { params, classes } = this.props;
+    const { division, divClass } = this.state;
+    let opts;
+
     switch (item) {
       case "confirm":
-        opts = {confirmed: true};
+        classes.confirmTeacher(true, divClass.divisionClass.id, teacher.divClassTeacher.id);
         break;
       case "unconfirm":
-        opts = {confirmed: false};
+        classes.confirmTeacher(false, divClass.divisionClass.id, teacher.divClassTeacher.id);
         break;
-      default:
-        opts = null;
+      case "add":
+        classes.updateClassDayTeacher(divClass.divisionClass.id, parseInt(params.day, 10), teacher.id);
+        break;
+      case "delete":
+        classes.deleteRecord("divisionClassTeachers", teacher.divClassTeacher.id);
         break;
     };
-    dispatch(
-      manageDivisionClassTeacher(
-        item,
-        config.id,
-        year.id,
-        division.id,
-        divClass.id,
-        classDay.day,
-        person.id,
-        opts
-      )
-    );
   }
 
   navigate(path, e) {
-    const { dispatch } = this.props;
-    dispatch(updatePath(path));
+    browserHistory.push(path);
   }
 
   render() {
-    const { dispatch, params, configs, people, ...props } = this.props,
-          { config, classDay, year, division, divClassPath, searchType } = this.state;
-    console.log("divClassPath", divClassPath);
-    let db = spahql.db(configs.data),
-        divClass = db.select(divClassPath).value(),
-        iconMenuStyle = {
+    const { params, classes, ...props } = this.props;
+    const { searchType } = this.state;
+    //console.log("divClassPath", divClassPath);
+    let iconMenuStyle = {
           float: 'right',
           verticalAlign: 'top'
         },
         dropDownStyle = {
           marginTop: "15px"
+        },
+        star = {
+          color: Colors.deepOrange500
         },
         menuItems = [
            { payload: 'lastName', text: 'Last Name' },
@@ -212,7 +188,7 @@ class AddClassDayTeacher extends Component {
             touch={true}
             tooltip="more"
             tooltipPosition="bottom-left">
-            <MoreVertIcon color={Styles.Colors.grey400} />
+            <MoreVertIcon color={Colors.grey400} />
           </IconButton>
         ),
         rightIconMenu = (
@@ -228,7 +204,7 @@ class AddClassDayTeacher extends Component {
           <Col xs={12} sm={12} md={12} lg={12}>
             <nav className={"grey darken-1"}>
               <div className={"nav-wrapper"}>
-                <div className={"col s12 m12 l12 truncate"}>
+                <div style={{margin: "0 0.5em"}}>
                   <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
                   <a href="#!" onTouchTap={((...args)=>this.navigate("/schedules", ...args))} className={"breadcrumb"}>Schedules</a>
                   <a className={"breadcrumb"}>Edit</a>
@@ -253,7 +229,7 @@ class AddClassDayTeacher extends Component {
               className={"searchBox"}
               ref="searchField"
               floatingLabelText="Search"
-              defaultValue={people.filter}
+              defaultValue={classes.peopleFilter}
               onChange={::this._handleInputChange} />
           </Col>
         </Row>
@@ -261,21 +237,27 @@ class AddClassDayTeacher extends Component {
           <Col xs={12} sm={12} md={12} lg={12}>
             <Card>
               <CardHeader
-                title={divClass.class.title}
-                subtitle={moment().isoWeekday(classDay.day).format("dddd") + " " + division.title + " " +  moment(year.endDate).format("YYYY")}
-                avatar={<Avatar>{moment().isoWeekday(classDay.day).format("dd")}</Avatar>}>
+                title={this.state.divClass.class.title}
+                subtitle={moment().isoWeekday(params.day).format("dddd") + " " + this.state.division.title + " " +  moment(this.state.division.startDate).format("YYYY")}
+                avatar={<Avatar>{moment().isoWeekday(params.day).format("dd")}</Avatar>}>
               </CardHeader>
               <CardMedia>
-                <List subheader="Assigned">
+                <List>
+                  <Subheader>Assigned</Subheader>
                   {this.renderClassTeachers().map((teacher, index) =>
                     <ListItem
-                      key={teacher.id}
-                      leftIcon={(teacher.confirmed) ? <ActionGrade color={Styles.Colors.deepOrange500} /> : null}
+                      key={teacher.divClassTeacher.id}
+                      primaryText={teacher.person.lastName+", "+teacher.person.firstName}
+                      leftIcon={
+                        <ActionGrade
+                          onTouchTap={((...args)=>this.confirmTeacher(divClass, teacherDay, teacher, ...args))}
+                          style={{ fill: (teacher.divClassTeacher.confirmed) ? Colors.deepOrange500 : Colors.grey400}} />
+                      }
                       rightIconButton={
                         <IconMenu iconButtonElement={iconButtonElement}>
-                          <MenuItem style={(teacher.confirmed) ? null : {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'unconfirm', ...args))}>Unconfirm</MenuItem>
-                          <MenuItem style={(!teacher.confirmed) ? null : {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'confirm', ...args))}>Confirm</MenuItem>
-                          <MenuItem style={(teacher.id) ? null: {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'delete', ...args))}>Delete</MenuItem>
+                          <MenuItem style={(teacher.divClassTeacher.confirmed) ? null : {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'unconfirm', ...args))}>Unconfirm</MenuItem>
+                          <MenuItem style={(!teacher.divClassTeacher.confirmed) ? null : {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'confirm', ...args))}>Confirm</MenuItem>
+                          <MenuItem style={(teacher.divClassTeacher.id) ? null: {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'delete', ...args))}>Delete</MenuItem>
                         </IconMenu>
                       }
                       primaryText={teacher.person.lastName+', '+teacher.person.firstName} >
@@ -284,10 +266,11 @@ class AddClassDayTeacher extends Component {
                   )}
                 </List>
                 <Divider />
-                <List subheader="Search Results">
-                  {this.renderPeople().map((person, index) =>
+                <List>
+                  <Subheader>Search Results</Subheader>
+                  {this.state.people.map((person, index) =>
                     <ListItem
-                      key={person.id}
+                      key={index}
                       rightIconButton={
                         <IconMenu iconButtonElement={iconButtonElement}>
                           <MenuItem onTouchTap={((...args)=>this.menuItemTap(person, 'add', ...args))}>Add</MenuItem>
@@ -305,16 +288,4 @@ class AddClassDayTeacher extends Component {
     );
   }
 }
-
-AddClassDayTeacher.propTypes = {
-  dispatch: PropTypes.func.isRequired
-};
-
-function select(state) {
-  return {
-    configs: state.divisionConfigs.present,
-    people: state.people.present
-  };
-}
-
-export default connect(select)(AddClassDayTeacher);
+export default AddClassDayTeacher;

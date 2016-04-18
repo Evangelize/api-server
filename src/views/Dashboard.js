@@ -4,8 +4,9 @@ import moment from 'moment-timezone';
 import spahql from 'spahql';
 import MasonryCtl from 'react-masonry-component';
 import Radium from 'radium';
-import { connect } from 'react-redux';
-import { ActionCreators } from 'redux-undo';
+import { observer } from "mobx-react";
+import connect from '../components/connect';
+import { browserHistory } from 'react-router';
 import DashboardComponentSmall from '../components/DashboardComponentSmall';
 import DashboardMediumGraph from '../components/DashboardMediumGraph';
 import ReactGridLayout from 'react-grid-layout';
@@ -30,19 +31,26 @@ import IconButton from 'material-ui/lib/icon-button';
 import CircularProgress from 'material-ui/lib/circular-progress';
 import List from 'material-ui/lib/lists/list';
 import ListItem from 'material-ui/lib/lists/list-item';
+import Subheader from 'material-ui/lib/Subheader/Subheader';
 import Divider from 'material-ui/lib/divider';
 import ActionGrade from 'material-ui/lib/svg-icons/action/grade';
 import Editor from 'react-medium-editor';
 import { Grid, Row, Col } from 'react-bootstrap';
+
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/medium-editor.css';
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/themes/default.css';
 import { updateClassAttendance, updateNote, addNote, divisionClassAttendanceAction } from '../actions';
 let Masonry = MasonryCtl(React);
 
-@Radium
+@connect(state => ({
+  classes: state.classes,
+  settings: state.settings
+}))
+@observer
 class Dashboard extends Component {
-  constructor(props) {
-    super(props);
+  constructor(props, context){
+    super(props, context);
+    //this.attendanceUpdate = _.debounce(this.attendanceUpdate, 2000);
   }
 
   resize() {
@@ -66,16 +74,17 @@ class Dashboard extends Component {
   }
 
   componentWillMount() {
-    const { dispatch, divisionConfigs, classMeetingDays } = this.props;
+    const { classes, settings } = this.props;
     let today = moment().weekday();
+    settings.authenticated = true;
 
     this.delayedAttendanceUpdate = _.debounce(function (divClass, count, event) {
       //console.log(divClass, event.target.value, attendanceDay);
-      dispatch(updateClassAttendance(divClass.id, today, moment().format('YYYY-MM-DD 00:00:00'), count));
+      classes.updateClassAttendance(divClass.id, today, moment().format('YYYY-MM-DD 00:00:00'), count);
     }, 500);
 
     this.delayedNoteUpdate = _.debounce(function (note, changes) {
-      dispatch(updateNote(note, changes));
+      //dispatch(updateNote(note, changes));
     }, 500);
 
 
@@ -98,185 +107,80 @@ class Dashboard extends Component {
   }
 
   displayAttendance(divisionConfig) {
-    const { classMeetingDays, divisions, classes, divisionClasses } = this.props,
+    const { classes } = this.props,
           { now } = this.state;
     //console.log("displayAttendance", classes);
-    let today = 0, //moment().weekday(),
-        division = divisions.chain().find({'end': {'$gte': now}}).simplesort('end').limit(1).data()[0],
-        classDay = classMeetingDays.find({
-          '$and': [
-            {
-              'day': {
-                '$eq': today
-              }
-            },
-            {
-              'divisionConfigId': {
-                '$eq': divisionConfig.id
-              }
-            }
-          ]
-        }),
-        divClasses = divisionClasses
-                  .chain()
-                  .find({'divisionId': {'$eq': division.id}})
-                  .eqJoin(classes.data, 'classId', 'id', function (left, right) {
-                    return {
-                      class: right,
-                      divisionClass: left
-                    }
-                  });
+    let today = moment().weekday(),
+        division = classes.getCurrentDivision(now),
+        classDay = classes.getCurrentDivisionMeetingDays(divisionConfig, today),
+        divClasses = classes.getCurrentDivisionClasses(division.id);
     if (!Array.isArray(classDay) && classDay !== null) {
       classDay = [classDay];
     } else if (classDay === null) {
       classDay = [];
     }
     let results = classDay.map(function(day, index){
-      day.classes = divClasses.data();
+      day.classes = divClasses;
       day.config = divisionConfig;
     });
-    console.log("classDay", classDay);
+    //console.log("classDay", classDay);
     return classDay;
   }
 
   getClasses(divisionConfig) {
-    const { classMeetingDays, divisions, classes, divisionClasses } = this.props,
+    const { classes } = this.props,
           { now } = this.state;
     let today = moment().weekday(),
-        division = divisions.chain().find({'end': {'$gte': now}}).simplesort('end').limit(1).data()[0],
-        classDay = classMeetingDays.find({
-          '$and': [
-            {
-              'day': {
-                '$eq': today
-              }
-            },
-            {
-              'divisionConfigId': {
-                '$eq': divisionConfig.id
-              }
-            }
-          ]
-        }),
-        divClasses = divisionClasses
-                  .chain()
-                  .find({'divisionId': {'$eq': division.id}})
-                  .eqJoin(classes.data, 'classId', 'id', function (left, right) {
-                    return {
-                      class: right,
-                      divisionClass: left
-                    }
-                  });
-    return divClasses.data();
+        division = classes.getCurrentDivision(now),
+        classDay = classes.getCurrentDivisionMeetingDays(divisionConfig, today),
+        divClasses = classes.getCurrentDivisionClasses(division.id);
+    return divClasses;
   }
 
   displayTeachers(divClass) {
-    const { divisionClassTeachers, people, divisionClasses } = this.props,
+    const { classes } = this.props,
           { now } = this.state,
           classDay = divClass.class.day,
           divisionClassId = divClass.divisionClass.id;
-    //console.log("divisionClassTeachers", divisionClassTeachers);
     let today = moment().weekday(),
-        teachers = divisionClassTeachers
-                  .chain()
-                  .find(
-                    {
-                      '$and': [
-                        {'divisionClassId': {'$eq': divisionClassId}},
-                        {'classDay': {'$eq': classDay}}
-                      ]
-                    }
-                  )
-                  .eqJoin(people.data, 'peopleId', 'id', function (left, right) {
-                    return {
-                      person: right,
-                      divClassTeacher: left
-                    }
-                  });
-    return teachers.data();
+        teachers = classes.getCurrentClassTeachers(divisionClassId);
+    return teachers;
   }
 
   attendanceUpdate(divClass, e) {
-    const { dispatch, divisionClassAttendance } = this.props,
-          { now } = this.state,
-          oldObj = divisionClassAttendance.chain()
-                      .find(
-                        {
-                          '$and': [
-                            {
-                              'attendanceDate': {'$gte': now}
-                            },
-                            {
-                              'divisionClassId': {'$eq': divClass.id}
-                            }
-                          ]
-                        }
-                      ),
-          exists = oldObj.data().length,
-          count = parseInt(e.target.value, 10);
-    let type = "insert",
-        newObj = {},
-        today = moment().format("YYYY-MM-DD")+"T00:00:00.000Z",
-        ts = moment.utc().format("YYYY-MM-DDTHH:mm:ss.sssZ");
-    e.persist();
-    if (!exists) {
-      newObj = {
-        attendanceDate: now,
-        count: count,
-        createdAt: ts,
-        day: moment().weekday(),
-        deletedAt: null,
-        divisionClassId: divClass.id,
-        id: null,
-        revision: null,
-        updatedAt: ts
-      };
-    } else {
-      type = "update";
-      newObj.count = count;
-    }
-    dispatch(divisionClassAttendanceAction(type, oldObj, newObj));
-    //this.delayedAttendanceUpdate(divClass, count, e);
+    const { classes } = this.props,
+          { now } = this.state;
+    classes.updateClassAttendance(divClass.divisionClass.id, now, e.target.value);
   }
 
   getClassAttendance(divClass) {
     const { now } = this.state,
-          { divisionClassAttendance } = this.props;
-    let attendance = divisionClassAttendance.chain()
-              .find(
-                {
-                  '$and': [
-                    {
-                      'attendanceDate': {'$gte': now}
-                    },
-                    {
-                      'divisionClassId': {'$eq': divClass.id}
-                    }
-                  ]
-                }
-              )
-              .data(),
+          { classes } = this.props;
+    let attendance = classes.getClassAttendanceToday(divClass.divisionClass.id),
         day = moment().format("YYYY-MM-DD"),
         isToday = false;
     //console.log("getClassAttendance", divClass, attendance);
     if (attendance.length) {
+      /*
       isToday = moment.utc(attendance[0].attendanceDate).tz('America/Chicago').isSame(day, 'day');
       if (isToday) {
         return attendance[0].count.toString();
       } else {
         return "0";
       }
+      */
+      return attendance[0].count.toString();
     } else {
       return "0";
     }
   }
 
-  getGraphAttendance() {
-    const { latestAttendance } = this.props;
-    let labels = latestAttendance.map(function(day, index){
+  getGraphAttendance(day, length) {
+    const { classes } = this.props;
+    let labels = classes.latestAttendance(day, length).map(function(day, index){
           return moment.utc(day.attendanceDate).tz("America/Chicago").format("MM/DD");
         }),
-        series = latestAttendance.map(function(day, index){
+        series = classes.latestAttendance(day, length).map(function(day, index){
           return parseInt(day.attendance,10);
         });
     //console.log("graphAttendance", labels, series);
@@ -307,7 +211,6 @@ class Dashboard extends Component {
   }
 
   handleDialogClose(e) {
-    const { dispatch } = this.props;
     if (!this.state.currentNote.id) {
       let title = (this.refs.title.getValue().length) ? this.refs.title.getValue() : null;
       this.setState({
@@ -317,11 +220,13 @@ class Dashboard extends Component {
           title: title
         }
       });
+      /*
       dispatch(
         addNote(
           this.state.currentNote
         )
       );
+      */
     }
     this.setState({
       showDialog: false
@@ -358,8 +263,8 @@ class Dashboard extends Component {
   }
 
   getNotes() {
-    const { notes } = this.props;
-    var results = notes.chain().find().simplesort('createdAt').data();
+    const { classes } = this.props;
+    let results = classes.getNotes();
     return results;
   }
 
@@ -374,9 +279,10 @@ class Dashboard extends Component {
     });
   }
 
-  handleNoteDelete(e) {
+  handleNoteDelete(note, e) {
     e.stopPropagation();
-    console.log("Delete", e);
+    const { classes } = this.props;
+    classes.deleteRecord("notes", note.id);
   }
 
   highlightText(e) {
@@ -386,7 +292,7 @@ class Dashboard extends Component {
   }
 
   render() {
-    const { dispatch, divisionConfigs, divisions, attendance, notes, classMeetingDays, avgAttendance, ...props } = this.props;
+    const { classes, ...props } = this.props;
     const { masonryOptions, now } = this.state;
     let paperStyle = {
           display: 'flex',
@@ -424,13 +330,14 @@ class Dashboard extends Component {
           size: '8px'
         },
         today = moment().weekday();
+    //console.log("classes.divisionConfigs:", classes);
     return (
       <div>
         <Grid fluid={true}>
-          {divisionConfigs.data.map((divisionConfig, index) =>
-            <Row key={divisionConfig.id}>
+          {classes.getDivisionConfigs().map((divisionConfig, index) =>
+            <Row key={index}>
             {this.displayAttendance(divisionConfig).map((attendance, index) =>
-                <Col xs={12} sm={12} md={12} lg={12}>
+                <Col xs={12} sm={12} md={12} lg={12} key={index}>
                   <Card>
                     <CardHeader
                       title={attendance.config.title+" Attendance"}
@@ -438,9 +345,10 @@ class Dashboard extends Component {
                       avatar={<Avatar>{moment().format("dd")}</Avatar>}>
                     </CardHeader>
                     <CardMedia>
-                      <Grid fluid={true}>
+                      <Grid fluid={true} key={1}>
+                        <Row>
                         {attendance.classes.map((divClass, index) =>
-                          <Col style={{display: "flex", alignItems: "center", justifyContent: "center"}} key={divClass.id} xs={12} sm={6} md={4} lg={3}>
+                          <Col style={{display: "flex", alignItems: "center", justifyContent: "center"}} key={index} xs={12} sm={6} md={4} lg={3}>
                             <div style={{width: "85%"}}>
                               <TextField
                                 type="number"
@@ -456,6 +364,7 @@ class Dashboard extends Component {
                             <div style={{width: "13%", margin: "0 1%", height: "50px", overflow: "hidden"}}><CircularProgress style={{display: (this.isUpdating(divClass)) ? "block" : "none"}} size={0.35} mode="indeterminate" /></div>
                           </Col>
                         )}
+                        </Row>
                       </Grid>
                     </CardMedia>
                   </Card>
@@ -464,28 +373,31 @@ class Dashboard extends Component {
             </Row>
           )}
           <Masonry className={"row"} options={masonryOptions}>
-            <Col xs={12} sm={12} md={6} lg={6}>
-              <DashboardMediumGraph
-                title={"Attendance"}
-                subtitle={"Past 8 weeks"}
-                avatar={<Avatar>A</Avatar>}
-                lineChartData={::this.getGraphAttendance()}
-                lineChartOptions={lineChartOptions}
-              />
-            </Col>
-            {divisionConfigs.data.map((divisionConfig, index) =>
-              <Col xs={12} sm={12} md={6} lg={6} key={divisionConfig.id} style={(this.displayAttendance(divisionConfig).length) ? null : {display: 'none'}}>
+            {classes.getClassMeetingDays().map((day, index) =>
+              <Col xs={12} sm={12} md={6} lg={6} key={index}>
+                <DashboardMediumGraph
+                  title={moment().weekday(day.day).format("dddd") + " Attendance"}
+                  subtitle={"Past 8 weeks"}
+                  avatar={<Avatar>A</Avatar>}
+                  lineChartData={::this.getGraphAttendance(day.day, 8)}
+                  lineChartOptions={lineChartOptions}
+                />
+              </Col>
+            )}
+            {classes.getDivisionConfigs().map((divisionConfig, index) =>
+              <Col xs={12} sm={12} md={6} lg={6} key={index} style={(this.displayAttendance(divisionConfig).length) ? null : {display: 'none'}}>
                 <Card>
                   <CardHeader
-                    title={"Teachers"}
+                    title={divisionConfig.title + " Teachers"}
                     subtitle={moment().tz("America/Chicago").format("dddd")}
                     avatar={<Avatar>T</Avatar>}>
                   </CardHeader>
                   <CardMedia>
                     {::this.getClasses(divisionConfig).map((divClass, index) =>
-                      <div key={divClass.id}>
+                      <div key={index}>
                         <Divider />
-                        <List subheader={divClass.class.title}>
+                        <List>
+                          <Subheader>{divClass.class.title}</Subheader>
                           {this.displayTeachers(divClass).map((teacher, index) =>
                             <ListItem
                               key={teacher.divClassTeacher.id}
@@ -505,13 +417,13 @@ class Dashboard extends Component {
               </Col>
             )}
             <Col xs={12} sm={12} md={6} lg={6}>
-              {classMeetingDays.find().map((day, index) =>
-                <Col xs={12} sm={6} md={6} lg={6} key={day.id}>
+              {classes.getClassMeetingDays().map((day, index) =>
+                <Col xs={12} sm={6} md={6} lg={6} key={index}>
                   <DashboardComponentSmall
                     zDepth={1}
                     sparkLineData={[5, 10, 5, 20, 5, 30, 25, 10, 18, 32, 22, 28, 30, 21, 45, 29, 33, 18, 10, 15]}
                     title={"Avg. Attendance "+moment().weekday(day.day).format("dddd")}
-                    body={avgAttendance(day.day)}
+                    body={classes.avgAttendance(day.day)}
                     style={paperStyle}
                   />
                 </Col>
@@ -543,7 +455,7 @@ class Dashboard extends Component {
                           iconClassName="material-icons"
                           tooltipPosition="top-center"
                           tooltip="Delete"
-                          onTouchTap={::this.handleNoteDelete}>
+                          onTouchTap={((...args)=>this.handleNoteDelete(note, ...args))}>
                             delete
                         </IconButton>
                       </CardActions>
@@ -581,10 +493,6 @@ class Dashboard extends Component {
   }
 }
 
-Dashboard.propTypes = {
-  dispatch: PropTypes.func.isRequired
-};
-
 const styles = {
   noteSmall: {
     width: '48%',
@@ -605,60 +513,4 @@ const styles = {
   }
 };
 
-function select(state) {
-  //console.log("divisionConfigs", state.divisionConfigs);
-  let latestAttendance = function() {
-        let now = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(1, "month").valueOf(),
-            latest = state.divisionClassAttendance.chain()
-              .find({'attendanceDate': {'$gte': now}})
-              .limit(8)
-              .simplesort("attendanceDate")
-              .data()
-              .reduce(
-                function(map, day){
-                  map[day.attendanceDate] = (map[day.attendanceDate] || 0) + day.count;
-                  return map;
-                },
-                Object.create(null)
-              );
-        return Object.keys(latest).map(function(k) { return {attendance: latest[k], attendanceDate: parseInt(k, 10)}; });
-      };
-  return {
-    divisionConfigs: state.divisionConfigs,
-    attendance: state.attendance,
-    notes: state.notes,
-    classMeetingDays: state.classMeetingDays,
-    divisionClasses: state.divisionClasses,
-    classes: state.classes,
-    divisionClassAttendance: state.divisionClassAttendance,
-    latestAttendance: latestAttendance(),
-    divisions: state.divisions,
-    divisionClassTeachers: state.divisionClassTeachers,
-    people: state.people,
-    avgAttendance: function(day) {
-      day = day || 0;
-      let now = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(1, "month").valueOf();
-      return state.divisionClassAttendance.chain()
-        .find({'attendanceDate': {'$gte': now}})
-        .mapReduce(
-          function( obj ){
-            return (obj.day === day) ? obj.count : null;
-          },
-          function ( array ){
-            var cumulator = 0;
-            var i = array.length >>> 0;
-            var actual = 0;
-            while(i--){
-              if(array[i] !== null){
-                cumulator += array[i];
-                actual++;
-              }
-            }
-            return ( cumulator / actual).toFixed(2);
-          }
-        );
-    }
-  };
-}
-
-export default connect(select)(Dashboard);
+export default Dashboard;

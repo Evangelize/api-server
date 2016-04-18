@@ -11,7 +11,7 @@ import initialState from './initialState.js';
 const { SHOW_ALL } = VisibilityFilters;
 
 function divisionClassAttendance(state, action) {
-  console.log("divisionClassAttendance", action, state);
+  //console.log("divisionClassAttendance", action, state);
   switch (action.type) {
     case types.INSERT_DIVISION_CLASS_ATTENDANCE:
       action.new.id = iouuid.generate();

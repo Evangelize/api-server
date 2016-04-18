@@ -2,7 +2,16 @@ module.exports = function (sequelize, DataTypes) {
   var Classes = sequelize.define(
     'classes',
     {
-      "id": { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      "id": {
+        type: DataTypes.BLOB,
+        primaryKey: true,
+        get: function()  {
+          return this.getDataValue('id').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('id', new Buffer(val, "hex"));
+        }
+      },
       "title": DataTypes.STRING,
       "description": DataTypes.STRING,
       "createdAt": {

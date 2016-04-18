@@ -1,27 +1,19 @@
 module.exports = function (sequelize, DataTypes) {
-  var ClassMeetingDays = sequelize.define(
-    'classMeetingDays',
+  var Users = sequelize.define(
+    'users',
     {
-      "id": {
+      "peopleId": {
         type: DataTypes.BLOB,
         primaryKey: true,
         get: function()  {
-          return this.getDataValue('id').toString('hex');
+          return this.getDataValue('peopleId').toString('hex');
         },
         set: function(val) {
-          this.setDataValue('id', new Buffer(val, "hex"));
+          this.setDataValue('peopleId', new Buffer(val, "hex"));
         }
       },
-      "divisionConfigId": {
-        type: DataTypes.BLOB,
-        get: function()  {
-          return this.getDataValue('divisionConfigId').toString('hex');
-        },
-        set: function(val) {
-          this.setDataValue('divisionConfigId', new Buffer(val, "hex"));
-        }
-      },
-      "day": DataTypes.INTEGER,
+      "password": DataTypes.STRING,
+      "active": DataTypes.BOOLEAN,
       "createdAt": {
         type: DataTypes.DATE,
         get: function()  {
@@ -40,9 +32,14 @@ module.exports = function (sequelize, DataTypes) {
       }
     },
     {
-      paranoid: true
+      paranoid: true,
+      classMethods: {
+        associate: function(models) {
+
+        }
+      }
     }
   );
 
-  return ClassMeetingDays;
+  return Users;
 };

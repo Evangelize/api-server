@@ -2,8 +2,25 @@ module.exports = function (sequelize, DataTypes) {
   var DivisionClassAttendance = sequelize.define(
     'divisionClassAttendance',
     {
-      "id": { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-      "divisionClassId": DataTypes.INTEGER,
+      "id": {
+        type: DataTypes.BLOB,
+        primaryKey: true,
+        get: function()  {
+          return this.getDataValue('id').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('id', new Buffer(val, "hex"));
+        }
+      },
+      "divisionClassId": {
+        type: DataTypes.BLOB,
+        get: function()  {
+          return this.getDataValue('divisionClassId').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('divisionClassId', new Buffer(val, "hex"));
+        }
+      },
       "day": DataTypes.INTEGER,
       "attendanceDate": {
         type: DataTypes.DATE,

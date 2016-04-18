@@ -4,9 +4,9 @@ import _ from 'lodash';
 import async from 'async';
 import moment from 'moment-timezone';
 import spahql from 'spahql';
-import { connect } from 'react-redux';
-import { updatePath } from 'redux-simple-router';
-import { ActionCreators } from 'redux-undo';
+import { observer } from "mobx-react";
+import connect from '../components/connect';
+import { browserHistory } from 'react-router';
 import DashboardMedium from '../components/DashboardMedium';
 import ReactGridLayout from 'react-grid-layout';
 import Styles from 'material-ui/lib/styles';
@@ -22,6 +22,10 @@ import Snackbar from 'material-ui/lib/snackbar';
 import { Grid, Row, Col } from 'react-bootstrap';
 import { getDivisionsConfigs } from '../actions';
 
+@connect(state => ({
+  classes: state.classes
+}))
+@observer
 class Attendance extends Component {
   constructor(props, context) {
     super(props, context);
@@ -32,29 +36,15 @@ class Attendance extends Component {
   }
 
   componentDidMount() {
-    const { dispatch, configs } = this.props;
-    let test = moment(window.__initialData__.attendance.latest[0].attendanceDate);
-    let t = test;
+
   }
 
-  formatYears() {
-    const { configs } = this.props;
-    let years = configs.data[this.state.divisionConfig].divisionYears;
-    //console.log("years", years);
-    return years.map(function(year, index){
-      return {
-        'id': year.id,
-        'year': moment(year.endDate).format("YYYY")
-      }
-    });
-  }
 
   handleEditAttendance(day, index, e) {
-    const { configs, dispatch } = this.props;
+    const { configs } = this.props;
     //let db = spahql.db(configs.data);
-    let path = "/attendance/" + index;
-    dispatch(updatePath(path));
-    //console.log(day);
+    let path = "/attendance/" + day.date;
+    this.navigate(path);
   }
 
   formatDateRange(division) {
@@ -73,13 +63,13 @@ class Attendance extends Component {
   }
 
   navigate(path, e) {
-    const { dispatch } = this.props;
-    dispatch(updatePath(path));
+    browserHistory.push(path);
   }
 
   render() {
-    const { dispatch, configs, attendance, ...props } = this.props;
-    console.log("render", attendance);
+    const { classes, ...props } = this.props;
+    let endMonth = moment(moment().format("MM/01/YYYY")+" 00:00:00").add(1, "month").valueOf();
+    //console.log("render", attendance);
     return (
       <div>
         <Grid fluid={true}>
@@ -87,7 +77,7 @@ class Attendance extends Component {
             <Col xs={12} sm={12} md={12} lg={12}>
               <nav className={"grey darken-1"}>
                 <div className={"nav-wrapper"}>
-                  <div className={"col s12 m12 l12"}>
+                  <div style={{margin: "0 0.5em"}}>
                     <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
                     <a className={"breadcrumb"}>Attendance</a>
                   </div>
@@ -105,13 +95,13 @@ class Attendance extends Component {
                 </CardHeader>
                 <CardMedia>
                   <List>
-                    {attendance.data.latest.map((day, index) =>
+                    {classes.getDailyAttendance(endMonth).map((day, index) =>
                       <ListItem
-                        key={day.id}
-                        rightAvatar={<Avatar>{day.attendance}</Avatar>}
+                        key={index}
+                        rightAvatar={<Avatar>{day.count}</Avatar>}
                         onTouchTap={((...args)=>this.handleEditAttendance(day, index, ...args))}
-                        primaryText={moment.utc(day.attendanceDate).format("dddd")}
-                        secondaryText={moment.utc(day.attendanceDate).format("MMMM Do YYYY")} />
+                        primaryText={moment(day.date, "x").format("dddd")}
+                        secondaryText={moment(day.date, "x").format("MMMM Do YYYY")} />
                     )}
                   </List>
                 </CardMedia>
@@ -124,15 +114,4 @@ class Attendance extends Component {
   }
 }
 
-Attendance.propTypes = {
-  dispatch: PropTypes.func.isRequired
-};
-
-function select(state) {
-  return {
-    configs: state.divisionConfigs.present,
-    attendance: state.attendance.present
-  };
-}
-
-export default connect(select)(Attendance);
+export default Attendance;

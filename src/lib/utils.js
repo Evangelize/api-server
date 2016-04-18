@@ -1,8 +1,10 @@
 import Promise from 'bluebird';
 import async from 'async';
+import jwt from 'jsonwebtoken';
 import {createClient} from './redisClient';
 import api from './server';
 let pubClient;
+
 createClient().then(
   function(client) {
     pubClient = client;
@@ -43,6 +45,46 @@ export default {
   pushMessage(channel, message) {
     pubClient.publish("congregate:"+channel, JSON.stringify(message));
     return null;
+  },
+  getPeoplePassword(email) {
+    return new Promise(function(resolve, reject){
+       api
+        .people
+        .find(
+          "emailAddress",
+          email
+        )
+        .then(
+          function(people) {
+            if (people.length){
+              api
+              .users
+              .get(people[0].id)
+              .then(
+                function(results) {
+                  let payload = {
+                    person: people[0].toJSON(),
+                    user: results.toJSON()
+                  };
+                  resolve(payload);
+                  return null;
+                },
+                function(err) {
+                  reject(err);
+                  return null;
+                }
+              );
+            } else {
+              resolve(null);
+              return null;
+            }
+          },
+          function(err) {
+            reject(err);
+            return null;
+          }
+        );
+    });
   },
   getAllTables() {
     return new Promise(function(resolve, reject){
@@ -155,8 +197,8 @@ export default {
           },
           divisionClassTeachers: function(callback){
             api
-            .teachers
-            .divisionClassTeachers()
+            .divisionClassTeachers
+            .get()
             .then(
               function(items) {
                 async.map(
@@ -315,6 +357,38 @@ export default {
             resolve(results);
             return null;
           }
+        }
+      );
+    });
+  },
+  validateJwt(token, cert) {
+    return new Promise(function(resolve, reject){
+      console.log("validateJwt");
+      jwt.verify(
+        token,
+        cert,
+        {
+          algorithm: 'RS256'
+        },
+        function(err, decoded) {
+          console.log('jwt', decoded);
+          if (err) {
+            console.log(decoded);
+            reject(err);
+          }
+          api
+          .people
+          .get(decoded.peopleId)
+          .then(
+            function(results) {
+              resolve(results.toJSON());
+              return null;
+            },
+            function(err) {
+              reject(err);
+              return null;
+            }
+          );
         }
       );
     });

@@ -1,7 +1,8 @@
 import React, { Component, PropTypes } from 'react';
 import _ from 'lodash';
-import { connect } from 'react-redux';
-import { ActionCreators } from 'redux-undo';
+import { observer } from "mobx-react";
+import connect from '../components/connect';
+import { browserHistory } from 'react-router';
 import ReactGridLayout from 'react-grid-layout';
 import Paper from 'material-ui/lib/paper';
 import Styles from 'material-ui/lib/styles';

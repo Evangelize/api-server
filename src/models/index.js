@@ -37,7 +37,7 @@ fs
     if (file.slice(-3) !== '.js') return;
     var model = sequelize['import'](path.join(__dirname, file));
     model.enableRevisions();
-    db[_.capitalize(model.name)] = model;
+    db[_.upperFirst(model.name)] = model;
   });
 
 Object.keys(db).forEach(function(modelName) {

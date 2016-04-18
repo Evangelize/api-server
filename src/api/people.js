@@ -8,7 +8,7 @@ export default {
   get(key, filter) {
     return axios.get('/api/people/search/'+key+'/'+filter)
     .then(function (response) {
-      console.log(response);
+      //console.log(response);
       return Promise.resolve({
         key: key,
         filter: filter,

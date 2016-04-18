@@ -52,7 +52,7 @@ module.exports = [
     path: '/chartist/css/{param*}',
     handler: {
       directory: {
-        path:  __dirname+'/../node_modules/react-chartist/node_modules/chartist/dist/'
+        path:  __dirname+'/../node_modules/chartist/dist/'
       }
     },
     config: {

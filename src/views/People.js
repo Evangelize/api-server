@@ -1,7 +1,8 @@
 import React, { Component, PropTypes } from 'react';
 import _ from 'lodash';
-import { connect } from 'react-redux';
-import { ActionCreators } from 'redux-undo';
+import { observer } from "mobx-react";
+import connect from '../components/connect';
+import { browserHistory } from 'react-router';
 import DashboardMedium from '../components/DashboardMedium';
 import ReactGridLayout from 'react-grid-layout';
 import Styles from 'material-ui/lib/styles';
@@ -24,20 +25,23 @@ import Toggle from 'material-ui/lib/toggle';
 import { Grid, Row, Col } from 'react-bootstrap';
 import { getPeople, setPerson } from '../actions';
 
+@connect(state => ({
+  classes: state.classes
+}))
+@observer
 class People extends Component {
   constructor(props, context) {
     super(props, context);
-    const { dispatch } = this.props;
     this.state = {
       searchType: "lastName"
     };
   }
 
   _handleInputChange(e) {
-    const { people, dispatch } = this.props,
+    const { people } = this.props,
           filter = e.target.value;
     if (filter.length > 1) {
-      dispatch(getPeople(people.key, e.target.value));
+      //dispatch(getPeople(people.key, e.target.value));
     }
   }
 
@@ -47,9 +51,9 @@ class People extends Component {
   }
 
   _handlePersonToggle(e, toggle, index) {
-    const { people, dispatch } = this.props,
+    const { people } = this.props,
           person = people.data[index];
-    dispatch(setPerson(person.id, index, e.target.value, toggle));
+    //dispatch(setPerson(person.id, index, e.target.value, toggle));
   }
 
   componentWillMount() {
@@ -70,8 +74,7 @@ class People extends Component {
   }
 
   navigate(path, e) {
-    const { dispatch } = this.props;
-    dispatch(updatePath(path));
+    //dispatch(updatePath(path));
   }
 
   render() {
@@ -92,8 +95,8 @@ class People extends Component {
           alignItems: 'flex-start',
           justifyContent: 'flex-start'
         };
-    const { dispatch, people, ...props } = this.props;
-           console.log(people);
+    const { people, ...props } = this.props;
+           //console.log(people);
     return (
       <Grid fluid={true}>
         <Row>
@@ -188,15 +191,4 @@ class People extends Component {
   }
 }
 
-People.propTypes = {
-  dispatch: PropTypes.func.isRequired
-};
-
-function select(state) {
-  console.log(state);
-  return {
-    people: state.people.present
-  };
-}
-
-export default connect(select)(People);
+export default People;

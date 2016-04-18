@@ -1,7 +1,8 @@
 import React, { Component, PropTypes } from 'react';
 import _ from 'lodash';
-import { connect } from 'react-redux';
-import { ActionCreators } from 'redux-undo';
+import { observer } from "mobx-react";
+import connect from '../components/connect';
+import { browserHistory } from 'react-router';
 import ReactGridLayout from 'react-grid-layout';
 import Card from 'material-ui/lib/card/card';
 import CardActions from 'material-ui/lib/card/card-actions';
@@ -11,7 +12,7 @@ import CardText from 'material-ui/lib/card/card-text';
 import IconMenu from 'material-ui/lib/menus/icon-menu';
 import IconButton from 'material-ui/lib/icon-button';
 import MoreVertIcon from 'material-ui/lib/svg-icons/navigation/more-vert';
-import Menu from 'material-ui/lib/menu/menu';
+import Menu from 'material-ui/lib/menus/menu';
 import MenuItem from 'material-ui/lib/menus/menu-item';
 import ChartistGraph from 'react-chartist';
 
