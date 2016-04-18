@@ -130,93 +130,8 @@ class EditDayAttendance extends Component {
 
   }
 
-<<<<<<< HEAD
   navigate(path, e) {
     browserHistory.push(path);
-=======
-  attendanceUpdate(divClass, e) {
-    const { dispatch, configs, params } = this.props,
-          { attendances, weekday, day } = this.state,
-          db = spahql.db(divClass),
-          today = moment.utc(day.attendanceDate).tz("America/Chicago"),
-          attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ "+today.valueOf()+"]"),
-          exists = attendance.values.length,
-          count = parseInt(e.target.value, 10);
-    let attend = {};
-    e.persist();
-    if (!exists) {
-      attend = {
-        attendanceDate: today.format("YYYY-MM-DD")+"T00:00:00.000Z",
-        count: count,
-        createdAt: today.format("YYYY-MM-DD")+"T00:00:00.000Z",
-        day: weekday,
-        deletedAt: null,
-        divisionClassId: divClass.id,
-        id: null,
-        revision: null,
-        updatedAt: today.format("YYYY-MM-DD")+"T00:00:00.000Z",
-        updating: true
-      }
-      divClass.divisionClassAttendances.unshift(attend);
-    } else {
-      attendance.values[0].count = count;
-      attendance.values[0].updating = true;
-    }
-    dispatch(updateClassAttendanceLocal(divClass));
-    this.delayedAttendanceUpdate(divClass, count, e);
-  }
-
-  handleTeacherTouchTap(teacher, divisionClass, e, el) {
-    this.refs.snackbar.setState({
-      teacher: teacher,
-      divClass: divisionClass
-    })
-    this.refs.snackbar.show();
-  }
-
-  _handleInputChange(e) {
-    const { people, dispatch } = this.props,
-          filter = e.target.value;
-    if (filter.length > 1) {
-      dispatch(getPeople(people.key, e.target.value));
-    }
-  }
-
-  _handleSelectValueChange(e) {
-    const { people } = this.props;
-    people.key = e.target.value;
-  }
-
-  menuItemTap(person, item, event) {
-    const { dispatch, params, configs } = this.props;
-    const { attendances, weekday } = this.state;
-    let db = spahql.db(configs.data),
-        divClass = db.select(divClassPath).value(),
-        opts;
-    switch (item) {
-      case "confirm":
-        opts = {confirmed: true};
-        break;
-      case "unconfirm":
-        opts = {confirmed: false};
-        break;
-      default:
-        opts = null;
-        break;
-    };
-    dispatch(
-      manageDivisionClassTeacher(
-        item,
-        config.id,
-        year.id,
-        division.id,
-        divClass.id,
-        classDay.day,
-        person.id,
-        opts
-      )
-    );
->>>>>>> master
   }
 
   isUpdating(divClass) {
@@ -239,14 +154,7 @@ class EditDayAttendance extends Component {
   }
 
   render() {
-<<<<<<< HEAD
     const { params, classes, ...props } = this.props;
-=======
-    const { dispatch, params, configs, ...props } = this.props,
-          { weekday, displayAttendance, attendances } = this.state;
-    console.log(attendances);
-    let db = spahql.db(configs.data);
->>>>>>> master
     return (
       <div>
         <Grid fluid={true}>
@@ -262,8 +170,6 @@ class EditDayAttendance extends Component {
                 </div>
               </nav>
             </Col>
-          </Row>
-<<<<<<< HEAD
           {classes.getDivisionConfigs().map((divisionConfig, index) =>
             <Row key={index}>
             {this.displayAttendance(divisionConfig).map((attendance, index) =>
@@ -300,40 +206,6 @@ class EditDayAttendance extends Component {
                   </Card>
                 </Col>
             )}
-=======
-          {displayAttendance.map((attendance, index) =>
-            <Row key={attendance.id}>
-              <Col xs={12} sm={12} md={12} lg={12}>
-                <Card>
-                  <CardHeader
-                    title={attendance.config.title+" Attendance"}
-                    subtitle={moment.utc(attendances[0].attendanceDate).format("dddd MM/DD/YYYY")}
-                    avatar={<Avatar>{moment.utc(attendances[0].attendanceDate).format("dd")}</Avatar>}>
-                  </CardHeader>
-                  <CardMedia>
-                    <Grid fluid={true}>
-                      {attendance.classes.map((divClass, index) =>
-                        <Col style={{display: "flex", alignItems: "center", justifyContent: "center"}} key={divClass.id} xs={12} sm={6} md={4} lg={3}>
-                          <div style={{width: "85%"}}>
-                            <TextField
-                              type="number"
-                              hintText="Enter attendance"
-                              value={::this.getClassAttendance(divClass)}
-                              min="0"
-                              max="500"
-                              ref={"inputAttendance"+divClass.id}
-                              onFocus={((...args)=>this.highlightText(...args))}
-                              onChange={((...args)=>this.attendanceUpdate(divClass, ...args))}
-                              floatingLabelText={divClass.class.title} />
-                          </div>
-                          <div style={{width: "13%", margin: "0 1%", height: "50px", overflow: "hidden"}}><CircularProgress style={{display: (this.isUpdating(divClass)) ? "block" : "none"}} size={0.35} mode="indeterminate" /></div>
-                        </Col>
-                      )}
-                    </Grid>
-                  </CardMedia>
-                </Card>
-              </Col>
->>>>>>> master
             </Row>
           )}
         </Grid>
@@ -342,20 +214,4 @@ class EditDayAttendance extends Component {
   }
 }
 
-<<<<<<< HEAD
 export default EditDayAttendance;
-=======
-EditDayAttendance.propTypes = {
-  dispatch: PropTypes.func.isRequired
-};
-
-function select(state) {
-  return {
-    configs: state.divisionConfigs.present,
-    people: state.people.present,
-    attendance: state.attendance.present
-  };
-}
-
-export default connect(select)(EditDayAttendance);
->>>>>>> master
