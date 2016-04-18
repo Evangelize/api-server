@@ -164,7 +164,8 @@ class Dashboard extends Component {
       /*
       isToday = moment.utc(attendance[0].attendanceDate).tz('America/Chicago').isSame(day, 'day');
       if (isToday) {
-        return attendance[0].count.toString();
+        let count = (attendance[0].count === null) ? "0" : attendance[0].count.toString();
+        return count;
       } else {
         return "0";
       }
