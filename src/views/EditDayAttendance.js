@@ -91,7 +91,6 @@ class EditDayAttendance extends Component {
   }
 
   getClassAttendance(divClass) {
-<<<<<<< HEAD
     const { classes, params } = this.props,
           { now } = this.state;
     let attendance = classes.collections.divisionClassAttendance.chain()
@@ -124,18 +123,6 @@ class EditDayAttendance extends Component {
       }
       */
       return attendance[0].count.toString();
-=======
-    const { attendances, day } = this.state;
-    let db = spahql.db(divClass),
-        today = moment.utc(day.attendanceDate).tz("America/Chicago").valueOf(),
-        attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ "+today+"]").values(),
-        theDay = moment.utc(day.attendanceDate).tz("America/Chicago").format("YYYY-MM-DD"),
-        isToday = false;
-    console.log("getClassAttendance", divClass, attendance);
-    if (attendance.length) {
-      let count = (attendance[0].count) ? attendance[0].count.toString() : "0";
-      return count;
->>>>>>> master
     } else {
       return "0";
     }
