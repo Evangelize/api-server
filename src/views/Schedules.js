@@ -4,9 +4,9 @@ import _ from 'lodash';
 import async from 'async';
 import moment from 'moment-timezone';
 import spahql from 'spahql';
-import { connect } from 'react-redux';
-import { updatePath } from 'redux-simple-router';
-import { ActionCreators } from 'redux-undo';
+import { observer } from "mobx-react";
+import connect from '../components/connect';
+import { browserHistory } from 'react-router';
 import DashboardMedium from '../components/DashboardMedium';
 import ReactGridLayout from 'react-grid-layout';
 import Slider from 'react-slick';
@@ -38,6 +38,7 @@ import FlatButton from 'material-ui/lib/flat-button';
 import Snackbar from 'material-ui/lib/snackbar';
 import List from 'material-ui/lib/lists/list';
 import ListItem from 'material-ui/lib/lists/list-item';
+import Subheader from 'material-ui/lib/Subheader/Subheader';
 import Divider from 'material-ui/lib/divider';
 import MediaQuery from 'react-responsive';
 import ActionGrade from 'material-ui/lib/svg-icons/action/grade';
@@ -46,16 +47,21 @@ import ContentRemove from 'material-ui/lib/svg-icons/content/remove';
 import { Grid, Row, Col } from 'react-bootstrap';
 import { manageDivisionClassTeacher, getDivisionsConfigs } from '../actions';
 
+@connect(state => ({
+  classes: state.classes
+}))
+@observer
 class Schedules extends Component {
   constructor(props, context) {
     super(props, context);
   }
 
   componentWillMount() {
-    const { dispatch, configs } = this.props;
-    let db = spahql.db(configs.data),
-        year = db.select("/0/divisionYears/0").value(),
-        schedule = this.getSchedule(year.divisionConfigId, year.id);
+    const { configs, classes } = this.props;
+    let divisionConfig = classes.collections.divisionConfigs.data[0],
+        year = classes.getCurrentDivisionYear(divisionConfig.id),
+        divSchedules = classes.getDivisionSchedules(divisionConfig.id, year.id),
+        schedule = classes.getCurrentDivisionSchedule(divisionConfig.id, year.id);
 
     this.setState({
       fixedHeader: true,
@@ -71,7 +77,9 @@ class Schedules extends Component {
       adjustForCheckbox: false,
       displaySelectAll: false,
       academicYear: year.id,
-      divisionConfig: year.divisionConfigId,
+      divisionConfig: divisionConfig.id,
+      divSchedules: divSchedules,
+      division: schedule[0].id,
       schedule: schedule,
       snackBar: {
         autoHideDuration: 2500,
@@ -83,14 +91,11 @@ class Schedules extends Component {
   }
 
   componentDidMount() {
-    const { dispatch, configs } = this.props;
-    if (!configs.hydrated) {
-      dispatch(getDivisionsConfigs());
-    }
+
   }
 
   getSchedule(config, year) {
-    const { dispatch, configs } = this.props,
+    const { configs } = this.props,
           state = (config && year) ? false : true;
     if (state) {
       const { divisionConfig, academicYear } = this.state;
@@ -109,7 +114,7 @@ class Schedules extends Component {
   }
 
   getClassMeetingDays() {
-    const { dispatch, configs } = this.props,
+    const { configs } = this.props,
           { divisionConfig, academicYear } = this.state;
     let db = spahql.db(configs.data),
         days = db.select("/*[/id == "+divisionConfig+"]/classMeetingDays/*");
@@ -124,6 +129,15 @@ class Schedules extends Component {
 
   selectedDivisionConfig(event, selectedIndex, value) {
     this.setState({divisionConfig: value});
+    //console.log(menuItem);
+  }
+
+  selectedDivision(event, selectedIndex, value) {
+    const { classes } = this.props;
+    this.setState({
+      division: value,
+      schedule: classes.getDivisionSchedule(value, this.state.academicYear)
+    });
     //console.log(menuItem);
   }
 
@@ -156,16 +170,13 @@ class Schedules extends Component {
     });
   }
 
-  renderClassTeachers(divClass, cb) {
-    const { configs } = this.props,
-          { divisionConfig, academicYear } = this.state;
-    let db = spahql.db(configs.data),
-        classDb = spahql.db(divClass),
-        days = db.select("/*[/id == "+divisionConfig+"]/classMeetingDays/*").values(),
+  renderClassTeachers(divClass, division) {
+    const { classes} = this.props;
+    let days = classes.getDivisionMeetingDays(division.divisionConfigId),
         classTeachers = [];
     //console.log(divClass);
     days.forEach(function(day, index){
-      let results = classDb.select("//divisionClassTeachers/*/[/day == "+day.day+"]").values();
+      let results = classes.getDivisionClassTeachers(divClass.divisionClass.id, day.day);
       //console.log("teachers", day.day, results);
       if (results.length) {
         classTeachers.push({
@@ -182,11 +193,14 @@ class Schedules extends Component {
           teachers: [{
             'id': _.uniqueId(),
             'day': day.day,
-            'divisionClassId': divClass.id,
+            'divisionClassId': divClass.divisionClass.id,
             'peopleId': 0,
             'person': {
               'lastName': 'Assigned',
               'firstName': 'Not'
+            },
+            'divClassTeacher': {
+              confirmed: false
             }
           }]
         });
@@ -224,16 +238,14 @@ class Schedules extends Component {
   }
 
   handleSnackbarAction(e) {
-    const { dispatch } = this.props;
     let { teacher, divClass } = this.refs.snackbar.state;
     this.handleEditDay(divClass, teacher, e);
   }
 
   handleEditDay(divClass, day, e) {
-    const { dispatch } = this.props;
     let { divisionConfig, academicYear} = this.state,
-        path = "/schedule/" + divisionConfig + "/" + academicYear + "/" + divClass.divisionId + "/" + divClass.id+ "/" + day.day.day;
-    dispatch(updatePath(path));
+        path = "/schedule/" + divisionConfig + "/" + academicYear + "/" + divClass.divisionClass.id + "/" + day.day.day;
+    browserHistory.push(path);
   }
 
   listToggle(day, e) {
@@ -250,32 +262,18 @@ class Schedules extends Component {
   }
 
   confirmTeacher(divClass, classDay, teacher, event) {
-    const { dispatch, params, configs } = this.props;
-    const { divisionConfig, academicYear } = this.state;
-    let db = spahql.db(configs.data),
-        opts,
-        confirmed = (teacher.confirmed) ? "unconfirm" : "confirm";
-    dispatch(
-      manageDivisionClassTeacher(
-        confirmed,
-        divisionConfig,
-        academicYear,
-        divClass.divisionId,
-        divClass.id,
-        classDay.day.day,
-        teacher.id,
-        {confirmed: !teacher.confirmed}
-      )
-    );
+    const { params, classes } = this.props;
+    let opts,
+        confirmed = !teacher.divClassTeacher.confirmed;
+    classes.confirmTeacher(confirmed, divClass.divisionClass.id, teacher.divClassTeacher.id);
   }
 
   navigate(path, e) {
-    const { dispatch } = this.props;
-    dispatch(updatePath(path));
+    browserHistory.push(path);
   }
 
   render() {
-    const { dispatch, configs, years, ...props } = this.props,
+    const { configs, classes, ...props } = this.props,
           iconButtonElement = (
             <IconButton
               touch={true}
@@ -350,6 +348,7 @@ class Schedules extends Component {
           float: 'right',
           verticalAlign: 'top'
         };
+    console.log("academicYear", this.state.academicYear);
     if (window) {
       const { innerWidth } = window;
       const { responsive } = settings;
@@ -366,17 +365,11 @@ class Schedules extends Component {
     }
     return (
       <Grid fluid={true}>
-        <Snackbar
-          ref="snackbar"
-          message={this.state.snackBar.message}
-          action={this.state.snackBar.action}
-          autoHideDuration={this.state.snackBar.autoHideDuration}
-          onActionTouchTap={::this.handleSnackbarAction}/>
         <Row>
           <Col xs={12} sm={12} md={12} lg={12}>
             <nav className={"grey darken-1"}>
               <div className={"nav-wrapper"}>
-                <div className={"col s12 m12 l12"}>
+                <div style={{margin: "0 0.5em"}}>
                   <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
                   <a className={"breadcrumb"}>Schedules</a>
                 </div>
@@ -389,13 +382,18 @@ class Schedules extends Component {
             <Toolbar>
               <ToolbarGroup key={0} float="left">
                 <DropDownMenu value={this.state.divisionConfig} ref="divisionConfig" onChange={::this.selectedDivisionConfig} style={{marginRight: "12px"}}>
-                  {configs.data.map((config, index) =>
+                  {classes.collections.divisionConfigs.data.map((config, index) =>
                     <MenuItem key={config.id} value={config.id} label={config.title} primaryText={config.title}/>
                   )}
                 </DropDownMenu>
                 <DropDownMenu ref="academicYear" value={this.state.academicYear} onChange={::this.selectedYear} style={{marginRight: "0px"}} >
-                  {::this.formatYears().map((year, index) =>
-                    <MenuItem key={year.id} value={year.id} label={year.year} primaryText={year.year}/>
+                  {::classes.getDivisionYears(this.state.divisionConfig).map((year, index) =>
+                    <MenuItem key={year.id} value={year.id} label={moment(year.startDate).format("YYYY")} primaryText={moment(year.startDate).format("YYYY")}/>
+                  )}
+                </DropDownMenu>
+                <DropDownMenu ref="divisions" value={this.state.division} onChange={::this.selectedDivision} style={{marginRight: "0px"}} >
+                  {::this.state.divSchedules.map((div, index) =>
+                    <MenuItem key={div.id} value={div.id} label={div.title} primaryText={div.title}/>
                   )}
                 </DropDownMenu>
               </ToolbarGroup>
@@ -431,7 +429,7 @@ class Schedules extends Component {
                             enableSelectAll={this.state.enableSelectAll}>
                             <TableRow>
                               <TableHeaderColumn>Class</TableHeaderColumn>
-                              {::this.getClassMeetingDays().map((day, index) =>
+                              {::classes.getDivisionMeetingDays(division.divisionConfigId).map((day, index) =>
                                 <TableHeaderColumn key={day.id}>{moment().isoWeekday(day.day).format("dddd")}</TableHeaderColumn>
                               )}
                             </TableRow>
@@ -441,36 +439,37 @@ class Schedules extends Component {
                             deselectOnClickaway={this.state.deselectOnClickaway}
                             showRowHover={this.state.showRowHover}
                             stripedRows={this.state.stripedRows}>
-                            {division.divisionClasses.map((divisionClass, index) =>
-                              <TableRow selected={false} key={divisionClass.id}>
+                            {classes.getCurrentDivisionClasses(division.id).map((divisionClass, index) =>
+                              <TableRow selected={false} key={divisionClass.divisionClass.id}>
                                 <TableRowColumn>
                                   <h6><a style={{color: Styles.Colors.deepOrange500}} href="">{divisionClass.class.title}</a></h6>
                                   <p style={{color: Styles.Colors.grey600}}>{divisionClass.class.description}</p>
                                 </TableRowColumn>
-                                {this.renderClassTeachers(divisionClass).map((teacherDay, index) =>
-                                  <TableRowColumn key={teacherDay.day.day}>{teacherDay.teachers.map((teacher, index) =>
-                                    <div key={teacher.id} style={{width: "100%", clear: "both"}}>
-                                      <IconButton
-                                        style={{
-                                          float: "left"
-                                        }}
-                                        touch={true}
-                                        onTouchTap={((...args)=>this.confirmTeacher(divisionClass, teacherDay, teacher, ...args))}>
-                                      <ActionGrade
-                                        color={(teacher.confirmed) ? Styles.Colors.deepOrange500 : Styles.Colors.grey400} />
-                                      </IconButton>
-                                      <FlatButton
-                                        style={{
-                                          float: "left",
-                                          marginTop: "8px"
-                                        }}
-                                        key={teacher.id}
-                                        label={teacher.person.firstName+" "+teacher.person.lastName}
-                                        secondary={true}
-                                        onTouchTap={(...args) =>this.handleEditDay(divisionClass, teacherDay, ...args)}
-                                        labelPosition="after" />
-                                    </div>
-                                  )}
+                                {::this.renderClassTeachers(divisionClass, division).map((teacherDay, index) =>
+                                  <TableRowColumn key={index}>
+                                    {teacherDay.teachers.map((teacher, index) =>
+                                      <div key={index} style={{width: "100%", clear: "both"}}>
+                                        <IconButton
+                                          style={{
+                                            float: "left"
+                                          }}
+                                          touch={true}
+                                          onTouchTap={((...args)=>this.confirmTeacher(divisionClass, teacherDay, teacher, ...args))}>
+                                        <ActionGrade
+                                          color={(teacher.divClassTeacher.confirmed) ? Styles.Colors.deepOrange500 : Styles.Colors.grey400} />
+                                        </IconButton>
+                                        <FlatButton
+                                          style={{
+                                            float: "left",
+                                            marginTop: "8px"
+                                          }}
+                                          key={teacher.id}
+                                          label={teacher.person.firstName+" "+teacher.person.lastName}
+                                          secondary={true}
+                                          onTouchTap={(...args) =>this.handleEditDay(divisionClass, teacherDay, ...args)}
+                                          labelPosition="after" />
+                                      </div>
+                                    )}
                                   </TableRowColumn>
                                 )}
                               </TableRow>
@@ -479,13 +478,14 @@ class Schedules extends Component {
                         </Table>
                       </MediaQuery>
                       <MediaQuery query='(max-device-width: 767px)'>
-                        {division.divisionClasses.map((divisionClass, index) =>
-                          <div key={divisionClass.id}>
+                        {classes.getCurrentDivisionClasses(division.id).map((divisionClass, index) =>
+                          <div key={divisionClass.divisionClass.id}>
                             <Divider />
-                            <List subheader={divisionClass.class.title}>
-                              {this.renderClassTeachers(divisionClass).map((teacherDay, index) =>
+                            <List>
+                              <Subheader>{divisionClass.class.title}</Subheader>
+                              {::this.renderClassTeachers(divisionClass, division).map((teacherDay, index) =>
                                 <ListItem
-                                  key={teacherDay.day.day}
+                                  key={index}
                                   primaryText={moment().isoWeekday(teacherDay.day.day).format("dddd")}
                                   initiallyOpen={false}
                                   primaryTogglesNestedList={true}
@@ -503,7 +503,7 @@ class Schedules extends Component {
                                         leftIcon={
                                           <ActionGrade
                                             onTouchTap={((...args)=>this.confirmTeacher(divisionClass, teacherDay, teacher, ...args))}
-                                            color={(teacher.confirmed) ? Styles.Colors.deepOrange500 : Styles.Colors.grey400} />
+                                            color={(teacher.divClassTeacher.confirmed) ? Styles.Colors.deepOrange500 : Styles.Colors.grey400} />
                                         }
                                       />,
                                     )}
@@ -525,14 +525,4 @@ class Schedules extends Component {
   }
 }
 
-Schedules.propTypes = {
-  dispatch: PropTypes.func.isRequired
-};
-
-function select(state) {
-  return {
-    configs: state.divisionConfigs.present
-  };
-}
-
-export default connect(select)(Schedules);
+export default Schedules;

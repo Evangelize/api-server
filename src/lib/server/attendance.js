@@ -8,7 +8,7 @@ export default {
        async.waterfall(
         [
           function(callback) {
-            console.log("Get Attendance");
+            //console.log("Get Attendance");
             models.DivisionClassAttendance.findAll(
               {
                 group: ['attendanceDate'],
@@ -68,7 +68,7 @@ export default {
       );
     });
   },
-  divisionClassAttenance() {
+  divisionClassAttendance() {
     return new Promise(function(resolve, reject){
       models.DivisionClassAttendance.findAll(
         {
@@ -77,6 +77,69 @@ export default {
       ).then(
         function(attendance) {
           resolve(attendance);
+        },
+        function(err){
+          console.log(err)
+          reject(err);
+        }
+      );
+    });
+  },
+  insert(record) {
+    record.id = new Buffer(record.id, 'hex');
+    return new Promise(function(resolve, reject){
+      models.DivisionClassAttendance.create(
+        record
+      ).then(
+        function(result) {
+          resolve(result);
+        },
+        function(err){
+          console.log(err)
+          reject(err);
+        }
+      );
+    });
+  },
+  update(record) {
+    console.log(record);
+    return new Promise(function(resolve, reject){
+      record.id = new Buffer(record.id, 'hex');
+      models.DivisionClassAttendance.update(
+        record,
+        {
+          where: {
+            id: record.id
+          }
+        }
+      ).then(
+        function(rows) {
+          models.DivisionClassAttendance.findOne({
+            where: {
+              id: record.id
+            }
+          }).then(
+            function(result) {
+              resolve(result);
+            }
+          );
+        },
+        function(err){
+          console.log(err)
+          reject(err);
+        }
+      );
+    });
+  },
+  delete(record) {
+    return new Promise(function(resolve, reject){
+      models.DivisionClassAttendance.destroy({
+        where: {
+          id: new Buffer(record.id, 'hex')
+        }
+      }).then(
+        function(results) {
+          resolve(record);
         },
         function(err){
           console.log(err)

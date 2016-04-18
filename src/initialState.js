@@ -24,6 +24,16 @@ module.exports = function(){
       data: [],
       key: "lastName",
       filter: ""
-    }
+    },
+    notes: {},
+    divisionClassAttendance: {},
+    divisionClasses: {},
+    divisionClassTeachers: {},
+    classes: {},
+    classMeetingDays: {},
+    divisions : {},
+    divisionYears : {},
+    students : {},
+    teachers : {}
   };
 };

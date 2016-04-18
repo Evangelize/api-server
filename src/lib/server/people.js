@@ -2,6 +2,28 @@ import models from '../../models';
 import Promise from 'bluebird';
 
 export default {
+  get(id) {
+    return new Promise(function(resolve, reject){
+      id = new Buffer(id, 'hex');
+      models.People.findOne(
+        {
+          where: {
+            id: id
+          }
+        }
+      ).then(
+        function(result) {
+          resolve(result);
+          return null;
+        },
+        function(err){
+          console.log(err);
+          reject(err);
+          return null;
+        }
+      );
+    });
+  },
   find(field, term) {
     return new Promise(function(resolve, reject){
       models.People.findAll({

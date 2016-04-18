@@ -116,5 +116,67 @@ export default {
         }
       );
     });
+  },
+  insert(record) {
+    return new Promise(function(resolve, reject){
+      models.Notes.create(
+        record
+      ).then(
+        function(result) {
+          resolve(result);
+        },
+        function(err){
+          console.log(err)
+          reject(err);
+        }
+      );
+    });
+  },
+   update(record) {
+    console.log(record);
+    return new Promise(function(resolve, reject){
+      record.id = new Buffer(record.id, 'hex');
+      models.Notes.update(
+        record,
+        {
+          where: {
+            id: record.id
+          }
+        }
+      ).then(
+        function(rows) {
+          models.Notes.findOne({
+            where: {
+              id: record.id
+            }
+          }).then(
+            function(result) {
+              resolve(result);
+            }
+          );
+        },
+        function(err){
+          console.log(err)
+          reject(err);
+        }
+      );
+    });
+  },
+  delete(record) {
+    return new Promise(function(resolve, reject){
+      models.Notes.destroy({
+        where: {
+          id: new Buffer(record.id, 'hex')
+        }
+      }).then(
+        function(results) {
+          resolve(record);
+        },
+        function(err){
+          console.log(err)
+          reject(err);
+        }
+      );
+    });
   }
 };

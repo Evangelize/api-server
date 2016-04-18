@@ -13,4 +13,4 @@ result = day;
 while (result.day() !== 3) {
     result.subtract(1, 'day');
 }
-console.log(result.format());
+//console.log(result.format());

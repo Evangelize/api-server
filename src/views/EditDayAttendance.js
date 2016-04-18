@@ -4,9 +4,9 @@ import _ from 'lodash';
 import async from 'async';
 import moment from 'moment-timezone';
 import spahql from 'spahql';
-import { connect } from 'react-redux';
-import { updatePath } from 'redux-simple-router';
-import { ActionCreators } from 'redux-undo';
+import { observer } from "mobx-react";
+import connect from '../components/connect';
+import { browserHistory } from 'react-router';
 import Card from 'material-ui/lib/card/card';
 import CardHeader from 'material-ui/lib/card/card-header';
 import CardTitle from 'material-ui/lib/card/card-title';
@@ -15,7 +15,7 @@ import CardText from 'material-ui/lib/card/card-text';
 import CardActions from 'material-ui/lib/card/card-actions';
 import Styles from 'material-ui/lib/styles';
 import List from 'material-ui/lib/lists/list';
-import ListDivider from 'material-ui/lib/lists/list-divider';
+import ListDivider from 'material-ui/lib/divider';
 import ListItem from 'material-ui/lib/lists/list-item';
 import CheckCircle from 'material-ui/lib/svg-icons/action/check-circle';
 import TextField from 'material-ui/lib/text-field';
@@ -23,18 +23,20 @@ import Avatar from 'material-ui/lib/avatar';
 import DropDownMenu from 'material-ui/lib/drop-down-menu';
 import RaisedButton from 'material-ui/lib/raised-button';
 import FontIcon from 'material-ui/lib/font-icon';
-import DropDownIcon from 'material-ui/lib/drop-down-icon';
 import IconMenu from 'material-ui/lib/menus/icon-menu';
 import IconButton from 'material-ui/lib/icon-button';
 import MoreVertIcon from 'material-ui/lib/svg-icons/navigation/more-vert';
-import Menu from 'material-ui/lib/menu/menu';
+import Menu from 'material-ui/lib/menus/menu';
 import MenuItem from 'material-ui/lib/menus/menu-item';
 import FlatButton from 'material-ui/lib/flat-button';
 import Snackbar from 'material-ui/lib/snackbar';
 import CircularProgress from 'material-ui/lib/circular-progress';
 import { Grid, Row, Col } from 'react-bootstrap';
-import { updateClassAttendance, updateNote, addNote, updateClassAttendanceLocal } from '../actions';
 
+@connect(state => ({
+  classes: state.classes
+}))
+@observer
 class EditDayAttendance extends Component {
   constructor(props, context) {
     super(props, context);
@@ -42,71 +44,87 @@ class EditDayAttendance extends Component {
 
   componentWillMount() {
     console.log("EditDayAttendance:componentWillMount");
-    const { configs, params, attendance, dispatch } = this.props;
-    //console.log("date", params.date);
-    let db = spahql.db(configs.data),
-        day = attendance.data.latest[params.dayIndex];
-    let attendances = db.select("/*/divisionYears/*/divisions/*/divisionClasses/*/divisionClassAttendances/*[/attendanceDate =~ "+day.attendanceDate+"]").values();
-    let weekday = attendances[0].day;
-
-    this.delayedAttendanceUpdate = _.debounce(function (divClass, count, event) {
-      //console.log(divClass, event.target.value, attendanceDay);
-      dispatch(updateClassAttendance(divClass.id, weekday, moment.utc(attendances[0].attendanceDate).format("YYYY-MM-DD 00:00:00"), count));
-    }, 500);
-
+    const { classes, params } = this.props;
+    console.log("date", params.date);
     this.setState({
-      attendances: attendances,
-      weekday: weekday,
-      day: day,
-      displayAttendance: this.displayAttendance(weekday)
+      now: parseInt(params.date, 10)
     });
   }
 
   componentWillReceiveProps(nextProps) {
-    console.log(nextProps);
+    //console.log(nextProps);
   }
 
   componentDidMount() {
-    const { dispatch } = this.props;
-  }
 
-  formatYears() {
-    const { configs } = this.props;
-    let years = configs.data[this.state.divisionConfig].divisionYears;
-    return years.map(function(year, index){
-      return {
-        'id': year.id,
-        'year': moment(year.endDate).format("YYYY")
-      }
-    });
   }
 
   formatDateRange(division) {
     return moment(division.start).format("MMM D YYYY") + " - " + moment(division.end).format("MMM D YYYY")
   }
 
-  displayAttendance(weekday) {
-    console.log("displayAttendance");
-    const { configs } = this.props;
-
-    let db = spahql.db(configs.data),
-        classDay = db.select("/*/classMeetingDays/*[/day == "+weekday+"]").value();
-
+  displayAttendance(divisionConfig) {
+    const { classes, params } = this.props,
+          { now } = this.state;
+    //console.log("displayAttendance", classes);
+    let today = moment(params.date, "x").weekday(),
+        division = classes.getCurrentDivision(params.date),
+        classDay = classes.getCurrentDivisionMeetingDays(divisionConfig, today),
+        divClasses = classes.getCurrentDivisionClasses(division.id);
     if (!Array.isArray(classDay) && classDay !== null) {
       classDay = [classDay];
     } else if (classDay === null) {
       classDay = [];
     }
     let results = classDay.map(function(day, index){
-      let config = db.select("/*[/id == "+day.divisionConfigId+"]"),
-          classes = db.select("/*[/id == "+day.divisionConfigId+"]/divisionYears/0/divisions/0/divisionClasses");
-      day.classes = classes.value();
-      day.config = config.value();
+      day.classes = divClasses;
+      day.config = divisionConfig;
     });
+    //console.log("classDay", classDay);
     return classDay;
   }
 
+  attendanceUpdate(divClass, e) {
+    const { classes } = this.props,
+          { now } = this.state;
+    classes.updateClassAttendance(divClass.divisionClass.id, now, e.target.value);
+  }
+
   getClassAttendance(divClass) {
+<<<<<<< HEAD
+    const { classes, params } = this.props,
+          { now } = this.state;
+    let attendance = classes.collections.divisionClassAttendance.chain()
+              .find(
+                {
+                  $and: [
+                    {
+                      attendanceDate: now
+                    },
+                    {
+                      divisionClassId: {$eq: divClass.divisionClass.id}
+                    },
+                    {
+                      deletedAt: null
+                    }
+                  ]
+                }
+              )
+              .data(),
+        day = moment(params.date, "x").format("YYYY-MM-DD"),
+        isToday = false;
+    //console.log("getClassAttendance", divClass, attendance);
+    if (attendance.length) {
+      /*
+      isToday = moment.utc(attendance[0].attendanceDate).tz('America/Chicago').isSame(day, 'day');
+      if (isToday) {
+        return attendance[0].count.toString();
+      } else {
+        return "0";
+      }
+      */
+      return attendance[0].count.toString();
+=======
     const { attendances, day } = this.state;
     let db = spahql.db(divClass),
         today = moment.utc(day.attendanceDate).tz("America/Chicago").valueOf(),
@@ -117,6 +135,7 @@ class EditDayAttendance extends Component {
     if (attendance.length) {
       let count = (attendance[0].count) ? attendance[0].count.toString() : "0";
       return count;
+>>>>>>> master
     } else {
       return "0";
     }
@@ -124,6 +143,10 @@ class EditDayAttendance extends Component {
 
   }
 
+<<<<<<< HEAD
+  navigate(path, e) {
+    browserHistory.push(path);
+=======
   attendanceUpdate(divClass, e) {
     const { dispatch, configs, params } = this.props,
           { attendances, weekday, day } = this.state,
@@ -206,21 +229,20 @@ class EditDayAttendance extends Component {
         opts
       )
     );
+>>>>>>> master
   }
 
   isUpdating(divClass) {
-    const { params } = this.props;
-    const { attendances, weekday } = this.state;
-    let db = spahql.db(divClass),
-        attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ '^"+moment.utc(attendances[0].attendanceDate).format("YYYY-MM-DD")+"']").values();
-
-    if (attendance.length && "updating" in attendance) {
+    /*
+    if (divClass.divisionClassAttendances.length && "updating" in divClass.divisionClassAttendances[0]) {
       console.log("isUpdating", true);
       return true;
     } else {
       console.log("isUpdating", false);
       return false;
     }
+    */
+    return false;
   }
 
   highlightText(e) {
@@ -229,16 +251,15 @@ class EditDayAttendance extends Component {
     }
   }
 
-  navigate(path, e) {
-    const { dispatch } = this.props;
-    dispatch(updatePath(path));
-  }
-
   render() {
+<<<<<<< HEAD
+    const { params, classes, ...props } = this.props;
+=======
     const { dispatch, params, configs, ...props } = this.props,
           { weekday, displayAttendance, attendances } = this.state;
     console.log(attendances);
     let db = spahql.db(configs.data);
+>>>>>>> master
     return (
       <div>
         <Grid fluid={true}>
@@ -246,7 +267,7 @@ class EditDayAttendance extends Component {
             <Col xs={12} sm={12} md={12} lg={12}>
               <nav className={"grey darken-1"}>
                 <div className={"nav-wrapper"}>
-                  <div className={"col s12 m12 l12"}>
+                  <div style={{margin: "0 0.5em"}}>
                     <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
                     <a href="#!" onTouchTap={((...args)=>this.navigate("/attendance", ...args))} className={"breadcrumb"}>Attendance</a>
                     <a className={"breadcrumb"}>Edit</a>
@@ -255,6 +276,44 @@ class EditDayAttendance extends Component {
               </nav>
             </Col>
           </Row>
+<<<<<<< HEAD
+          {classes.getDivisionConfigs().map((divisionConfig, index) =>
+            <Row key={index}>
+            {this.displayAttendance(divisionConfig).map((attendance, index) =>
+                <Col xs={12} sm={12} md={12} lg={12} key={index}>
+                  <Card>
+                    <CardHeader
+                      title={attendance.config.title+" Attendance"}
+                      subtitle={moment(params.date, "x").format("dddd MM/DD/YYYY")}
+                      avatar={<Avatar>{moment(params.date, "x").format("dd")}</Avatar>}>
+                    </CardHeader>
+                    <CardMedia>
+                      <Grid fluid={true} key={1}>
+                        <Row>
+                        {attendance.classes.map((divClass, index) =>
+                          <Col style={{display: "flex", alignItems: "center", justifyContent: "center"}} key={index} xs={12} sm={6} md={4} lg={3}>
+                            <div style={{width: "85%"}}>
+                              <TextField
+                                type="number"
+                                hintText="Enter attendance"
+                                value={::this.getClassAttendance(divClass)}
+                                min="0"
+                                max="500"
+                                ref={"inputAttendance"+divClass.id}
+                                onFocus={((...args)=>this.highlightText(...args))}
+                                onChange={((...args)=>this.attendanceUpdate(divClass, ...args))}
+                                floatingLabelText={divClass.class.title} />
+                            </div>
+                            <div style={{width: "13%", margin: "0 1%", height: "50px", overflow: "hidden"}}><CircularProgress style={{display: (this.isUpdating(divClass)) ? "block" : "none"}} size={0.35} mode="indeterminate" /></div>
+                          </Col>
+                        )}
+                        </Row>
+                      </Grid>
+                    </CardMedia>
+                  </Card>
+                </Col>
+            )}
+=======
           {displayAttendance.map((attendance, index) =>
             <Row key={attendance.id}>
               <Col xs={12} sm={12} md={12} lg={12}>
@@ -287,6 +346,7 @@ class EditDayAttendance extends Component {
                   </CardMedia>
                 </Card>
               </Col>
+>>>>>>> master
             </Row>
           )}
         </Grid>
@@ -295,6 +355,9 @@ class EditDayAttendance extends Component {
   }
 }
 
+<<<<<<< HEAD
+export default EditDayAttendance;
+=======
 EditDayAttendance.propTypes = {
   dispatch: PropTypes.func.isRequired
 };
@@ -308,3 +371,4 @@ function select(state) {
 }
 
 export default connect(select)(EditDayAttendance);
+>>>>>>> master

@@ -1,3 +1,287 @@
+nav {
+  color: #fff;
+  background-color: #ee6e73;
+  width: 100%;
+  height: 56px;
+  line-height: 56px;
+}
+
+nav a {
+  color: #fff;
+}
+
+nav i,
+nav [class^="mdi-"], nav [class*="mdi-"],
+nav i.material-icons {
+  display: block;
+  font-size: 2rem;
+  height: 56px;
+  line-height: 56px;
+}
+
+nav .nav-wrapper {
+  position: relative;
+  height: 100%;
+}
+
+@media only screen and (min-width: 993px) {
+  nav a.button-collapse {
+    display: none;
+  }
+}
+
+nav .button-collapse {
+  float: left;
+  position: relative;
+  z-index: 1;
+  height: 56px;
+}
+
+nav .button-collapse i {
+  font-size: 2.7rem;
+  height: 56px;
+  line-height: 56px;
+}
+
+nav .brand-logo {
+  position: absolute;
+  color: #fff;
+  display: inline-block;
+  font-size: 2.1rem;
+  padding: 0;
+  white-space: nowrap;
+}
+
+nav .brand-logo.center {
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+          transform: translateX(-50%);
+}
+
+.navName {
+  background-color: rgba(238, 238, 238, 0.8);
+  padding: 5px;
+  margin: 0 0.5em 0.5em 0;
+  text-align: center;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  font-size: 1.25em;
+  color: black;
+}
+
+@media only screen and (max-width: 992px) {
+  nav .brand-logo {
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+            transform: translateX(-50%);
+  }
+  nav .brand-logo.left, nav .brand-logo.right {
+    padding: 0;
+    -webkit-transform: none;
+            transform: none;
+  }
+  nav .brand-logo.left {
+    left: 0.5rem;
+  }
+  nav .brand-logo.right {
+    right: 0.5rem;
+    left: auto;
+  }
+}
+
+nav .brand-logo.right {
+  right: 0.5rem;
+  padding: 0;
+}
+
+nav ul {
+  margin: 0;
+}
+
+nav ul li {
+  transition: background-color .3s;
+  float: left;
+  padding: 0;
+}
+
+nav ul li.active {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+nav ul a {
+  transition: background-color .3s;
+  font-size: 1rem;
+  color: #fff;
+  display: inline-block;
+  padding: 0 15px;
+  cursor: pointer;
+}
+
+nav ul a.btn, nav ul a.btn-large, nav ul a.btn-large, nav ul a.btn-flat, nav ul a.btn-floating {
+  margin-top: -2px;
+  margin-left: 15px;
+  margin-right: 15px;
+}
+
+nav ul a:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+nav ul.left {
+  float: left;
+}
+
+nav .input-field {
+  margin: 0;
+}
+
+nav .input-field input {
+  height: 100%;
+  font-size: 1.2rem;
+  border: none;
+  padding-left: 2rem;
+}
+
+nav .input-field input:focus, nav .input-field input[type=text]:valid, nav .input-field input[type=password]:valid, nav .input-field input[type=email]:valid, nav .input-field input[type=url]:valid, nav .input-field input[type=date]:valid {
+  border: none;
+  box-shadow: none;
+}
+
+nav .input-field label {
+  top: 0;
+  left: 0;
+}
+
+nav .input-field label i {
+  color: rgba(255, 255, 255, 0.7);
+  transition: color .3s;
+}
+
+nav .input-field label.active i {
+  color: #fff;
+}
+
+nav .input-field label.active {
+  -webkit-transform: translateY(0);
+          transform: translateY(0);
+}
+
+.navbar-fixed {
+  position: relative;
+  height: 56px;
+  z-index: 998;
+}
+
+.navbar-fixed nav {
+  position: fixed;
+}
+
+@media only screen and (min-width: 601px) {
+  nav, nav .nav-wrapper i, nav a.button-collapse, nav a.button-collapse i {
+    height: 64px;
+    line-height: 64px;
+  }
+  .navbar-fixed {
+    height: 64px;
+  }
+}
+
+.breadcrumb {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.breadcrumb i,
+.breadcrumb [class^="mdi-"], .breadcrumb [class*="mdi-"],
+.breadcrumb i.material-icons {
+  display: inline-block;
+  float: left;
+  font-size: 24px;
+}
+
+.breadcrumb:before {
+  content: '\E5CC';
+  color: rgba(255, 255, 255, 0.7);
+  vertical-align: top;
+  display: inline-block;
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 25px;
+  margin: 0 10px 0 8px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.breadcrumb:first-child:before {
+  display: none;
+}
+
+.breadcrumb:last-child {
+  color: #fff;
+}
+
+.grey.darken-1 {
+  background-color: #757575 !important;
+}
+
+.grey-text.text-darken-1 {
+  color: #757575 !important;
+}
+
+.login-box {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  bottom: 0px;
+  right: 0px;
+  width: 100%;
+  height: 100%;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  background: url(/img/login-background.jpg);
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.login-center {
+  width: 100%;
+  height: 100%;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-pack: center;
+  -moz-box-pack: center;
+  -ms-flex-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-box-align: center;
+  -moz-box-align: center;
+  -ms-flex-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+}
+
+.login {
+  width: 500px;
+  -webkit-box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+  -moz-box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+  border-radius: 2px;
+  background: #fff;
+}
+
+.login-header {
+  padding: 20px;
+  height: 140px;
+}
+
+.login-body {
+  padding: 20px;
+  height: 323px;
+}
+
 .visible-xs,
 .visible-sm,
 .visible-md,

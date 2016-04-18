@@ -149,5 +149,54 @@ export default {
         }
       );
     });
-  }
+  },
+  divisionClassTeachers() {
+    return new Promise(function(resolve, reject){
+      models.DivisionClassTeachers.findAll(
+        {
+          order: "id ASC"
+        }
+      ).then(
+        function(result) {
+          resolve(result);
+          return null;
+        },
+        function(err){
+          console.log(err);
+          reject(err);
+          return null;
+        }
+      );
+    });
+  },
+  update(record) {
+    console.log(record);
+    return new Promise(function(resolve, reject){
+      record.id = new Buffer(record.id, 'hex');
+      models.DivisionClassTeachers.update(
+        record,
+        {
+          where: {
+            id: record.id
+          }
+        }
+      ).then(
+        function(rows) {
+          models.DivisionClassTeachers.findOne({
+            where: {
+              id: record.id
+            }
+          }).then(
+            function(result) {
+              resolve(result);
+            }
+          );
+        },
+        function(err){
+          console.log(err)
+          reject(err);
+        }
+      );
+    });
+  },
 };

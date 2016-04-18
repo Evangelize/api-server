@@ -5,7 +5,8 @@ module.exports = {
 	target:  "web",
 	cache:   false,
 	context: __dirname,
-	devtool: 'eval-source-map',
+    debug: true,
+    devtool: 'eval',
 	entry:  [
       'webpack-hot-middleware/client?path=/__webpack_hmr&reload=true',
       path.join(__dirname, '../src/index.js')
@@ -30,7 +31,7 @@ module.exports = {
 	module:  {
       loaders: [
         {
-          test: /\.js?$/,
+          test: /\.js[x]?$/,
           exclude: /node_modules/,
           loader: 'babel',
           query: {
@@ -70,7 +71,7 @@ module.exports = {
         "node_modules",
         "web_modules"
       ],
-      extensions: ["", ".json", ".js"]
+      extensions: ["", ".json", ".js", ".jsx"]
 	},
 	node:    {
       __dirname: true,

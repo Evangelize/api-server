@@ -2,7 +2,16 @@ module.exports = function (sequelize, DataTypes) {
   var People = sequelize.define(
     'people',
     {
-      "id": { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      "id": {
+        type: DataTypes.BLOB,
+        primaryKey: true,
+        get: function()  {
+          return this.getDataValue('id').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('id', new Buffer(val, "hex"));
+        }
+      },
       "familyName": DataTypes.STRING,
       "lastName": DataTypes.STRING,
       "firstName": DataTypes.STRING,
@@ -18,7 +27,15 @@ module.exports = function (sequelize, DataTypes) {
       "cellPhoneNumber": DataTypes.STRING,
       "emailAddress": DataTypes.STRING,
       "birthday": {
-        type: DataTypes.DATE
+        type: DataTypes.DATE,
+        get: function()  {
+
+          if (this.getDataValue('birthday') && this.getDataValue('birthday') !== "0000-00-00 00:00:00") {
+            return this.getDataValue('birthday').getTime();
+          } else {
+            return null;
+          }
+        }
       },
       "nonChristian": { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
       "nonMember": { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },

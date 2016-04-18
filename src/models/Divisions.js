@@ -2,9 +2,34 @@ module.exports = function (sequelize, DataTypes) {
   var Divisions = sequelize.define(
     'divisions',
     {
-      "id": { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-      "divisionConfigId": DataTypes.INTEGER,
-      "divisionYear": DataTypes.INTEGER,
+      "id": {
+        type: DataTypes.BLOB,
+        primaryKey: true,
+        get: function()  {
+          return this.getDataValue('id').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('id', new Buffer(val, "hex"));
+        }
+      },
+      "divisionConfigId":  {
+        type: DataTypes.BLOB,
+        get: function()  {
+          return this.getDataValue('divisionConfigId').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('divisionConfigId', new Buffer(val, "hex"));
+        }
+      },
+      "divisionYear":  {
+        type: DataTypes.BLOB,
+        get: function()  {
+          return this.getDataValue('divisionYear').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('divisionYear', new Buffer(val, "hex"));
+        }
+      },
       "position": DataTypes.INTEGER,
       "title": DataTypes.STRING,
       "start": {

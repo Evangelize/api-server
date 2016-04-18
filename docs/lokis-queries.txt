@@ -1,0 +1,52 @@
+d.find({'$and': [{'attendanceDate': {'$gte': 1450569600000}, 'day':{'$eq': 0}}])
+
+
+function
+
+
+function getAverage( array ){
+  var cumulator = 0;
+  var i = array.length >>> 0;
+  var actual = 0;
+  while(i--){
+    if(array[i] != null){
+      cumulator += array[i];
+      actual++;
+    }
+  }
+  return ( cumulator / actual).toFixed(2);
+}
+
+d.chain()
+  .find({'attendanceDate': {'$gte': 1450569600000}})
+  .mapReduce(
+    function( obj ){
+      return (obj.day === 0) ? obj.count : null;
+    },
+    function ( array ){
+      var cumulator = 0;
+      var i = array.length >>> 0;
+      var actual = 0;
+      while(i--){
+        if(array[i] !== null){
+          cumulator += array[i];
+          actual++;
+        }
+      }
+      return ( cumulator / actual).toFixed(2);
+    }
+  );
+
+, getAverage );
+
+d.chain()
+  .find({'attendanceDate': {'$gte': 1450569600000}})
+  .limit(8)
+  .data()
+  .reduce(
+    function(map, day){
+      map[day.attendanceDate] = (map[day.attendanceDate] || 0) + day.count;
+      return map;
+    },
+    Object.create(null)
+  );

@@ -4,8 +4,9 @@ import moment from 'moment-timezone';
 import spahql from 'spahql';
 import MasonryCtl from 'react-masonry-component';
 import Radium from 'radium';
-import { connect } from 'react-redux';
-import { ActionCreators } from 'redux-undo';
+import { observer } from "mobx-react";
+import connect from '../components/connect';
+import { browserHistory } from 'react-router';
 import DashboardComponentSmall from '../components/DashboardComponentSmall';
 import DashboardMediumGraph from '../components/DashboardMediumGraph';
 import ReactGridLayout from 'react-grid-layout';
@@ -30,19 +31,26 @@ import IconButton from 'material-ui/lib/icon-button';
 import CircularProgress from 'material-ui/lib/circular-progress';
 import List from 'material-ui/lib/lists/list';
 import ListItem from 'material-ui/lib/lists/list-item';
+import Subheader from 'material-ui/lib/Subheader/Subheader';
 import Divider from 'material-ui/lib/divider';
 import ActionGrade from 'material-ui/lib/svg-icons/action/grade';
 import Editor from 'react-medium-editor';
 import { Grid, Row, Col } from 'react-bootstrap';
+
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/medium-editor.css';
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/themes/default.css';
-import { updateClassAttendance, updateNote, addNote, updateClassAttendanceLocal } from '../actions';
+import { updateClassAttendance, updateNote, addNote, divisionClassAttendanceAction } from '../actions';
 let Masonry = MasonryCtl(React);
 
-@Radium
+@connect(state => ({
+  classes: state.classes,
+  settings: state.settings
+}))
+@observer
 class Dashboard extends Component {
-  constructor(props) {
-    super(props);
+  constructor(props, context){
+    super(props, context);
+    //this.attendanceUpdate = _.debounce(this.attendanceUpdate, 2000);
   }
 
   resize() {
@@ -66,32 +74,30 @@ class Dashboard extends Component {
   }
 
   componentWillMount() {
-    const { dispatch, configs } = this.props;
-    let db = spahql.db(configs.data),
-        today = moment().weekday(),
-        attendanceDay = db.select("/*/classMeetingDays/*[/day == "+today+"]").value();
+    const { classes, settings } = this.props;
+    let today = moment().weekday();
+    settings.authenticated = true;
 
     this.delayedAttendanceUpdate = _.debounce(function (divClass, count, event) {
       //console.log(divClass, event.target.value, attendanceDay);
-      dispatch(updateClassAttendance(divClass.id, today, moment().format('YYYY-MM-DD 00:00:00'), count));
+      classes.updateClassAttendance(divClass.id, today, moment().format('YYYY-MM-DD 00:00:00'), count);
     }, 500);
 
     this.delayedNoteUpdate = _.debounce(function (note, changes) {
-      dispatch(updateNote(note, changes));
+      //dispatch(updateNote(note, changes));
     }, 500);
 
 
     this.setState({
       sparklineWidth: 100,
-      attendanceDay: attendanceDay,
-      displayAttendance: this.displayAttendance(),
       showDialog: false,
       currentNote: {
         id: null,
         title: null,
         text: null
       },
-      masonryOptions: {}
+      masonryOptions: {},
+      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
     });
   }
 
@@ -100,101 +106,84 @@ class Dashboard extends Component {
     //console.log("handleAttendance", currentValue);
   }
 
-  displayAttendance() {
-    const { configs } = this.props;
-    let db = spahql.db(configs.data),
-        today = moment().weekday(),
-        classDay = db.select("/*/classMeetingDays/*[/day == "+today+"]").value();
+  displayAttendance(divisionConfig) {
+    const { classes } = this.props,
+          { now } = this.state;
+    //console.log("displayAttendance", classes);
+    let today = moment().weekday(),
+        division = classes.getCurrentDivision(now),
+        classDay = classes.getCurrentDivisionMeetingDays(divisionConfig, today),
+        divClasses = classes.getCurrentDivisionClasses(division.id);
     if (!Array.isArray(classDay) && classDay !== null) {
       classDay = [classDay];
     } else if (classDay === null) {
       classDay = [];
     }
     let results = classDay.map(function(day, index){
-      let config = db.select("/*[/id == "+day.divisionConfigId+"]"),
-          classes = db.select("/*[/id == "+day.divisionConfigId+"]/divisionYears/0/divisions/0/divisionClasses");
-      day.classes = classes.value();
-      day.config = config.value();
+      day.classes = divClasses;
+      day.config = divisionConfig;
     });
+    //console.log("classDay", classDay);
     return classDay;
   }
 
-  getClasses(day) {
-    const { configs } = this.props;
-    let db = spahql.db(configs.data),
-        today = moment().weekday();
-    let classDays = db.select("/0/divisionYears/0/divisions/0/divisionClasses/*").values();
-    return classDays;
+  getClasses(divisionConfig) {
+    const { classes } = this.props,
+          { now } = this.state;
+    let today = moment().weekday(),
+        division = classes.getCurrentDivision(now),
+        classDay = classes.getCurrentDivisionMeetingDays(divisionConfig, today),
+        divClasses = classes.getCurrentDivisionClasses(division.id);
+    return divClasses;
   }
 
   displayTeachers(divClass) {
-    const { configs } = this.props;
-    let db = spahql.db(configs.data),
-        today = moment().weekday(),
-        teachers = db.select("/0/divisionYears/0/divisions/0/divisionClasses/*[/id =="+divClass.id+"]/divisionClassTeachers/*/[/day == "+today+"]").values();
+    const { classes } = this.props,
+          { now } = this.state,
+          classDay = divClass.class.day,
+          divisionClassId = divClass.divisionClass.id;
+    let today = moment().weekday(),
+        teachers = classes.getCurrentClassTeachers(divisionClassId);
     return teachers;
   }
 
   attendanceUpdate(divClass, e) {
-    const { dispatch } = this.props,
-          { attendanceDay } = this.state,
-          db = spahql.db(divClass),
-          attendance = db.select("//divisionClassAttendances/*[/attendanceDate =~ '^"+moment().format("YYYY-MM-DD")+"']"),
-          exists = attendance.values.length,
-          count = parseInt(e.target.value, 10);
-    let attend = {},
-        today = moment().format("YYYY-MM-DD")+"T00:00:00.000Z";
-    e.persist();
-    if (!exists) {
-      attend = {
-        attendanceDate: today,
-        count: count,
-        createdAt: today,
-        day: moment().weekday(),
-        deletedAt: null,
-        divisionClassId: divClass.id,
-        id: null,
-        revision: null,
-        updatedAt: today,
-        updating: true
-      }
-      divClass.divisionClassAttendances.unshift(attend);
-    } else {
-      attendance.values[0].count = count;
-      attendance.values[0].updating = true;
-    }
-    dispatch(updateClassAttendanceLocal(divClass));
-    this.delayedAttendanceUpdate(divClass, count, e);
+    const { classes } = this.props,
+          { now } = this.state;
+    classes.updateClassAttendance(divClass.divisionClass.id, now, e.target.value);
   }
 
   getClassAttendance(divClass) {
-    let db = spahql.db(divClass),
-        today = moment.utc(moment.tz("America/Chicago").format("YYYY-MM-DD")).valueOf(),
-        attendance = db.select("//divisionClassAttendances/*[/attendanceDate >= "+today+"]").values(),
+    const { now } = this.state,
+          { classes } = this.props;
+    let attendance = classes.getClassAttendanceToday(divClass.divisionClass.id),
         day = moment().format("YYYY-MM-DD"),
         isToday = false;
-    console.log("getClassAttendance", divClass, attendance);
+    //console.log("getClassAttendance", divClass, attendance);
     if (attendance.length) {
-      isToday = moment.utc(attendance[0].attendanceDate).isSame(day, 'day');
+      /*
+      isToday = moment.utc(attendance[0].attendanceDate).tz('America/Chicago').isSame(day, 'day');
       if (isToday) {
         let count = (attendance[0].count === null) ? "0" : attendance[0].count.toString();
         return count;
       } else {
         return "0";
       }
+      */
+      return attendance[0].count.toString();
     } else {
       return "0";
     }
   }
 
-  getGraphAttendance() {
-    const { attendance } = this.props;
-    let labels = attendance.data.latest.map(function(day, index){
-          return moment(day.attendanceDate).tz("America/Chicago").format("MM/DD");
-        }).reverse(),
-        series = attendance.data.latest.map(function(day, index){
+  getGraphAttendance(day, length) {
+    const { classes } = this.props;
+    let labels = classes.latestAttendance(day, length).map(function(day, index){
+          return moment.utc(day.attendanceDate).tz("America/Chicago").format("MM/DD");
+        }),
+        series = classes.latestAttendance(day, length).map(function(day, index){
           return parseInt(day.attendance,10);
-        }).reverse();
+        });
     //console.log("graphAttendance", labels, series);
     return {
       labels: labels,
@@ -203,6 +192,7 @@ class Dashboard extends Component {
   }
 
   isUpdating(divClass) {
+    /*
     if (divClass.divisionClassAttendances.length && "updating" in divClass.divisionClassAttendances[0]) {
       console.log("isUpdating", true);
       return true;
@@ -210,6 +200,8 @@ class Dashboard extends Component {
       console.log("isUpdating", false);
       return false;
     }
+    */
+    return false;
   }
 
   handleCardTouchTap(note, e) {
@@ -220,7 +212,6 @@ class Dashboard extends Component {
   }
 
   handleDialogClose(e) {
-    const { dispatch } = this.props;
     if (!this.state.currentNote.id) {
       let title = (this.refs.title.getValue().length) ? this.refs.title.getValue() : null;
       this.setState({
@@ -230,11 +221,13 @@ class Dashboard extends Component {
           title: title
         }
       });
+      /*
       dispatch(
         addNote(
           this.state.currentNote
         )
       );
+      */
     }
     this.setState({
       showDialog: false
@@ -270,6 +263,12 @@ class Dashboard extends Component {
     }
   }
 
+  getNotes() {
+    const { classes } = this.props;
+    let results = classes.getNotes();
+    return results;
+  }
+
   handleNewNote(e) {
     this.setState({
       currentNote: {
@@ -281,9 +280,10 @@ class Dashboard extends Component {
     });
   }
 
-  handleNoteDelete(e) {
+  handleNoteDelete(note, e) {
     e.stopPropagation();
-    console.log("Delete", e);
+    const { classes } = this.props;
+    classes.deleteRecord("notes", note.id);
   }
 
   highlightText(e) {
@@ -293,8 +293,8 @@ class Dashboard extends Component {
   }
 
   render() {
-    const { dispatch, configs, attendance, notes, ...props } = this.props;
-    const { masonryOptions, displayAttendance } = this.state;
+    const { classes, ...props } = this.props;
+    const { masonryOptions, now } = this.state;
     let paperStyle = {
           display: 'flex',
           flexDirection: 'row',
@@ -330,93 +330,105 @@ class Dashboard extends Component {
           color: '#4DAF7C',
           size: '8px'
         },
-        db = spahql.db(configs.data),
-        today = moment().weekday(),
-        classDay = db.select("/*/classMeetingDays/*[/day == "+today+"]").value()
+        today = moment().weekday();
+    //console.log("classes.divisionConfigs:", classes);
     return (
       <div>
         <Grid fluid={true}>
-          {displayAttendance.map((attendance, index) =>
-            <Row key={attendance.id}>
-              <Col xs={12} sm={12} md={12} lg={12}>
-                <Card>
-                  <CardHeader
-                    title={attendance.config.title+" Attendance"}
-                    subtitle={moment().format("dddd MM/DD/YYYY")}
-                    avatar={<Avatar>{moment().format("dd")}</Avatar>}>
-                  </CardHeader>
-                  <CardMedia>
-                    <Grid fluid={true}>
-                      {attendance.classes.map((divClass, index) =>
-                        <Col style={{display: "flex", alignItems: "center", justifyContent: "center"}} key={divClass.id} xs={12} sm={6} md={4} lg={3}>
-                          <div style={{width: "85%"}}>
-                            <TextField
-                              type="number"
-                              hintText="Enter attendance"
-                              value={::this.getClassAttendance(divClass)}
-                              min="0"
-                              max="500"
-                              ref={"inputAttendance"+divClass.id}
-                              onFocus={((...args)=>this.highlightText(...args))}
-                              onChange={((...args)=>this.attendanceUpdate(divClass, ...args))}
-                              floatingLabelText={divClass.class.title} />
-                          </div>
-                          <div style={{width: "13%", margin: "0 1%", height: "50px", overflow: "hidden"}}><CircularProgress style={{display: (this.isUpdating(divClass)) ? "block" : "none"}} size={0.35} mode="indeterminate" /></div>
-                        </Col>
-                      )}
-                    </Grid>
-                  </CardMedia>
-                </Card>
-              </Col>
+          {classes.getDivisionConfigs().map((divisionConfig, index) =>
+            <Row key={index}>
+            {this.displayAttendance(divisionConfig).map((attendance, index) =>
+                <Col xs={12} sm={12} md={12} lg={12} key={index}>
+                  <Card>
+                    <CardHeader
+                      title={attendance.config.title+" Attendance"}
+                      subtitle={moment().format("dddd MM/DD/YYYY")}
+                      avatar={<Avatar>{moment().format("dd")}</Avatar>}>
+                    </CardHeader>
+                    <CardMedia>
+                      <Grid fluid={true} key={1}>
+                        <Row>
+                        {attendance.classes.map((divClass, index) =>
+                          <Col style={{display: "flex", alignItems: "center", justifyContent: "center"}} key={index} xs={12} sm={6} md={4} lg={3}>
+                            <div style={{width: "85%"}}>
+                              <TextField
+                                type="number"
+                                hintText="Enter attendance"
+                                value={::this.getClassAttendance(divClass)}
+                                min="0"
+                                max="500"
+                                ref={"inputAttendance"+divClass.id}
+                                onFocus={((...args)=>this.highlightText(...args))}
+                                onChange={((...args)=>this.attendanceUpdate(divClass, ...args))}
+                                floatingLabelText={divClass.class.title} />
+                            </div>
+                            <div style={{width: "13%", margin: "0 1%", height: "50px", overflow: "hidden"}}><CircularProgress style={{display: (this.isUpdating(divClass)) ? "block" : "none"}} size={0.35} mode="indeterminate" /></div>
+                          </Col>
+                        )}
+                        </Row>
+                      </Grid>
+                    </CardMedia>
+                  </Card>
+                </Col>
+            )}
             </Row>
           )}
           <Masonry className={"row"} options={masonryOptions}>
+            {classes.getClassMeetingDays().map((day, index) =>
+              <Col xs={12} sm={12} md={6} lg={6} key={index}>
+                <DashboardMediumGraph
+                  title={moment().weekday(day.day).format("dddd") + " Attendance"}
+                  subtitle={"Past 8 weeks"}
+                  avatar={<Avatar>A</Avatar>}
+                  lineChartData={::this.getGraphAttendance(day.day, 8)}
+                  lineChartOptions={lineChartOptions}
+                />
+              </Col>
+            )}
+            {classes.getDivisionConfigs().map((divisionConfig, index) =>
+              <Col xs={12} sm={12} md={6} lg={6} key={index} style={(this.displayAttendance(divisionConfig).length) ? null : {display: 'none'}}>
+                <Card>
+                  <CardHeader
+                    title={divisionConfig.title + " Teachers"}
+                    subtitle={moment().tz("America/Chicago").format("dddd")}
+                    avatar={<Avatar>T</Avatar>}>
+                  </CardHeader>
+                  <CardMedia>
+                    {::this.getClasses(divisionConfig).map((divClass, index) =>
+                      <div key={index}>
+                        <Divider />
+                        <List>
+                          <Subheader>{divClass.class.title}</Subheader>
+                          {this.displayTeachers(divClass).map((teacher, index) =>
+                            <ListItem
+                              key={teacher.divClassTeacher.id}
+                              primaryText={teacher.person.firstName+" "+teacher.person.lastName}
+                              leftIcon={
+                                <ActionGrade
+                                  onTouchTap={((...args)=>this.confirmTeacher(divClass, teacherDay, teacher, ...args))}
+                                  color={(teacher.divClassTeacher.confirmed) ? Styles.Colors.deepOrange500 : Styles.Colors.grey400} />
+                              }
+                            />
+                          )}
+                        </List>
+                      </div>
+                    )}
+                  </CardMedia>
+                </Card>
+              </Col>
+            )}
             <Col xs={12} sm={12} md={6} lg={6}>
-              <DashboardMediumGraph
-                title={"Attendance"}
-                subtitle={"Past 8 weeks"}
-                avatar={<Avatar>A</Avatar>}
-                lineChartData={::this.getGraphAttendance()}
-                lineChartOptions={lineChartOptions}
-              />
-            </Col>
-            <Col xs={12} sm={12} md={6} lg={6} style={(attendance.length) ? null : {display: 'none'}}>
-              <Card>
-                <CardHeader
-                  title={"Teachers"}
-                  subtitle={moment().tz("America/Chicago").format("dddd")}
-                  avatar={<Avatar>T</Avatar>}>
-                </CardHeader>
-                <CardMedia>
-                  {::this.getClasses().map((divClass, index) =>
-                    <div key={divClass.id}>
-                      <Divider />
-                      <List subheader={divClass.class.title}>
-                        {this.displayTeachers(divClass).map((teacher, index) =>
-                          <ListItem
-                            key={teacher.id}
-                            primaryText={teacher.person.firstName+" "+teacher.person.lastName}
-                            leftIcon={
-                              <ActionGrade
-                                onTouchTap={((...args)=>this.confirmTeacher(divisionClass, teacherDay, teacher, ...args))}
-                                color={(teacher.confirmed) ? Styles.Colors.deepOrange500 : Styles.Colors.grey400} />
-                            }
-                          />
-                        )}
-                      </List>
-                    </div>
-                  )}
-                </CardMedia>
-              </Card>
-            </Col>
-            <Col xs={6} sm={4} md={3} lg={3}>
-              <DashboardComponentSmall
-                zDepth={1}
-                sparkLineData={[5, 10, 5, 20, 5, 30, 25, 10, 18, 32, 22, 28, 30, 21, 45, 29, 33, 18, 10, 15]}
-                title={"Avg. Attendance"}
-                body={attendance.data.average[0].attendance.toFixed(2)}
-                style={paperStyle}
-              />
+              {classes.getClassMeetingDays().map((day, index) =>
+                <Col xs={12} sm={6} md={6} lg={6} key={index}>
+                  <DashboardComponentSmall
+                    zDepth={1}
+                    sparkLineData={[5, 10, 5, 20, 5, 30, 25, 10, 18, 32, 22, 28, 30, 21, 45, 29, 33, 18, 10, 15]}
+                    title={"Avg. Attendance "+moment().weekday(day.day).format("dddd")}
+                    body={classes.avgAttendance(day.day)}
+                    style={paperStyle}
+                  />
+                </Col>
+              )}
             </Col>
             <Col xs={12} sm={12} md={6} lg={6}>
               <Toolbar>
@@ -432,7 +444,7 @@ class Dashboard extends Component {
                 </ToolbarGroup>
               </Toolbar>
               <Masonry>
-                {notes.data.map((note, index) =>
+                {this.getNotes().map((note, index) =>
                   <Col key={note.id} xs={12} sm={6} md={6} lg={6} key={index}>
                     <Card>
                       <CardTitle title={note.title} style={(note.title) ? null : {display: 'none'}} />
@@ -444,7 +456,7 @@ class Dashboard extends Component {
                           iconClassName="material-icons"
                           tooltipPosition="top-center"
                           tooltip="Delete"
-                          onTouchTap={::this.handleNoteDelete}>
+                          onTouchTap={((...args)=>this.handleNoteDelete(note, ...args))}>
                             delete
                         </IconButton>
                       </CardActions>
@@ -482,10 +494,6 @@ class Dashboard extends Component {
   }
 }
 
-Dashboard.propTypes = {
-  dispatch: PropTypes.func.isRequired
-};
-
 const styles = {
   noteSmall: {
     width: '48%',
@@ -506,12 +514,4 @@ const styles = {
   }
 };
 
-function select(state) {
-  return {
-    configs: state.divisionConfigs.present,
-    attendance: state.attendance.present,
-    notes: state.notes.present
-  };
-}
-
-export default connect(select)(Dashboard);
+export default Dashboard;

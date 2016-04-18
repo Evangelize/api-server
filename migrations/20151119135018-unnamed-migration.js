@@ -14,7 +14,7 @@ module.exports = {
       queryInterface.createTable(
         'people',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+          "id": { type: Sequelize.BLOB, primaryKey: true },
           "familyName": Sequelize.STRING,
           "lastName": Sequelize.STRING,
           "firstName": Sequelize.STRING,
@@ -48,7 +48,7 @@ module.exports = {
       queryInterface.createTable(
         'teachers',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+          "id": { type: Sequelize.BLOB, primaryKey: true },
           "peopleId": Sequelize.INTEGER,
           "createdAt": Sequelize.DATE,
           "updatedAt": Sequelize.DATE,
@@ -62,7 +62,7 @@ module.exports = {
       queryInterface.createTable(
         'students',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+          "id": { type: Sequelize.BLOB, primaryKey: true },
           "peopleId": Sequelize.INTEGER,
           "createdAt": Sequelize.DATE,
           "updatedAt": Sequelize.DATE,
@@ -76,7 +76,7 @@ module.exports = {
       queryInterface.createTable(
         'divisionConfigs',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+          "id": { type: Sequelize.BLOB, primaryKey: true },
           "title": { type: Sequelize.STRING, defaultValue: 'Children\'s Classes' },
           "divisionName": { type: Sequelize.ENUM('semester', 'quarter'), defaultValue: 'quarter' },
           "academicYearTitle": { type: Sequelize.STRING, defaultValue: 'Academic Year' },
@@ -98,7 +98,7 @@ module.exports = {
       queryInterface.createTable(
         'divisionYears',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+          "id": { type: Sequelize.BLOB, primaryKey: true },
           "divisionConfigId": Sequelize.INTEGER,
           "startDate": Sequelize.DATE,
           "endDate": Sequelize.DATE,
@@ -114,8 +114,8 @@ module.exports = {
       queryInterface.createTable(
         'divisions',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-          "divisionConfigId": Sequelize.INTEGER,
+          "id": { type: Sequelize.BLOB, primaryKey: true },
+          "divisionConfigId": Sequelize.BLOB,
           "divisionYear": Sequelize.INTEGER,
           "position": Sequelize.INTEGER,
           "title": Sequelize.STRING,
@@ -133,7 +133,7 @@ module.exports = {
       queryInterface.createTable(
         'classes',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+          "id": { type: Sequelize.BLOB, primaryKey: true },
           "title": Sequelize.STRING,
           "description": Sequelize.STRING,
           "createdAt": Sequelize.DATE,
@@ -148,8 +148,8 @@ module.exports = {
       queryInterface.createTable(
         'divisionClasses',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-          "divisionId": Sequelize.INTEGER,
+          "id": { type: Sequelize.BLOB, primaryKey: true },
+          "divisionId": Sequelize.BLOB,
           "classId": Sequelize.INTEGER,
           "createdAt": Sequelize.DATE,
           "updatedAt": Sequelize.DATE,
@@ -163,8 +163,8 @@ module.exports = {
       queryInterface.createTable(
         'classMeetingDays',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-          "divisionConfigId": Sequelize.INTEGER,
+          "id": { type: Sequelize.BLOB, primaryKey: true },
+          "divisionConfigId": Sequelize.BLOB,
           "day": Sequelize.INTEGER,
           "createdAt": Sequelize.DATE,
           "updatedAt": Sequelize.DATE,
@@ -178,9 +178,9 @@ module.exports = {
       queryInterface.createTable(
         'divisionClassTeachers',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-          "divisionClassId": Sequelize.INTEGER,
-          "peopleId": Sequelize.INTEGER,
+          "id": { type: Sequelize.BLOB, primaryKey: true },
+          "divisionClassId": Sequelize.BLOB,
+          "peopleId": Sequelize.BLOB,
           "day": Sequelize.INTEGER,
           "confirmed": { type: Sequelize.BOOLEAN, defaultValue: false },
           "createdAt": Sequelize.DATE,
@@ -195,8 +195,8 @@ module.exports = {
       queryInterface.createTable(
         'divisionClassStudents',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-          "divisionClassId": Sequelize.INTEGER,
+          "id": { type: Sequelize.BLOB, primaryKey: true },
+          "divisionClassId": Sequelize.BLOB,
           "peopleId": Sequelize.INTEGER,
           "createdAt": Sequelize.DATE,
           "updatedAt": Sequelize.DATE,
@@ -210,8 +210,8 @@ module.exports = {
       queryInterface.createTable(
         'divisionClassAttendance',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-          "divisionClassId": Sequelize.INTEGER,
+          "id": { type: Sequelize.BLOB, primaryKey: true },
+          "divisionClassId": Sequelize.BLOB,
           "day": Sequelize.INTEGER,
           "attendanceDate": Sequelize.DATE,
           "count": Sequelize.INTEGER,
@@ -227,7 +227,7 @@ module.exports = {
       queryInterface.createTable(
         'notes',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+          "id": { type: Sequelize.BLOB, primaryKey: true },
           "type": {
             type: Sequelize.ENUM(
               'none',
@@ -252,13 +252,13 @@ module.exports = {
       queryInterface.createTable(
         'revisions',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+          "id": { type: Sequelize.BLOB, primaryKey: true },
           model: {
             type: Sequelize.TEXT,
             allowNull: false
           },
           documentId: {
-            type: Sequelize.UUID,
+            type: Sequelize.BLOB,
             allowNull: false
           },
           revision: {
@@ -277,7 +277,7 @@ module.exports = {
       queryInterface.createTable(
         'revisionChanges',
         {
-          "id": { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+          "id": { type: Sequelize.BLOB, primaryKey: true },
           path: {
             type: Sequelize.TEXT,
             allowNull: false

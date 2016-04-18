@@ -2,9 +2,34 @@ module.exports = function (sequelize, DataTypes) {
   var DivisionClassTeachers = sequelize.define(
     'divisionClassTeachers',
     {
-      "id": { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-      "divisionClassId": DataTypes.INTEGER,
-      "peopleId": DataTypes.INTEGER,
+      "id": {
+        type: DataTypes.BLOB,
+        primaryKey: true,
+        get: function()  {
+          return this.getDataValue('id').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('id', new Buffer(val, "hex"));
+        }
+      },
+      "divisionClassId":  {
+        type: DataTypes.BLOB,
+        get: function()  {
+          return this.getDataValue('divisionClassId').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('divisionClassId', new Buffer(val, "hex"));
+        }
+      },
+      "peopleId":  {
+        type: DataTypes.BLOB,
+        get: function()  {
+          return this.getDataValue('peopleId').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('peopleId', new Buffer(val, "hex"));
+        }
+      },
       "day": DataTypes.INTEGER,
       "confirmed": DataTypes.BOOLEAN,
       "createdAt": {

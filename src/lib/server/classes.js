@@ -28,7 +28,7 @@ export default {
             );
           },
           function(classTeacher, callback) {
-            console.log(classTeacher);
+            //console.log(classTeacher);
             models.DivisionClasses.findOne(
               {
                 where: {

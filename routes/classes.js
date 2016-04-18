@@ -52,7 +52,7 @@ module.exports = [
     method: 'DELETE',
     path: prefix + '/{classId}/teacher/{classTeacherId}',
     handler: function (request, reply) {
-      console.log(request.params);
+      //console.log(request.params);
       api
       .classes
       .deleteTeacher(
@@ -86,7 +86,7 @@ module.exports = [
           utils.pushMessage("attendance.UPDATE_DIVISION_CLASS_ATTENDANCE_FULFILLED", results);
           utils.pushLast8Attenance().then(
             function(results) {
-              console.log(results);
+              //console.log(results);
             },
             function(err) {
               console.log(err);
@@ -94,7 +94,7 @@ module.exports = [
           );
           utils.pushAvgAttendance().then(
             function(results) {
-              console.log(results);
+              //console.log(results);
             },
             function(err) {
               console.log(err);
