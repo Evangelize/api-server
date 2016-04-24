@@ -148,7 +148,7 @@ class Dashboard extends Component {
   attendanceUpdate(divClass, e) {
     const { classes } = this.props,
           { now } = this.state;
-    classes.updateClassAttendance(divClass.divisionClass.id, now, parseInt(e.target.value, 10);
+    classes.updateClassAttendance(divClass.divisionClass.id, now, parseInt(e.target.value, 10));
   }
 
   getClassAttendance(divClass) {
