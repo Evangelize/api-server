@@ -531,6 +531,7 @@ export default class Classes {
   }
 
   updateClassAttendance(divisionClassId, now, count) {
+    console.log("delayedAttendanceUpdate", count);
     let record = this.collections.divisionClassAttendance
                 .findOne(
                   {
@@ -550,7 +551,7 @@ export default class Classes {
     if (!record) {
       record = {
         attendanceDate: now,
-        count: parseInt(count),
+        count: parseInt(count, 10),
         createdAt: null,
         day: moment(now, "x").weekday(),
         deletedAt: null,

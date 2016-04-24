@@ -37,7 +37,6 @@ import { Grid, Row, Col } from 'react-bootstrap';
 
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/medium-editor.css';
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/themes/default.css';
-import { updateClassAttendance, updateNote, addNote, divisionClassAttendanceAction } from '../actions';
 let Masonry = MasonryCtl(React);
 
 @connect(state => ({
