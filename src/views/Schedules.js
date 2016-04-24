@@ -10,40 +10,34 @@ import { browserHistory } from 'react-router';
 import DashboardMedium from '../components/DashboardMedium';
 import ReactGridLayout from 'react-grid-layout';
 import Slider from 'react-slick';
-import Styles from 'material-ui/lib/styles';
-import Table from 'material-ui/lib/table/table';
-import TableBody from 'material-ui/lib/table/table-body';
-import TableFooter from 'material-ui/lib/table/table-footer';
-import TableHeader from 'material-ui/lib/table/table-header';
-import TableHeaderColumn from 'material-ui/lib/table/table-header-column';
-import TableRow from 'material-ui/lib/table/table-row';
-import TableRowColumn from 'material-ui/lib/table/table-row-column';
-import Card from 'material-ui/lib/card/card';
-import CardHeader from 'material-ui/lib/card/card-header';
-import CardMedia from 'material-ui/lib/card/card-media';
-import Avatar from 'material-ui/lib/avatar';
-import CardTitle from 'material-ui/lib/card/card-title';
-import DropDownMenu from 'material-ui/lib/DropDownMenu';
-import Toolbar from 'material-ui/lib/toolbar/toolbar';
-import ToolbarGroup from 'material-ui/lib/toolbar/toolbar-group';
-import ToolbarSeparator from 'material-ui/lib/toolbar/toolbar-separator';
-import ToolbarTitle from 'material-ui/lib/toolbar/toolbar-title';
-import RaisedButton from 'material-ui/lib/raised-button';
-import FontIcon from 'material-ui/lib/font-icon';
-import IconMenu from 'material-ui/lib/menus/icon-menu';
-import IconButton from 'material-ui/lib/icon-button';
-import MoreVertIcon from 'material-ui/lib/svg-icons/navigation/more-vert';
-import MenuItem from 'material-ui/lib/menus/menu-item';
-import FlatButton from 'material-ui/lib/flat-button';
-import Snackbar from 'material-ui/lib/snackbar';
-import List from 'material-ui/lib/lists/list';
-import ListItem from 'material-ui/lib/lists/list-item';
-import Subheader from 'material-ui/lib/Subheader/Subheader';
-import Divider from 'material-ui/lib/divider';
+import * as Colors from 'material-ui/styles/colors';
+import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn, TableFooter} from 'material-ui/Table';
+import Card from 'material-ui/Card/Card';
+import CardHeader from 'material-ui/Card/CardHeader';
+import CardMedia from 'material-ui/Card/CardMedia';
+import Avatar from 'material-ui/Avatar';
+import CardTitle from 'material-ui/Card/CardTitle';
+import DropDownMenu from 'material-ui/DropDownMenu';
+import Toolbar from 'material-ui/Toolbar/Toolbar';
+import ToolbarGroup from 'material-ui/Toolbar/ToolbarGroup';
+import ToolbarSeparator from 'material-ui/Toolbar/ToolbarSeparator';
+import ToolbarTitle from 'material-ui/Toolbar/ToolbarTitle';
+import RaisedButton from 'material-ui/RaisedButton';
+import FontIcon from 'material-ui/FontIcon';
+import IconMenu from 'material-ui/IconMenu';
+import IconButton from 'material-ui/IconButton';
+import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
+import MenuItem from 'material-ui/MenuItem';
+import FlatButton from 'material-ui/FlatButton';
+import Snackbar from 'material-ui/Snackbar';
+import List from 'material-ui/List/List';
+import ListItem from 'material-ui/List/ListItem';
+import Subheader from 'material-ui/Subheader/Subheader';
+import Divider from 'material-ui/Divider';
 import MediaQuery from 'react-responsive';
-import ActionGrade from 'material-ui/lib/svg-icons/action/grade';
-import ContentAdd from 'material-ui/lib/svg-icons/content/add';
-import ContentRemove from 'material-ui/lib/svg-icons/content/remove';
+import ActionGrade from 'material-ui/svg-icons/action/grade';
+import ContentAdd from 'material-ui/svg-icons/content/add';
+import ContentRemove from 'material-ui/svg-icons/content/remove';
 import { Grid, Row, Col } from 'react-bootstrap';
 import { manageDivisionClassTeacher, getDivisionsConfigs } from '../actions';
 
@@ -279,7 +273,7 @@ class Schedules extends Component {
               touch={true}
               tooltip="more"
               tooltipPosition="bottom-left">
-              <MoreVertIcon color={Styles.Colors.grey400} />
+              <MoreVertIcon color={Colors.grey400} />
             </IconButton>
           );
     //console.log("render", configs.data.data);
@@ -300,8 +294,8 @@ class Schedules extends Component {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "flex-start",
-          backgroundColor: Styles.Colors.grey300,
-          borderLeft: "1px solid "+ Styles.Colors.grey400
+          backgroundColor: Colors.grey300,
+          borderLeft: "1px solid "+ Colors.grey400
         },
         tileClassName = {
           padding: "2%",
@@ -313,10 +307,10 @@ class Schedules extends Component {
           flexDirection: "row",
           alignItems: "flex-start",
           justifyContent: "flex-start",
-          borderLeft: "1px solid "+ Styles.Colors.grey400
+          borderLeft: "1px solid "+ Colors.grey400
         },
         stripe = {
-          backgroundColor: Styles.Colors.grey100
+          backgroundColor: Colors.grey100
         },
         settings = {
           arrows: false,
@@ -442,8 +436,8 @@ class Schedules extends Component {
                             {classes.getCurrentDivisionClasses(division.id).map((divisionClass, index) =>
                               <TableRow selected={false} key={divisionClass.divisionClass.id}>
                                 <TableRowColumn>
-                                  <h6><a style={{color: Styles.Colors.deepOrange500}} href="">{divisionClass.class.title}</a></h6>
-                                  <p style={{color: Styles.Colors.grey600}}>{divisionClass.class.description}</p>
+                                  <h6><a style={{color: Colors.deepOrange500}} href="">{divisionClass.class.title}</a></h6>
+                                  <p style={{color: Colors.grey600}}>{divisionClass.class.description}</p>
                                 </TableRowColumn>
                                 {::this.renderClassTeachers(divisionClass, division).map((teacherDay, index) =>
                                   <TableRowColumn key={index}>
@@ -456,7 +450,7 @@ class Schedules extends Component {
                                           touch={true}
                                           onTouchTap={((...args)=>this.confirmTeacher(divisionClass, teacherDay, teacher, ...args))}>
                                         <ActionGrade
-                                          color={(teacher.divClassTeacher.confirmed) ? Styles.Colors.deepOrange500 : Styles.Colors.grey400} />
+                                          color={(teacher.divClassTeacher.confirmed) ? Colors.deepOrange500 : Colors.grey400} />
                                         </IconButton>
                                         <FlatButton
                                           style={{
@@ -503,7 +497,7 @@ class Schedules extends Component {
                                         leftIcon={
                                           <ActionGrade
                                             onTouchTap={((...args)=>this.confirmTeacher(divisionClass, teacherDay, teacher, ...args))}
-                                            color={(teacher.divClassTeacher.confirmed) ? Styles.Colors.deepOrange500 : Styles.Colors.grey400} />
+                                            color={(teacher.divClassTeacher.confirmed) ? Colors.deepOrange500 : Colors.grey400} />
                                         }
                                       />,
                                     )}

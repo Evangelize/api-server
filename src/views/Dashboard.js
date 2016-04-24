@@ -1,7 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import _ from 'lodash';
 import moment from 'moment-timezone';
-import spahql from 'spahql';
 import MasonryCtl from 'react-masonry-component';
 import Radium from 'radium';
 import { observer } from "mobx-react";
@@ -10,30 +9,29 @@ import { browserHistory } from 'react-router';
 import DashboardComponentSmall from '../components/DashboardComponentSmall';
 import DashboardMediumGraph from '../components/DashboardMediumGraph';
 import ReactGridLayout from 'react-grid-layout';
-import Paper from 'material-ui/lib/paper';
-import Styles from 'material-ui/lib/styles';
-import Card from 'material-ui/lib/card/card';
-import CardHeader from 'material-ui/lib/card/card-header';
-import CardTitle from 'material-ui/lib/card/card-title';
-import CardMedia from 'material-ui/lib/card/card-media';
-import CardText from 'material-ui/lib/card/card-text';
-import CardActions from 'material-ui/lib/card/card-actions';
-import TextField from 'material-ui/lib/text-field';
-import Avatar from 'material-ui/lib/avatar';
-import Dialog from 'material-ui/lib/dialog';
-import Toolbar from 'material-ui/lib/toolbar/toolbar';
-import ToolbarGroup from 'material-ui/lib/toolbar/toolbar-group';
-import ToolbarSeparator from 'material-ui/lib/toolbar/toolbar-separator';
-import ToolbarTitle from 'material-ui/lib/toolbar/toolbar-title';
-import FlatButton from 'material-ui/lib/flat-button';
-import RaisedButton from 'material-ui/lib/raised-button';
-import IconButton from 'material-ui/lib/icon-button';
-import CircularProgress from 'material-ui/lib/circular-progress';
-import List from 'material-ui/lib/lists/list';
-import ListItem from 'material-ui/lib/lists/list-item';
-import Subheader from 'material-ui/lib/Subheader/Subheader';
-import Divider from 'material-ui/lib/divider';
-import ActionGrade from 'material-ui/lib/svg-icons/action/grade';
+import Paper from 'material-ui/Paper';
+import * as Colors from 'material-ui/styles/colors';
+import Card from 'material-ui/Card/Card';
+import CardHeader from 'material-ui/Card/CardHeader';
+import CardTitle from 'material-ui/Card/CardTitle';
+import CardMedia from 'material-ui/Card/CardMedia';
+import CardText from 'material-ui/Card/CardText';
+import CardActions from 'material-ui/Card/CardActions';
+import TextField from 'material-ui/TextField';
+import Avatar from 'material-ui/Avatar';
+import Dialog from 'material-ui/Dialog';
+import Toolbar from 'material-ui/Toolbar/Toolbar';
+import ToolbarGroup from 'material-ui/Toolbar/ToolbarGroup';
+import ToolbarSeparator from 'material-ui/Toolbar/ToolbarSeparator';
+import ToolbarTitle from 'material-ui/Toolbar/ToolbarTitle';
+import FlatButton from 'material-ui/FlatButton';
+import RaisedButton from 'material-ui/RaisedButton';
+import IconButton from 'material-ui/IconButton';
+import CircularProgress from 'material-ui/CircularProgress';
+import {List, ListItem} from 'material-ui/List';
+import Subheader from 'material-ui/Subheader/Subheader';
+import Divider from 'material-ui/Divider';
+import ActionGrade from 'material-ui/svg-icons/action/grade';
 import Editor from 'react-medium-editor';
 import { Grid, Row, Col } from 'react-bootstrap';
 
@@ -301,7 +299,7 @@ class Dashboard extends Component {
           alignItems: 'center',
           justifyContent: 'center',
           height: '75px',
-          backgroundColor: Styles.Colors.cyan300,
+          backgroundColor: Colors.cyan300,
           color: 'white'
         },
         grid = {
@@ -406,7 +404,7 @@ class Dashboard extends Component {
                               leftIcon={
                                 <ActionGrade
                                   onTouchTap={((...args)=>this.confirmTeacher(divClass, teacherDay, teacher, ...args))}
-                                  color={(teacher.divClassTeacher.confirmed) ? Styles.Colors.deepOrange500 : Styles.Colors.grey400} />
+                                  color={(teacher.divClassTeacher.confirmed) ? Colors.deepOrange500 : Colors.grey400} />
                               }
                             />
                           )}

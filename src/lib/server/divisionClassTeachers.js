@@ -45,7 +45,9 @@ export default {
       models.DivisionClassTeachers.destroy({
         where: {
           id: new Buffer(record.id, 'hex')
-        }
+        },
+        individualHooks: true,
+        hooks: true
       }).then(
         function(results) {
           resolve(record);

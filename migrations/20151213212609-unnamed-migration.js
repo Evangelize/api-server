@@ -1,5 +1,5 @@
 'use strict';
-
+var async = require('async');
 module.exports = {
   up: function (queryInterface, Sequelize) {
     /*
@@ -13,8 +13,8 @@ module.exports = {
       queryInterface.createTable(
         'users',
         {
-          "peopleId": { type: Sequelize.BLOB, primaryKey: true },
-          "password": Sequelize.BLOB,
+          "peopleId": { type: Sequelize.STRING(255), primaryKey: true  },
+          "password": Sequelize.STRING(255),
           "active": Sequelize.BOOLEAN,
           "createdAt": Sequelize.DATE,
           "updatedAt": Sequelize.DATE,

@@ -4,9 +4,9 @@ import { observer } from "mobx-react";
 import connect from '../components/connect';
 import { browserHistory } from 'react-router';
 import ReactGridLayout from 'react-grid-layout';
-import Paper from 'material-ui/lib/paper';
-import Styles from 'material-ui/lib/styles';
-import Transitions from 'material-ui/lib/styles/transitions';
+import Paper from 'material-ui/Paper';
+import * as Colors from 'material-ui/styles/colors';
+import Transitions from 'material-ui/styles/transitions';
 import { Sparklines, SparklinesBars } from 'react-sparklines';
 
 class DashboardComponentSmall extends Component {
@@ -36,7 +36,7 @@ class DashboardComponentSmall extends Component {
 
   render() {
     let attendanceStyle = {
-          backgroundColor: Styles.Colors.cyan500,
+          backgroundColor: Colors.cyan500,
           width: "50%",
           display: 'flex',
           flexDirection: 'row',

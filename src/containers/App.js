@@ -2,21 +2,19 @@ import React, { Component, PropTypes } from 'react';
 import { observer } from "mobx-react";
 import connect from '../components/connect';
 import { browserHistory } from 'react-router';
-import AppBar from 'material-ui/lib/app-bar';
-import AppCanvas from 'material-ui/lib/app-canvas';
-import IconButton from 'material-ui/lib/icon-button';
-import IconMenu from 'material-ui/lib/menus/icon-menu';
-import MenuItem from 'material-ui/lib/menus/menu-item';
-import Menu from 'material-ui/lib/menus/menu';
-import List from 'material-ui/lib/lists/list';
-import ListItem from 'material-ui/lib/lists/list-item';
-import ThemeManager from 'material-ui/lib/styles/theme-manager';
-import getMuiTheme from 'material-ui/lib/styles/getMuiTheme';
+import AppBar from 'material-ui/AppBar';
+import IconButton from 'material-ui/IconButton';
+import IconMenu from 'material-ui/IconMenu';
+import MenuItem from 'material-ui/MenuItem';
+import Menu from 'material-ui/Menu';
+import {List, ListItem} from 'material-ui/List';
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import CustomColors from '../components/CustomColors';
-import * as Colors from 'material-ui/lib/styles/colors';
-import NavigationMenu from 'material-ui/lib/svg-icons/navigation/menu';
-import MoreVertIcon from 'material-ui/lib/svg-icons/navigation/more-vert';
-import LeftNav from 'material-ui/lib/left-nav';
+import * as Colors from 'material-ui/styles/colors';
+import NavigationMenu from 'material-ui/svg-icons/navigation/menu';
+import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
+import Drawer from 'material-ui/Drawer';
 
 @connect(state => ({
   classes: state.classes,
@@ -79,7 +77,7 @@ class App extends Component {
           };
     //console.log("settings", this.props);
     return (
-      <AppCanvas>
+      <div>
         <div style={{display: (settings.authenticated) ? "block": "none"}}>
           <AppBar
             title="Evangelize"
@@ -90,7 +88,7 @@ class App extends Component {
           </AppBar>
         </div>
         <div>
-          <LeftNav
+          <Drawer
             ref="leftNav"
             docked={false}
             disableSwipeToOpen={true}
@@ -136,10 +134,10 @@ class App extends Component {
               <ListItem value={"/people"} primaryText="Members" onTouchTap={((...args)=>this.handleLeftNavChange("/people", ...args))} />
               <ListItem value={"/settings"} primaryText="Settings" onTouchTap={((...args)=>this.handleLeftNavChange("/settings", ...args))} />
             </List>
-          </LeftNav>
+          </Drawer>
         </div>
         {this.props.children}
-      </AppCanvas>
+      </div>
     );
   }
 }

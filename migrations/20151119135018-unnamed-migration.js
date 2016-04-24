@@ -99,7 +99,7 @@ module.exports = {
         'divisionYears',
         {
           "id": { type: Sequelize.BLOB, primaryKey: true },
-          "divisionConfigId": Sequelize.INTEGER,
+          "divisionConfigId": Sequelize.BLOB,
           "startDate": Sequelize.DATE,
           "endDate": Sequelize.DATE,
           "createdAt": Sequelize.DATE,
@@ -290,7 +290,7 @@ module.exports = {
             type: Sequelize.TEXT,
             allowNull: false
           },
-          "revisionId": Sequelize.INTEGER,
+          "revisionId": Sequelize.BLOB,
           "createdAt": Sequelize.DATE,
           "updatedAt": Sequelize.DATE,
           "deletedAt": Sequelize.DATE
