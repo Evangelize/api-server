@@ -23,6 +23,7 @@ const authenticated = function() {
   }
 };
 let websocketUri = (window.wsUri) ? window.wsUri : "http://localhost:3002";
+console.log("websocketUri", websocketUri);
 let wsclient = io(websocketUri);
 const settings = new Settings(wsclient);
 settings.authenticated = authenticated();
