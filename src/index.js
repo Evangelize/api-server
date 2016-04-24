@@ -22,7 +22,7 @@ const authenticated = function() {
     return false;
   }
 };
-let websocketUri = (window.wsUri) ? 'http://'+window.wsUri : "http://localhost:3002";
+let websocketUri = (window.wsUri) ? window.wsUri : "http://localhost:3002";
 let wsclient = io(websocketUri);
 const settings = new Settings(wsclient);
 settings.authenticated = authenticated();
