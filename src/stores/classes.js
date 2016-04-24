@@ -550,7 +550,7 @@ export default class Classes {
     if (!record) {
       record = {
         attendanceDate: now,
-        count: count,
+        count: parseInt(count),
         createdAt: null,
         day: moment(now, "x").weekday(),
         deletedAt: null,
