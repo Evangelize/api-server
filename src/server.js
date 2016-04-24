@@ -236,7 +236,7 @@ export default function( HOST, PORT, callback ) {
                    .env()
                    .file({ file: path.join(__dirname, '../config/settings.json') });
                 const script = process.env.NODE_ENV === 'production' ? '/dist/client.min.js' : '/hot/client.js',
-                      websocketUri =  settings.get("websocket:protocol")+"://"+settings.get("websocket:host")+":"+settings.get("websocket:port");
+                      websocketUri = "//"+settings.get("websocket:host")+":"+settings.get("websocket:port");
                 let output = (
                   `<!doctype html>
                   <html lang="en-us">
