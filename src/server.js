@@ -252,11 +252,11 @@ export default function( HOST, PORT, callback ) {
                       <link rel="stylesheet" href="/css/sanitize.css" />
                       <link rel="stylesheet" href="/chartist/css/chartist.min.css">
                       <link rel="shortcut icon" sizes="16x16 32x32 48x48 64x64 128x128 256x256" href="/favicon.ico?v2">
-                      <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:300,400,500,700" type="text/css">
-                      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.3.15/slick.css" />
-                      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/medium-editor/5.11.0/css/medium-editor.css" />
-                      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/medium-editor/5.11.0/css/themes/default.css" />
-                      <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+                      <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700" type="text/css">
+                      <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.3.15/slick.css" />
+                      <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/medium-editor/5.11.0/css/medium-editor.css" />
+                      <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/medium-editor/5.11.0/css/themes/default.css" />
+                      <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons" />
                       <link rel="stylesheet" href="/css/custom.css" />
                     </head>
                     <body>

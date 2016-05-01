@@ -8,6 +8,8 @@ import Schedules from './views/Schedules';
 import Attendance from './views/Attendance';
 import AddClassDayTeacher from './views/AddClassDayTeacher';
 import EditDayAttendance from './views/EditDayAttendance';
+import Classes from './views/Classes';
+import Class from './views/Class';
 
 export default (settings) => {
   console.log("createRoutes", settings.authenticated);
@@ -30,6 +32,8 @@ export default (settings) => {
       <IndexRoute component={Dashboard} onEnter={requireAuth} />
       <Route path="login" component={Login} onEnter={redirect} />
       <Route path="dashboard" component={Dashboard} onEnter={requireAuth} />
+      <Route path="classes" component={Classes} onEnter={requireAuth} />
+      <Route path="classes/:classId" component={Class} onEnter={requireAuth} />
       <Route path="people" component={People} onEnter={requireAuth} />
       <Route path="schedules" component={Schedules} onEnter={requireAuth} />
       <Route path="attendance" component={Attendance} onEnter={requireAuth} />

@@ -16,59 +16,54 @@ import Avatar from 'material-ui/Avatar';
 import CardTitle from 'material-ui/Card/CardTitle';
 import List from 'material-ui/List/List';
 import ListItem from 'material-ui/List/ListItem';
+import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 import Snackbar from 'material-ui/Snackbar';
+import Divider from 'material-ui/Divider';
+import {Tabs, Tab} from 'material-ui/Tabs';
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
 import { Grid, Row, Col } from 'react-bootstrap';
-import { getDivisionsConfigs } from '../actions';
+
+const styles = {
+  headline: {
+    fontSize: 24,
+    paddingTop: 16,
+    marginBottom: 12,
+    fontWeight: 400,
+  },
+};
 
 @connect(state => ({
   classes: state.classes
 }))
 @observer
-class Attendance extends Component {
+class Classes extends Component {
   constructor(props, context) {
     super(props, context);
   }
 
   componentWillMount() {
-    //this.setState({});
+  
   }
 
   componentDidMount() {
 
   }
 
-
-  handleEditAttendance(day, index, e) {
-    const { configs } = this.props;
-    //let db = spahql.db(configs.data);
-    let path = "/attendance/" + day.date;
-    this.navigate(path);
-  }
-
   formatDateRange(division) {
     return moment(division.start).format("MMM D YYYY") + " - " + moment(division.end).format("MMM D YYYY")
-  }
-
-  getMeetingDays(division) {
-    const { configs } = this.props;
-    let days = configs.data[this.state.divisionConfig].classMeetingDays;
-    return days.map(function(day, index){
-      return {
-        'id': day.id,
-        'year': moment(day.day).format("YYYY")
-      }
-    });
   }
 
   navigate(path, e) {
     browserHistory.push(path);
   }
+  
+  handleNewClass(){
+    
+  }
 
   render() {
     const { classes, ...props } = this.props;
-    let endMonth = moment(moment().format("MM/01/YYYY")+" 00:00:00").add(1, "month").valueOf();
-    //console.log("render", attendance);
     return (
       <div>
         <Grid fluid={true}>
@@ -78,7 +73,7 @@ class Attendance extends Component {
                 <div className={"nav-wrapper"}>
                   <div style={{margin: "0 0.5em"}}>
                     <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
-                    <a className={"breadcrumb"}>Attendance</a>
+                    <a className={"breadcrumb"}>Classes</a>
                   </div>
                 </div>
               </nav>
@@ -86,21 +81,36 @@ class Attendance extends Component {
           </Row>
           <Row>
             <Col xs={12} sm={12} md={12} lg={12}>
+              <Toolbar style={{justifyContent: "flex-end"}}>
+                <ToolbarGroup key={1} float={"right"} lastChild={true}>
+                  <RaisedButton
+                    label="Add Class"
+                    secondary={true}
+                    onTouchTap={::this.handleNewClass}
+                  />
+                </ToolbarGroup>
+              </Toolbar>
+            </Col>
+          </Row>
+          <Row>
+            <Col xs={12} sm={12} md={12} lg={12}>
               <Card>
                 <CardHeader
-                  title={"Children Attendance"}
-                  subtitle={"Daily Totals"}
+                  title={"Classes"}
+                  subtitle={"All classes"}
                   avatar={<Avatar>{"C"}</Avatar>}>
                 </CardHeader>
                 <CardMedia>
                   <List>
-                    {classes.getDailyAttendance(endMonth).map((day, index) =>
-                      <ListItem
-                        key={index}
-                        rightAvatar={<Avatar>{day.count}</Avatar>}
-                        onTouchTap={((...args)=>this.handleEditAttendance(day, index, ...args))}
-                        primaryText={moment(day.date, "x").format("dddd")}
-                        secondaryText={moment(day.date, "x").format("MMMM Do YYYY")} />
+                    {::classes.getClasses().map((cls, index) =>
+                      <div
+                        key={index} >
+                        <Divider />
+                        <ListItem
+                          onTouchTap={((...args)=>this.navigate("/classes/"+cls.id, ...args))}
+                          primaryText={cls.title}
+                        />
+                       </div>
                     )}
                   </List>
                 </CardMedia>
@@ -113,4 +123,4 @@ class Attendance extends Component {
   }
 }
 
-export default Attendance;
+export default Classes;

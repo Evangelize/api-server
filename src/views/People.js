@@ -32,16 +32,23 @@ class People extends Component {
   }
 
   _handleInputChange(e) {
-    const { people } = this.props,
+    const { classes } = this.props,
+          { searchType } = this.state,
           filter = e.target.value;
-    if (filter.length > 1) {
+    if (filter && filter.length > 1) {
       //dispatch(getPeople(people.key, e.target.value));
+      this.setState({
+        filter: filter,
+        people: classes.findPeople(filter, searchType)
+      });
     }
   }
 
   handleSelectValueChange(e, index, value) {
-    const { people } = this.props;
-    people.key = value;
+    this.setState({
+      searchType: e.target.value
+    });
+
   }
 
   _handlePersonToggle(e, toggle, index) {
@@ -61,6 +68,8 @@ class People extends Component {
       enableSelectAll: false,
       deselectOnClickaway: true,
       height: '300px',
+      filter: '',
+      people: [],
       displayRowCheckbox: false,
       adjustForCheckbox: false,
       displaySelectAll: false
@@ -68,11 +77,11 @@ class People extends Component {
   }
 
   navigate(path, e) {
-    //dispatch(updatePath(path));
+    browserHistory.push(path);
   }
 
   render() {
-    const { searchType } = this.state;
+    const { searchType, people } = this.state;
     let grid = {
           className: "layout",
           isDraggable: false,
@@ -89,17 +98,15 @@ class People extends Component {
           alignItems: 'flex-start',
           justifyContent: 'flex-start'
         };
-    const { people, ...props } = this.props;
-           //console.log(people);
     return (
       <Grid fluid={true}>
         <Row>
           <Col xs={12} sm={12} md={12} lg={12}>
             <nav className={"grey darken-1"}>
               <div className={"nav-wrapper"}>
-                <div className={"col s12 m12 l12"}>
+                <div style={{margin: "0 0.5em"}}>
                   <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
-                  <a className={"breadcrumb"}>People</a>
+                  <a className={"breadcrumb"}>Members</a>
                 </div>
               </div>
             </nav>
@@ -107,12 +114,12 @@ class People extends Component {
         </Row>
         <Row>
           <Col xs={12} sm={12} md={12} lg={12}>
-            <DashboardMedium title={"Find Members"} subtitle={"Search for members to provision as students and teachers"}>
+            <DashboardMedium title={"Find Members"} subtitle={"Search for members"}>
               <Row>
                 <Col xs={12} sm={12} md={3} lg={2}>
                   <DropDownMenu
                     value={searchType}
-                    onChange={::this.handleSelectValueChange}
+                    onChange={((...args)=>this.handleSelectValueChange(...args))}
                     style={dropDownStyle}>
                     <MenuItem value={"lastName"} primaryText="Last Name" />
                     <MenuItem value={"firstName"} primaryText="First Name" />
@@ -124,8 +131,8 @@ class People extends Component {
                     className={"searchBox"}
                     ref="searchField"
                     floatingLabelText="Search"
-                    defaultValue={people.filter}
-                    onChange={::this._handleInputChange} />
+                    defaultValue={this.state.filter}
+                    onChange={((...args)=>this._handleInputChange(...args))} />
                 </Col>
               </Row>
               <div>
@@ -151,7 +158,7 @@ class People extends Component {
                     deselectOnClickaway={this.state.deselectOnClickaway}
                     showRowHover={this.state.showRowHover}
                     stripedRows={this.state.stripedRows}>
-                    {people.data.map((person, index) =>
+                    {people.map((person, index) =>
                       <TableRow selected={false} key={person.id}>
                         <TableRowColumn style={{ width: "50%" }}>
                           <div>{person.lastName}, {person.firstName}</div>

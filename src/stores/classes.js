@@ -6,6 +6,7 @@ import api from '../api';
 import * as types from '../constants';
 import conv from 'binstring';
 import iouuid from 'innodb-optimized-uuid';
+import change from 'percent-change';
 
 export default class Classes {
   db;
@@ -92,7 +93,20 @@ export default class Classes {
 
   getDivisionConfigs() {
     //console.log( this.collections.divisionConfigs.data);
-    return this.collections.divisionConfigs.data;
+    let records = this.collections.divisionConfigs.chain()
+        .find({deletedAt: null})
+        .data();
+    //console.log("years", years);
+    return records;
+  }
+  
+  getClasses() {
+    let classes = this.collections.classes.chain()
+        .find({deletedAt: null})
+        .simplesort("title")
+        .data();
+    //console.log("years", years);
+    return classes;
   }
 
   getDivisionYears(divisionConfigId) {
@@ -192,13 +206,14 @@ export default class Classes {
     return Object.keys(latest).map(function(k) { return {attendance: latest[k], attendanceDate: parseInt(k, 10)}; });
   }
 
-  avgAttendance(day) {
+  avgAttendance(day, begin, end) {
     let divClass = this.collections.divisionClassAttendance;
     day = day || 0;
+    begin = begin || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(4, "week").valueOf();
+    end = end || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
 
-    let now = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(4, "week").valueOf(),
-        latest = this.collections.divisionClassAttendance.chain()
-        .find({$and: [{attendanceDate: {$gte: now}}, {day: day}, {deletedAt: null}]})
+    let latest = this.collections.divisionClassAttendance.chain()
+        .find({$and: [{attendanceDate: {$gte: begin}}, {attendanceDate: {$lte: end}}, {day: day}, {deletedAt: null}]})
         .simplesort("attendanceDate")
         .data()
         .reduce(
@@ -212,6 +227,18 @@ export default class Classes {
     Object.keys(latest).forEach(function(day, index) { avg += latest[day]; });
     avg = avg / Object.keys(latest).length;
     return avg.toFixed(0);
+  }
+
+  attendancePercentChange(day) {
+    let divClass = this.collections.divisionClassAttendance;
+    day = day || 0;
+
+    let priorBegin = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(8, "week").valueOf(),
+        priorEnd = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(4, "week").valueOf(),
+        priorAvg =  this.avgAttendance(day, priorBegin, priorEnd),
+        currAvg =  this.avgAttendance(day),
+        percChange = change(priorAvg, currAvg, true);
+    return percChange;
   }
 
   getClassAttendanceToday(classId) {
@@ -259,6 +286,38 @@ export default class Classes {
       })
     });
     console.log(dailyAttendance);
+    return dailyAttendance;
+  }
+  
+  getClassAttendanceByDay(classId, day, begin, end) {
+    begin = begin || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(8, "week").valueOf();
+    end = end || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
+    let divisionClasses = this.collections.divisionClasses.chain()
+        .find(
+          {
+            $and: [
+              {classId: classId},
+              {deletedAt: null}
+             ]
+           }
+        )
+        .data().map(function(cls, index){
+          return cls.id;
+        }),
+        dailyAttendance = this.collections.divisionClassAttendance.chain()
+        .find(
+          {
+            $and: [
+              {divisionClassId: {$in: divisionClasses}},
+              {day: day},
+              {attendanceDate: {$gte: begin}}, 
+              {attendanceDate: {$lte: end}}, 
+              {deletedAt: null}
+             ]
+           }
+        )
+        .simplesort("attendanceDate", true)
+        .data();
     return dailyAttendance;
   }
 
@@ -416,17 +475,82 @@ export default class Classes {
 
   getClass(classId) {
     let cls = this.collections.classes
-          .chain()
-          .find(
+          .findOne(
             {
               $and: [
                 {id: classId},
                 {deletedAt: null}
               ]
             }
-          ).data();
+          );
     //console.log(getCurrentClassTeachers, teachers);
     return cls;
+  }
+  
+  getClassTeachers(classId) {
+    let divisionClasses = this.collections.divisionClasses.chain()
+        .find(
+          {
+            $and: [
+              {classId: classId},
+              {deletedAt: null}
+             ]
+           }
+        )
+        .data().map(function(cls, index){
+          return cls.id;
+        });
+       
+    let teachers = this.collections.divisionClassTeachers
+          .chain()
+          .find(
+            {
+              $and: [
+                {divisionClassId: {$in: divisionClasses}},
+                {deletedAt: null}
+              ]
+            }
+          )
+          .simplesort("createdAt", true)
+          .eqJoin(this.collections.people.data.toJSON(), 'peopleId', 'id', function (left, right) {
+            return {
+              person: right,
+              divisionClassId: left.divisionClassId,
+              divClassTeacher: left
+            }
+          })
+          .eqJoin(this.collections.divisionClasses.data.toJSON(), 'divisionClassId', 'id', function (left, right) {
+            return { 
+              person: left.person,
+              divisionClassId: left.divisionClassId,
+              divClassTeacher: left.divClassTeacher,
+              divisionId: right.divisionId,
+              divClass: right
+            };
+          })
+          .eqJoin(this.collections.divisions.data.toJSON(), 'divisionId', 'id', function (left, right) {
+            return { 
+              person: left.person,
+              personId: left.person.id,
+              divisionClassId: left.divisionClassId,
+              divClassTeacher: left.divClassTeacher,
+              divClass: left.divClass,
+              divisionId: left.divisionId,
+              division: right
+            };
+          })
+          .data();
+    let uniq = teachers.reduce(function(a,b){
+          //console.log(a, b);
+          if (Array.isArray(a) && a.length === 0) {
+            a.push(b);
+          } else if (a.personId !== b.personId  ) {
+            a.push(b);
+          }
+          return a;
+        },[]);
+    console.log("getClassTeachers", uniq);
+    return uniq;
   }
 
   getNotes() {

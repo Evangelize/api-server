@@ -1,4 +1,3 @@
-import Promise from 'bluebird';
 import axios from 'axios';
 import _ from 'lodash';
 import reactCookie from 'react-cookie';
@@ -15,10 +14,10 @@ export default {
         }
       )
       .then(function (response) {
-        return response.data;
+        return Promise.resolve(response.data);
       })
       .catch(function (response) {
-        return response.data;
+        return Promise.reject(response.data);
       });
   }
 }

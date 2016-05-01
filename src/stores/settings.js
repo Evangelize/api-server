@@ -52,8 +52,8 @@ export default class Settings {
         callback(self.authenticated);
       },
       function(err){
-        console.log(err)
-
+        console.log("unauthorized", err);
+        callback(self.authenticated);
       }
     );
   }

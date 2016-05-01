@@ -30,7 +30,8 @@ class Login extends Component {
     this.state = {
       muiTheme: getMuiTheme(CustomColors),
       email: null,
-      password: null
+      password: null,
+      error: null
     };
   }
 
@@ -40,11 +41,17 @@ class Login extends Component {
 
   login(e) {
     const { classes, settings } = this.props;
+    let self = this;
+    self.setState({error: null});
     settings.authenticate(
       this.state.email,
       this.state.password,
       function(authenticated){
-        browserHistory.push("/dashboard");
+        if (authenticated) {
+          browserHistory.push("/dashboard");
+        } else {
+          self.setState({error: "Incorrect email and/or password"});
+        }
       }
     );
 
@@ -86,6 +93,8 @@ class Login extends Component {
               <TextField
                 hintText="Email"
                 floatingLabelText="Email"
+                type="email"
+                errorText={this.state.error}
                 style={{width: "100%"}}
                 value={this.state.email}
                 onChange={((...args)=>this.handleChange("email", ...args))}
@@ -94,6 +103,7 @@ class Login extends Component {
                 type="password"
                 hintText="Password"
                 floatingLabelText="Password"
+                errorText={this.state.error}
                 style={{width: "100%"}}
                 value={this.state.password}
                 onChange={((...args)=>this.handleChange("password", ...args))}

@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import _ from 'lodash';
 import async from 'async';
 import moment from 'moment-timezone';
-import spahql from 'spahql';
 import { observer } from "mobx-react";
 import connect from '../components/connect';
 import { browserHistory } from 'react-router';
@@ -51,7 +50,7 @@ class Schedules extends Component {
   }
 
   componentWillMount() {
-    const { configs, classes } = this.props;
+    const { classes } = this.props;
     let divisionConfig = classes.collections.divisionConfigs.data[0],
         year = classes.getCurrentDivisionYear(divisionConfig.id),
         divSchedules = classes.getDivisionSchedules(divisionConfig.id, year.id),
@@ -373,7 +372,9 @@ class Schedules extends Component {
         </Row>
         <Row>
           <Col xs={12} sm={12} md={12} lg={12}>
-            <Toolbar>
+            <Toolbar
+              style={{flexWrap: "wrap"}}
+            >
               <ToolbarGroup key={0} float="left">
                 <DropDownMenu value={this.state.divisionConfig} ref="divisionConfig" onChange={::this.selectedDivisionConfig} style={{marginRight: "12px"}}>
                   {classes.collections.divisionConfigs.data.map((config, index) =>
@@ -409,9 +410,8 @@ class Schedules extends Component {
                       avatar={<Avatar>Q{division.position}</Avatar>}>
                     </CardHeader>
                     <CardMedia>
-                      <MediaQuery query='(min-device-width: 768px)'>
+                      <MediaQuery query='(min-device-width: 1024px)'>
                         <Table
-                          height={this.state.height}
                           fixedHeader={this.state.fixedHeader}
                           fixedFooter={this.state.fixedFooter}
                           selectable={this.state.selectable}
@@ -471,7 +471,7 @@ class Schedules extends Component {
                           </TableBody>
                         </Table>
                       </MediaQuery>
-                      <MediaQuery query='(max-device-width: 767px)'>
+                      <MediaQuery query='(max-device-width: 1023px)'>
                         {classes.getCurrentDivisionClasses(division.id).map((divisionClass, index) =>
                           <div key={divisionClass.divisionClass.id}>
                             <Divider />

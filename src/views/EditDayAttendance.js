@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import _ from 'lodash';
 import async from 'async';
 import moment from 'moment-timezone';
-import spahql from 'spahql';
 import { observer } from "mobx-react";
 import connect from '../components/connect';
 import { browserHistory } from 'react-router';

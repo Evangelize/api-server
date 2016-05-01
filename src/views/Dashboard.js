@@ -175,10 +175,11 @@ class Dashboard extends Component {
 
   getGraphAttendance(day, length) {
     const { classes } = this.props;
-    let labels = classes.latestAttendance(day, length).map(function(day, index){
+    let attendance = classes.latestAttendance(day, length),
+        labels = attendance.map(function(day, index){
           return moment.utc(day.attendanceDate).tz("America/Chicago").format("MM/DD");
         }),
-        series = classes.latestAttendance(day, length).map(function(day, index){
+        series = attendance.map(function(day, index){
           return parseInt(day.attendance,10);
         });
     //console.log("graphAttendance", labels, series);
@@ -400,10 +401,20 @@ class Dashboard extends Component {
                             <ListItem
                               key={teacher.divClassTeacher.id}
                               primaryText={teacher.person.firstName+" "+teacher.person.lastName}
-                              leftIcon={
-                                <ActionGrade
-                                  onTouchTap={((...args)=>this.confirmTeacher(divClass, teacherDay, teacher, ...args))}
-                                  color={(teacher.divClassTeacher.confirmed) ? Colors.deepOrange500 : Colors.grey400} />
+                              leftAvatar={
+                                <Avatar 
+                                  src={
+                                    (teacher.person.individualPhotoUrl) ? 
+                                      teacher.person.individualPhotoUrl : 
+                                      teacher.person.familyPhotoUrl
+                                    }
+                                  >
+                                    {
+                                      (teacher.person.individualPhotoUrl || teacher.person.familyPhotoUrl) ? 
+                                        null : 
+                                        teacher.person.firstName.charAt(0)
+                                    }
+                                  </Avatar>
                               }
                             />
                           )}
@@ -416,15 +427,24 @@ class Dashboard extends Component {
             )}
             <Col xs={12} sm={12} md={6} lg={6}>
               {classes.getClassMeetingDays().map((day, index) =>
+                <div>
                 <Col xs={12} sm={6} md={6} lg={6} key={index}>
                   <DashboardComponentSmall
                     zDepth={1}
-                    sparkLineData={[5, 10, 5, 20, 5, 30, 25, 10, 18, 32, 22, 28, 30, 21, 45, 29, 33, 18, 10, 15]}
                     title={"Avg. Attendance "+moment().weekday(day.day).format("dddd")}
                     body={classes.avgAttendance(day.day)}
                     style={paperStyle}
                   />
                 </Col>
+                <Col xs={12} sm={6} md={6} lg={6} key={"pc"+index}>
+                  <DashboardComponentSmall
+                    zDepth={1}
+                    title={"Attendance Change "+moment().weekday(day.day).format("dddd")}
+                    body={classes.attendancePercentChange(day.day)}
+                    style={paperStyle}
+                  />
+                </Col>
+                </div>
               )}
             </Col>
             <Col xs={12} sm={12} md={6} lg={6}>
@@ -435,7 +455,7 @@ class Dashboard extends Component {
                 <ToolbarGroup key={1} float="right">
                   <RaisedButton
                     label="Add Note"
-                    primary={true}
+                    secondary={true}
                     onTouchTap={::this.handleNewNote}
                   />
                 </ToolbarGroup>
@@ -445,18 +465,18 @@ class Dashboard extends Component {
                   <Col key={note.id} xs={12} sm={6} md={6} lg={6} key={index}>
                     <Card>
                       <CardTitle title={note.title} style={(note.title) ? null : {display: 'none'}} />
-                      <CardText onClick={((...args)=>this.handleCardTouchTap(note, ...args))}>
-                        <div dangerouslySetInnerHTML={{__html: note.text}} />
-                      </CardText>
-                      <CardActions style={{float: "right"}}>
-                        <IconButton
-                          iconClassName="material-icons"
-                          tooltipPosition="top-center"
-                          tooltip="Delete"
-                          onTouchTap={((...args)=>this.handleNoteDelete(note, ...args))}>
-                            delete
-                        </IconButton>
-                      </CardActions>
+                      <CardMedia onClick={((...args)=>this.handleCardTouchTap(note, ...args))}>
+                        <div style={{padding: "25px"}} dangerouslySetInnerHTML={{__html: note.text}} />
+                        <div>
+                          <IconButton
+                            iconClassName="material-icons"
+                            tooltipPosition="top-center"
+                            tooltip="Delete"
+                            onTouchTap={((...args)=>this.handleNoteDelete(note, ...args))}>
+                              delete
+                          </IconButton>
+                        </div>
+                      </CardMedia>
                     </Card>
                   </Col>
                 )}

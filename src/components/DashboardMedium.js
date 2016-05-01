@@ -53,13 +53,6 @@ class DashboardMedium extends Component {
         <CardHeader
           title={this.props.title}
           subtitle={this.props.subtitle}>
-            <IconMenu style={iconMenuStyle} iconButtonElement={
-              <IconButton><MoreVertIcon /></IconButton>
-            }>
-              <MenuItem primaryText="Refresh" />
-              <MenuItem primaryText="Help" />
-              <MenuItem primaryText="Sign out" />
-            </IconMenu>
         </CardHeader>
         <CardMedia>
           {this.props.children}
