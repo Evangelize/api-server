@@ -47,7 +47,7 @@
     "mobx": "^2.1.4",
     "mobx-react": "^3.0.4",
     "moment": "^2.10.6",
-    "moment-fquarter": "^0.1.0",
+    "moment-fquarter": "mattvoss/moment-fquarter",
     "moment-timezone": "^0.5.0",
     "mysql": "^2.9.0",
     "nconf": "^0.8.2",
