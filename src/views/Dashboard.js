@@ -466,12 +466,13 @@ class Dashboard extends Component {
                     <Card>
                       <CardTitle title={note.title} style={(note.title) ? null : {display: 'none'}} />
                       <CardMedia onClick={((...args)=>this.handleCardTouchTap(note, ...args))}>
-                        <div style={{padding: "25px"}} dangerouslySetInnerHTML={{__html: note.text}} />
-                        <div>
+                        <div style={{padding: "10px 25px"}} dangerouslySetInnerHTML={{__html: note.text}} />
+                        <div style={{display: "flex", flexDirection: "row", justifyContent: "flex-end"}}>
                           <IconButton
                             iconClassName="material-icons"
                             tooltipPosition="top-center"
                             tooltip="Delete"
+                            iconStyle={{color: "grey"}}
                             onTouchTap={((...args)=>this.handleNoteDelete(note, ...args))}>
                               delete
                           </IconButton>
