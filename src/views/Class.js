@@ -151,7 +151,7 @@ class Class extends Component {
                                       </Avatar>
                                   }
                                   primaryText={teacher.person.lastName + ", " + teacher.person.firstName}
-                                  secondaryText={"Last Taught: "+teacher.division.title+" "+moment(teacher.division.start, "x").fquarter(-4).year}
+                                  secondaryText={"Last Taught: "+teacher.division.title+" "+moment(teacher.division.start, "x").fquarter(-4).year+" - "+moment().isoWeekday(teacher.divClassTeacher.day).format("dddd")}
                                 />
                               </div>
                             )}
