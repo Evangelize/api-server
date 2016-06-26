@@ -393,7 +393,7 @@ module.exports = {
         'ALTER TABLE `people` ADD COLUMN `familyId` BINARY(16)'
       ),
       queryInterface.sequelize.query(
-        'ALTER TABLE `people` ADD COLUMN cohort` BINARY(16)'
+        'ALTER TABLE `people` ADD COLUMN `cohort` BINARY(16)'
       ),
       queryInterface.sequelize.query(
         'ALTER TABLE `classStudents` CHANGE `id` `id` BINARY(16) NOT NULL'
