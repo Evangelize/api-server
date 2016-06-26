@@ -286,14 +286,9 @@ module.exports = {
         }
       ),
       queryInterface.addColumn(
-        'people',
-        'cohort',
-        Sequelize.BLOB
-      ),
-      queryInterface.addColumn(
-        'people',
-        'familyId',
-        Sequelize.BLOB
+        'classes',
+        'order',
+        Sequelize.INTEGER
       ),
       queryInterface.sequelize.query(
         'ALTER TABLE `users` CHANGE `peopleid` `peopleid` BINARY(16) NOT NULL'
@@ -395,10 +390,10 @@ module.exports = {
         'ALTER TABLE `teacherSubstitutions` CHANGE `divisionClassId` `divisionClassId` BINARY(16) NOT NULL'
       ),
       queryInterface.sequelize.query(
-        'ALTER TABLE `people` CHANGE `familyId` `familyId` BINARY(16) NOT NULL'
+        'ALTER TABLE `people` ADD COLUMN `familyId` BINARY(16)'
       ),
       queryInterface.sequelize.query(
-        'ALTER TABLE `people` ADD COLUMN cohort` BINARY(16) NOT NULL'
+        'ALTER TABLE `people` ADD COLUMN cohort` BINARY(16)'
       ),
       queryInterface.sequelize.query(
         'ALTER TABLE `classStudents` CHANGE `id` `id` BINARY(16) NOT NULL'
