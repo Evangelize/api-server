@@ -1,5 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
+import DevTools from 'mobx-react-devtools';
 import Promise from 'bluebird';
 import io from 'socket.io-client';
 import moment from 'moment';
@@ -8,13 +9,18 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
 import reactCookie from 'react-cookie';
 import jwt from 'jsonwebtoken';
 import Provider from './components/Provider';
+import Db from './stores/db';
 import Classes from './stores/classes';
 import Settings from './stores/settings';
 import routes from './routes';
 import { browserHistory, Router, Route, IndexRoute, Link } from 'react-router';
+import EventEmitter from 'eventemitter3';
+
+let db, settings, classes, r, context;
+const events = new EventEmitter();
 const rootElement = document.getElementById('root');
+const cookie = reactCookie.load('accessToken');
 const authenticated = function() {
-  const cookie = reactCookie.load('accessToken');
   console.log("cookie", cookie);
   if (cookie) {
     return true;
@@ -22,14 +28,6 @@ const authenticated = function() {
     return false;
   }
 };
-let websocketUri = (window.wsUri) ? window.wsUri : "http://localhost:3002";
-console.log("websocketUri", websocketUri);
-let wsclient = io(websocketUri);
-const settings = new Settings(wsclient);
-settings.authenticated = authenticated();
-settings.user = JSON.parse(window.user);
-const classes = new Classes(window.dbJson, wsclient);
-const r = routes(settings);
 
 //Needed for onTouchTap
 //Can go away when react 1.0 release
@@ -37,11 +35,40 @@ const r = routes(settings);
 //https://github.com/zilverline/react-tap-event-plugin
 injectTapEventPlugin();
 
+if (authenticated()) {
+  let websocketUri = (window.wsUri) ? window.wsUri : "http://localhost:3002";
+  console.log("websocketUri", websocketUri);
+  let wsclient = io(websocketUri, {query: 'auth_token='+cookie});
+  db = new Db(window.dbJson, wsclient);
+  settings = new Settings(wsclient, events);
+  settings.authenticated = true;
+  settings.user = JSON.parse(window.user);
+  classes = new Classes(db, wsclient, events);
+  
+} else {
+  db = new Db(window.dbJson);
+  settings = new Settings();
+  settings.authenticated = false;
+  classes = new Classes(db);
+}
+
+r = routes(settings);
+context = {
+  state: {
+    db: db,
+    classes: classes, 
+    settings: settings
+  },
+  store: {
+
+  }
+};
+
 class Root extends Component {
   render() {
     return (
       <div>
-        <Provider store={{classes: classes, settings: settings}}>
+        <Provider context={context}>
           <Router history={browserHistory} routes={r}></Router>
         </Provider>
       </div>
@@ -49,8 +76,8 @@ class Root extends Component {
   }
 }
 
-ReactDOM.render(<Root />, document.getElementById('root'));
 
+ReactDOM.render(<Root />, document.getElementById('root'));  
 
 if (module.hot) {
   /*

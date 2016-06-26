@@ -1,7 +1,8 @@
 var _ = require('lodash'),
     moment = require('moment-timezone'),
     models  = require('../src/models'),
-    fieldMap = {
+    async = require('async'),
+    pFieldMap = {
       "id": "id",
       "Family Name": "familyName",
       "Last Name": "lastName",
@@ -25,22 +26,64 @@ var _ = require('lodash'),
       "Individual Photo URL (http://www...)": "individualPhotoUrl",
       "Family Photo URL (http://www...)": "familyPhotoUrl"
     },
+    fFieldMap = {
+      "Family Name": "familyName",
+      "Family Photo URL (http://www...)": "familyPhotoUrl"
+    },
     peopleData = require('../src/data/people.json');
 
-peopleData.forEach(function(person, index){
-  var _person = {};
+async.each(
+  peopleData,
+  function(person, callback){
+    var _person = {},
+        _family = {};
+    
+    Object.keys(fFieldMap).map(function(key) {
+      _family[fFieldMap[key]] = person[key];
+    });
 
-  Object.keys(fieldMap).map(function(key) {
-     _person[fieldMap[key]] = person[key];
-  });
+    Object.keys(pFieldMap).map(function(key) {
+      _person[pFieldMap[key]] = person[key];
+    });
 
-  _person.birthday = moment(_person.birthday, "MM/DD/YYYY").format("YYYY-MM-DD 00:00:00");
+    _person.birthday = moment(_person.birthday, "MM/DD/YYYY").format("YYYY-MM-DD 00:00:00");
 
-  models.People.create(
-    _person
-  ).then(
-    function(person) {
-      console.log(person);
-    }
-  )
-});
+    async.waterfall(
+      [
+        function(cb) {
+          models.Families.find(
+
+          );
+        },
+        function(person, cb) {
+          if (person) {
+            person.update(
+              _person
+            ).then(
+              function(person) {
+                cb(person);
+              }
+            );
+          } else {
+            models.People.create(
+              _person
+            ).then(
+              function(person) {
+                cb(person);
+              }
+            );
+          }
+        }
+      ],
+      function(error, result) {
+        console.log(result);
+        callback();
+      }
+    )
+
+    
+  }, 
+  function(err){
+
+  }
+);

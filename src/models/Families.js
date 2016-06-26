@@ -1,6 +1,6 @@
 module.exports = function (sequelize, DataTypes) {
-  var Classes = sequelize.define(
-    'classes',
+  var Families = sequelize.define(
+    'families',
     {
       "id": {
         type: DataTypes.BLOB,
@@ -12,8 +12,7 @@ module.exports = function (sequelize, DataTypes) {
           this.setDataValue('id', new Buffer(val, "hex"));
         }
       },
-      "title": DataTypes.STRING,
-      "description": DataTypes.STRING,
+      "name": DataTypes.STRING(255),
       "createdAt": {
         type: DataTypes.DATE,
         get: function()  {
@@ -29,13 +28,12 @@ module.exports = function (sequelize, DataTypes) {
       "revision": {
         type: DataTypes.INTEGER,
         defaultValue: 0
-      },
-      "order": {
-        type: DataTypes.INTEGER,
-        defaultValue: 0
       }
+    },
+    {
+      paranoid: true
     }
   );
 
-  return Classes;
+  return Families;
 };

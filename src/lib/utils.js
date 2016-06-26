@@ -111,6 +111,27 @@ export default {
               }
             );
           },
+          families: function(callback){
+            api
+            .families
+            .get()
+            .then(
+              function(items) {
+                async.map(
+                  items,
+                  function(item, cb) {
+                    cb(null, item.get({ plain: true }))
+                  },
+                  function(err, result) {
+                    callback(null, result);
+                  }
+                );
+              },
+              function(err) {
+                callback(err);
+              }
+            );
+          },
           divisions: function(callback){
             api
             .divisions

@@ -126,8 +126,11 @@ export default {
           resolve(result);
         },
         function(err){
-          console.log(err)
-          reject(err);
+          let result = {
+            error: err,
+            record: null
+          };
+          reject(result);
         }
       );
     });
@@ -156,8 +159,11 @@ export default {
           );
         },
         function(err){
-          console.log(err)
-          reject(err);
+          let result = {
+            error: err,
+            record: null
+          };
+          reject(result);
         }
       );
     });
@@ -173,8 +179,11 @@ export default {
           resolve(record);
         },
         function(err){
-          console.log(err)
-          reject(err);
+          let result = {
+            error: err,
+            record: null
+          };
+          reject(result);
         }
       );
     });

@@ -1,0 +1,60 @@
+Member Attendance
+
+    worshipServices
+        id binary(16)
+        day int(11)
+        time datetime
+        title varchar(255)
+        updatedAt datetime
+        createdAt datetime
+        deletedAt datetime
+        revision int(11)
+        
+    attendanceType
+        id binary(16)
+        title varchar(255)
+        updatedAt datetime
+        createdAt datetime
+        deletedAt datetime
+        revision int(11)
+        
+    memberAttendance
+        id binary(16)
+        worshipServiceId binary(16)
+        personId binary(16)
+        attendanceDate datetime
+        day int(11)
+        attendanceType binary(16)
+        updatedAt datetime
+        createdAt datetime
+        deletedAt datetime
+        revision int(11)
+        
+    groups
+        id binary(16)
+        title varchar(255)
+        updatedAt datetime
+        createdAt datetime
+        deletedAt datetime
+        revision int(11)
+   
+    memberGroup
+        id binary(16)
+        groupId binary(16)
+        personId binary(16)
+        rights varchar(5)
+        updatedAt datetime
+        createdAt datetime
+        deletedAt datetime
+        revision int(11)
+        
+    memberDevice
+        id binary(16)
+        personId binary(16)
+        deviceId varchar(255)
+        updatedAt datetime
+        createdAt datetime
+        deletedAt datetime
+        revision int(11)
+        
+        

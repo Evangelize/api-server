@@ -30,3 +30,5 @@ ALTER TABLE `users` CHANGE `peopleId` `peopleId` BINARY(16) NOT NULL;
 
 UPDATE divisionClassAttendance
 SET attendanceDate = attendanceDate + INTERVAL 7 HOUR;
+
+ALTER TABLE `congregateClasses`.`divisionClassAttendance` ADD UNIQUE `divClassAttendanceUnique` (`divisionClassId`, `day`, `attendanceDate`);

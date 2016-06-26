@@ -4,7 +4,7 @@ import _ from 'lodash';
 import async from 'async';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
-import connect from '../components/connect';
+import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
 import DashboardMedium from '../components/DashboardMedium';
 import ReactGridLayout from 'react-grid-layout';
@@ -31,19 +31,18 @@ import Snackbar from 'material-ui/Snackbar';
 import ActionGrade from 'material-ui/svg-icons/action/grade';
 import Divider from 'material-ui/Divider';
 import { Grid, Row, Col } from 'react-bootstrap';
-import { manageDivisionClassTeacher, getPeople } from '../actions';
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+import NavToolBar from '../components/NavToolBar';
 
-@connect(state => ({
-  classes: state.classes
-}))
-@observer
+@connect
 class AddClassDayTeacher extends Component {
   constructor(props, context) {
     super(props, context);
   }
 
   componentWillMount() {
-    const { classes, params } = this.props;
+    const { classes } = this.context.state;
+    const { params } = this.props;
     let divClass = classes.getDivisionClass(params.classId),
         division = classes.getDivision(divClass.divisionClass.divisionId);
     this.setState({
@@ -97,7 +96,8 @@ class AddClassDayTeacher extends Component {
   }
 
   renderClassTeachers() {
-    const { classes, params } = this.props;
+    const { classes } = this.context.state;
+    const { params } = this.props;
     const day = parseInt(params.day,10);
     let results = classes.getDivisionClassTeachers(params.classId, day);
     return results;
@@ -120,7 +120,7 @@ class AddClassDayTeacher extends Component {
   }
 
   _handleInputChange(e) {
-    const { classes } = this.props,
+    const { classes } = this.context.state,
           filter = e.target.value;
     if (filter.length > 1) {
       this.setState(
@@ -136,7 +136,8 @@ class AddClassDayTeacher extends Component {
     });
   }
   menuItemTap(teacher, item, event) {
-    const { params, classes } = this.props;
+    const { classes } = this.context.state;
+    const { params } = this.props;
     const { division, divClass } = this.state;
     let opts;
 
@@ -161,7 +162,8 @@ class AddClassDayTeacher extends Component {
   }
 
   render() {
-    const { params, classes, ...props } = this.props;
+    const { classes } = this.context.state;
+    const { params } = this.props;
     const { searchType } = this.state;
     //console.log("divClassPath", divClassPath);
     let iconMenuStyle = {
@@ -198,15 +200,7 @@ class AddClassDayTeacher extends Component {
       <Grid fluid={true}>
          <Row>
           <Col xs={12} sm={12} md={12} lg={12}>
-            <nav className={"grey darken-1"}>
-              <div className={"nav-wrapper"}>
-                <div style={{margin: "0 0.5em"}}>
-                  <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
-                  <a href="#!" onTouchTap={((...args)=>this.navigate("/schedules", ...args))} className={"breadcrumb"}>Schedules</a>
-                  <a className={"breadcrumb"}>Edit</a>
-                </div>
-              </div>
-            </nav>
+            <NavToolBar navLabel="Assign Teachers" goBackTo="/schedules" />
           </Col>
         </Row>
         <Row>

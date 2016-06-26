@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import _ from 'lodash';
 import { observer } from "mobx-react";
-import connect from '../components/connect';
+import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
 import ReactGridLayout from 'react-grid-layout';
 import Card from 'material-ui/Card/Card';
@@ -16,6 +16,7 @@ import Menu from 'material-ui/Menu';
 import MenuItem from 'material-ui/MenuItem';
 import ChartistGraph from 'react-chartist';
 
+@observer
 class DashboardMedium extends Component {
   constructor(props, context) {
     super(props, context);

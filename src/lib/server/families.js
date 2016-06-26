@@ -2,31 +2,51 @@ import models from '../../models';
 import Promise from 'bluebird';
 
 export default {
-  get(peopleId) {
-    return new Promise(function(resolve, reject){
-      peopleId = new Buffer(peopleId, 'hex');
-      models.Users.findOne(
-        {
-          where: {
-            peopleId: peopleId
+  get(id) {
+    if (id) {
+      return new Promise(function(resolve, reject){
+        id = new Buffer(id, 'hex');
+        models.Users.findOne(
+          {
+            where: {
+              id: id
+            }
           }
-        }
-      ).then(
-        function(result) {
-          resolve(result);
-          return null;
-        },
-        function(err){
-          console.log(err);
-          reject(err);
-          return null;
-        }
-      );
-    });
+        ).then(
+          function(result) {
+            resolve(result);
+            return null;
+          },
+          function(err){
+            console.log(err);
+            reject(err);
+            return null;
+          }
+        );
+      });
+    } else {
+      return new Promise(function(resolve, reject){
+        models.Users.findAll({
+          order: [
+            ['updatedAt', 'DESC']
+          ]
+        }).then(
+          function(results) {
+            resolve(results);
+            return null;
+          },
+          function(err){
+            console.log(error);
+            reject(error);
+            return null;
+          }
+        )
+      });
+    }
   },
   insert(record) {
     return new Promise(function(resolve, reject){
-      models.Users.create(
+      models.Families.create(
         record
       ).then(
         function(result) {
@@ -48,7 +68,7 @@ export default {
     console.log(record);
     return new Promise(function(resolve, reject){
       record.id = new Buffer(record.id, 'hex');
-      models.Users.update(
+      models.Families.update(
         record,
         {
           where: {
@@ -57,7 +77,7 @@ export default {
         }
       ).then(
         function(rows) {
-          models.Users.findOne({
+          models.Families.findOne({
             where: {
               id: record.id
             }
@@ -79,7 +99,7 @@ export default {
   },
   delete(record) {
     return new Promise(function(resolve, reject){
-      models.Users.destroy({
+      models.Families.destroy({
         where: {
           id: new Buffer(record.id, 'hex')
         }

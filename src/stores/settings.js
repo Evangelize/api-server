@@ -1,4 +1,4 @@
-import { extendObservable, observable, autorun, isObservable, isObservableMap, map } from "mobx";
+import { extendObservable, observable, computed, autorun, isObservable, isObservableMap, map } from "mobx";
 import _ from 'lodash';
 import loki from 'lokijs';
 import moment from 'moment-timezone';
@@ -13,24 +13,37 @@ export default class Settings {
   @observable authenticated = false;
   @observable user = null;
   ws;
-  constructor(websocket) {
-    console.log("settings class");
+  events;
+  constructor(websocket, events) {
+    //console.log("settings class");
     if (websocket) {
-      this.ws = websocket;
-
-      this.ws.on('global', data => {
-        console.log('settings', 'global', data);
-        //self.wsHandler(self.ws, data);
-      });
-
-      this.ws.on('connect', () => {
-        console.log('settings', "websocket: connected");
-      });
-
-      this.ws.on('settings', 'error', err => {
-        self.wsError(err);
-      });
+      this.setupWs(websocket);
     }
+
+    if (events) {
+      this.setupEvents(events);
+    }
+  }
+  
+  setupWs(websocket) {
+    this.ws = websocket;
+
+    this.ws.on('global', data => {
+      //console.log('settings', 'global', data);
+      //self.wsHandler(self.ws, data);
+    });
+
+    this.ws.on('connect', () => {
+      //console.log('settings', "websocket: connected");
+    });
+
+    this.ws.on('settings', 'error', err => {
+      //self.wsError(err);
+    });
+  }
+
+  setupEvents(events) {
+    this.events = events;
   }
 
   authenticate(email, password, callback) {
@@ -48,7 +61,8 @@ export default class Settings {
           }
         );
         self.authenticated = true;
-        self.user = result.person;
+        console.log("user", result.user);
+        self.user = result.user;
         callback(self.authenticated);
       },
       function(err){
@@ -56,5 +70,10 @@ export default class Settings {
         callback(self.authenticated);
       }
     );
+  }
+  
+  @computed get userFullName() {
+    let name = (this.user && this.user.person) ? this.user.person.firstName + " " + this.user.person.lastName : "User Name";
+    return name;
   }
 }

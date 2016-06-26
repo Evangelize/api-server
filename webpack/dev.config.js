@@ -18,15 +18,15 @@ module.exports = {
 	},
 	plugins: [
 		new webpack.DefinePlugin({__CLIENT__: true, __SERVER__: false}),
-        new webpack.DefinePlugin({__DEV__: JSON.stringify(JSON.parse(process.env.BUILD_DEV || 'true'))}),
+    new webpack.DefinePlugin({__DEV__: JSON.stringify(JSON.parse(process.env.BUILD_DEV || 'true'))}),
 		new webpack.DefinePlugin({
           'process.env.NODE_ENV': JSON.stringify( 'development' ),
           '__DEV__': JSON.stringify( process.env.NODE_ENV )
         }),
 		new webpack.optimize.DedupePlugin(),
 		new webpack.optimize.OccurenceOrderPlugin(),
-        new webpack.HotModuleReplacementPlugin(),
-        new webpack.NoErrorsPlugin()
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.NoErrorsPlugin()
 	],
 	module:  {
       loaders: [

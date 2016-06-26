@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import _ from 'lodash';
 import { observer } from "mobx-react";
-import connect from '../components/connect';
+import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
 import DashboardMedium from '../components/DashboardMedium';
 import ReactGridLayout from 'react-grid-layout';
@@ -17,13 +17,11 @@ import ToolbarSeparator from 'material-ui/Toolbar/ToolbarSeparator';
 import ToolbarTitle from 'material-ui/Toolbar/ToolbarTitle';
 import RaisedButton from 'material-ui/RaisedButton';
 import Toggle from 'material-ui/Toggle';
+import reactCookie from 'react-cookie';
+import io from 'socket.io-client';
 import { Grid, Row, Col } from 'react-bootstrap';
 
-@connect(state => ({
-  classes: state.classes,
-  settings: state.settings
-}))
-@observer
+@connect
 class Login extends Component {
   constructor(props, context) {
     super(props, context);
@@ -40,7 +38,7 @@ class Login extends Component {
   }
 
   login(e) {
-    const { classes, settings } = this.props;
+    const { classes, settings, db } = this.context.state;
     let self = this;
     self.setState({error: null});
     settings.authenticate(
@@ -48,6 +46,14 @@ class Login extends Component {
       this.state.password,
       function(authenticated){
         if (authenticated) {
+          let cookie = reactCookie.load('accessToken');
+          let websocketUri = (window.wsUri) ? window.wsUri : "http://localhost:3002";
+          //console.log("websocketUri", websocketUri);
+          let wsclient = io(websocketUri, {query: 'auth_token='+cookie});
+          db.setupWs(wsclient);
+          settings.setupWs(wsclient);
+          classes.setupWs(wsclient);
+          
           browserHistory.push("/dashboard");
         } else {
           self.setState({error: "Incorrect email and/or password"});

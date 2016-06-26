@@ -50,8 +50,11 @@ export default {
         ],
         function(error, result) {
           if (error) {
-            console.log(error);
-            reject(error);
+            let result = {
+              error: err,
+              record: null
+            };
+            reject(result);
             return null;
           } else {
             resolve(result);
@@ -120,8 +123,11 @@ export default {
         ],
         function(error, result) {
           if (error) {
-            console.log(error);
-            reject(error);
+            let result = {
+              error: err,
+              record: null
+            };
+            reject(result);
             return null;
           } else {
             resolve(result);

@@ -4,7 +4,7 @@ import _ from 'lodash';
 import async from 'async';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
-import connect from '../components/connect';
+import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
 import DashboardMedium from '../components/DashboardMedium';
 import ReactGridLayout from 'react-grid-layout';
@@ -26,6 +26,8 @@ import FontIcon from 'material-ui/FontIcon';
 import IconMenu from 'material-ui/IconMenu';
 import IconButton from 'material-ui/IconButton';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
+import ArrowDropRight from 'material-ui/svg-icons/navigation-arrow-drop-right';
+import ActionSettings from 'material-ui/svg-icons/action/settings';
 import MenuItem from 'material-ui/MenuItem';
 import FlatButton from 'material-ui/FlatButton';
 import Snackbar from 'material-ui/Snackbar';
@@ -37,21 +39,21 @@ import MediaQuery from 'react-responsive';
 import ActionGrade from 'material-ui/svg-icons/action/grade';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import ContentRemove from 'material-ui/svg-icons/content/remove';
+import NavigationExpandMoreIcon from 'material-ui/svg-icons/navigation/expand-more';
 import { Grid, Row, Col } from 'react-bootstrap';
+import NavToolBar from '../components/NavToolBar';
+import DisplayDivisionClasses from '../components/DisplayDivisionClasses';
 import { manageDivisionClassTeacher, getDivisionsConfigs } from '../actions';
 
-@connect(state => ({
-  classes: state.classes
-}))
-@observer
+@connect
 class Schedules extends Component {
   constructor(props, context) {
     super(props, context);
   }
 
   componentWillMount() {
-    const { classes } = this.props;
-    let divisionConfig = classes.collections.divisionConfigs.data[0],
+    const { classes } = this.context.state;
+    let divisionConfig = classes.getDivisionConfigs()[0],
         year = classes.getCurrentDivisionYear(divisionConfig.id),
         divSchedules = classes.getDivisionSchedules(divisionConfig.id, year.id),
         schedule = classes.getCurrentDivisionSchedule(divisionConfig.id, year.id);
@@ -59,14 +61,10 @@ class Schedules extends Component {
     this.setState({
       fixedHeader: true,
       fixedFooter: true,
-      stripedRows: false,
-      showRowHover: false,
       selectable: false,
       multiSelectable: false,
       enableSelectAll: false,
-      deselectOnClickaway: true,
       height: '300px',
-      displayRowCheckbox: false,
       adjustForCheckbox: false,
       displaySelectAll: false,
       academicYear: year.id,
@@ -88,7 +86,7 @@ class Schedules extends Component {
   }
 
   getSchedule(config, year) {
-    const { configs } = this.props,
+    const { configs } = this.context,
           state = (config && year) ? false : true;
     if (state) {
       const { divisionConfig, academicYear } = this.state;
@@ -107,7 +105,7 @@ class Schedules extends Component {
   }
 
   getClassMeetingDays() {
-    const { configs } = this.props,
+    const { configs } = this.context,
           { divisionConfig, academicYear } = this.state;
     let db = spahql.db(configs.data),
         days = db.select("/*[/id == "+divisionConfig+"]/classMeetingDays/*");
@@ -126,7 +124,7 @@ class Schedules extends Component {
   }
 
   selectedDivision(event, selectedIndex, value) {
-    const { classes } = this.props;
+    const { classes } = this.context.state;
     this.setState({
       division: value,
       schedule: classes.getDivisionSchedule(value, this.state.academicYear)
@@ -164,7 +162,7 @@ class Schedules extends Component {
   }
 
   renderClassTeachers(divClass, division) {
-    const { classes} = this.props;
+    const { classes } = this.context.state;
     let days = classes.getDivisionMeetingDays(division.divisionConfigId),
         classTeachers = [];
     //console.log(divClass);
@@ -246,7 +244,7 @@ class Schedules extends Component {
   }
 
   getLeftIcon(day) {
-    console.log("getLeftIcon", day);
+    //console.log("getLeftIcon", day);
     if (day.viewing) {
       return (<ContentAdd />);
     } else {
@@ -255,10 +253,18 @@ class Schedules extends Component {
   }
 
   confirmTeacher(divClass, classDay, teacher, event) {
-    const { params, classes } = this.props;
+    const { classes } = this.context.state;
+    const { params } = this.props;
     let opts,
         confirmed = !teacher.divClassTeacher.confirmed;
     classes.confirmTeacher(confirmed, divClass.divisionClass.id, teacher.divClassTeacher.id);
+  }
+
+  itemSelected(item, type, e) {
+    console.log(item, type);
+    let state = {};
+    state[type] = item.id;
+    this.setState(state);
   }
 
   navigate(path, e) {
@@ -266,7 +272,8 @@ class Schedules extends Component {
   }
 
   render() {
-    const { configs, classes, ...props } = this.props,
+    const { classes } = this.context.state;
+    const { configs, ...props } = this.props,
           iconButtonElement = (
             <IconButton
               touch={true}
@@ -274,7 +281,21 @@ class Schedules extends Component {
               tooltipPosition="bottom-left">
               <MoreVertIcon color={Colors.grey400} />
             </IconButton>
-          );
+          ),
+          tableStyle={
+            displayRowCheckbox: false,
+            deselectOnClickaway: true,
+            stripedRows: false,
+            showRowHover: false,
+            fixedHeader: true,
+            fixedFooter: true,
+            selectable: false,
+            multiSelectable: false,
+            enableSelectAll: false,
+            height: '300px',
+            adjustForCheckbox: false,
+            displaySelectAll: false
+          };
     //console.log("render", configs.data.data);
     let gridLayout = {
           className: "layout",
@@ -341,7 +362,7 @@ class Schedules extends Component {
           float: 'right',
           verticalAlign: 'top'
         };
-    console.log("academicYear", this.state.academicYear);
+    //console.log("academicYear", this.state.academicYear);
     if (window) {
       const { innerWidth } = window;
       const { responsive } = settings;
@@ -360,48 +381,91 @@ class Schedules extends Component {
       <Grid fluid={true}>
         <Row>
           <Col xs={12} sm={12} md={12} lg={12}>
-            <nav className={"grey darken-1"}>
-              <div className={"nav-wrapper"}>
-                <div style={{margin: "0 0.5em"}}>
-                  <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
-                  <a className={"breadcrumb"}>Schedules</a>
-                </div>
-              </div>
-            </nav>
+            <MediaQuery query='(min-device-width: 1024px)'>
+              <NavToolBar navLabel="Schedules" goBackTo="/dashboard">
+                <ToolbarGroup key={2} lastChild={true} float="right">
+                  <DropDownMenu value={this.state.divisionConfig} ref="divisionConfig" onChange={::this.selectedDivisionConfig} style={{marginRight: "12px"}}>
+                    {classes.getDivisionConfigs().map((config, index) =>
+                      <MenuItem key={index} value={config.id} label={config.title} primaryText={config.title}/>
+                    )}
+                  </DropDownMenu>
+                  <DropDownMenu ref="academicYear" value={this.state.academicYear} onChange={::this.selectedYear} style={{marginRight: "0px"}} >
+                    {::classes.getDivisionYears(this.state.divisionConfig).map((year, index) =>
+                      <MenuItem key={index} value={year.id} label={moment(year.startDate).format("YYYY")} primaryText={moment(year.startDate).format("YYYY")}/>
+                    )}
+                  </DropDownMenu>
+                  <DropDownMenu ref="divisions" value={this.state.division} onChange={::this.selectedDivision} style={{marginRight: "0px"}} >
+                    {::classes.getDivisionSchedules(this.state.divisionConfig, this.state.academicYear).map((div, index) =>
+                      <MenuItem key={index} value={div.id} label={div.title} primaryText={div.title}/>
+                    )}
+                  </DropDownMenu>
+                  <ToolbarSeparator />
+                  <RaisedButton label="Manage Schedules" secondary={true} />
+                </ToolbarGroup>
+              </NavToolBar>
+            </MediaQuery>
+            <MediaQuery query='(max-device-width: 1023px)'>
+               <NavToolBar navLabel="Schedules" goBackTo="/dashboard">
+                  <ToolbarGroup key={2} lastChild={true}>
+                    <IconMenu
+                      iconButtonElement={<IconButton touch={true}><NavigationExpandMoreIcon /></IconButton>}
+                      anchorOrigin={{horizontal: 'left', vertical: 'top'}}
+                      targetOrigin={{horizontal: 'left', vertical: 'top'}}
+                    >
+                      <MenuItem
+                        primaryText="Class Grouping"
+                        rightIcon={<ArrowDropRight />}
+                        menuItems={::classes.getDivisionConfigs().map((config, index) =>
+                            <MenuItem 
+                              checked={(this.state.divisionConfig === config.id) ? true : false}
+                              key={config.id} 
+                              value={config.id} 
+                              label={config.title} 
+                              primaryText={config.title} 
+                              onTouchTap={((...args)=>this.itemSelected(config, 'divisionConfig', ...args))} />,
+                          )
+                        }
+                      />
+
+                      <MenuItem
+                        primaryText="Year"
+                        rightIcon={<ArrowDropRight />}
+                        menuItems={::classes.getDivisionYears(this.state.divisionConfig).map((year, index) =>
+                            <MenuItem
+                              checked={(this.state.academicYear === year.id) ? true : false}
+                              key={year.id} 
+                              value={year.id} 
+                              label={moment(year.startDate).format("YYYY")} 
+                              primaryText={moment(year.startDate).format("YYYY")}
+                              onTouchTap={((...args)=>this.itemSelected(year, 'academicYear', ...args))} />,
+                          )
+                        }
+                      />
+
+                      <MenuItem
+                        primaryText="Quarter"
+                        rightIcon={<ArrowDropRight />}
+                        menuItems={::classes.getDivisionSchedules(this.state.divisionConfig, this.state.academicYear).map((div, index) =>
+                          <MenuItem
+                            checked={(this.state.division === div.id) ? true : false}
+                            key={div.id} 
+                            value={div.id} 
+                            label={div.title} 
+                            primaryText={div.title}
+                            onTouchTap={((...args)=>this.itemSelected(div, 'division', ...args))} />,
+                        )}
+                      />
+                      <Divider />
+                      <MenuItem value="manage-schedules" primaryText="Manage Schedules" />
+                    </IconMenu>
+                  </ToolbarGroup>
+              </NavToolBar>
+            </MediaQuery>
           </Col>
         </Row>
         <Row>
-          <Col xs={12} sm={12} md={12} lg={12}>
-            <Toolbar
-              style={{flexWrap: "wrap"}}
-            >
-              <ToolbarGroup key={0} float="left">
-                <DropDownMenu value={this.state.divisionConfig} ref="divisionConfig" onChange={::this.selectedDivisionConfig} style={{marginRight: "12px"}}>
-                  {classes.collections.divisionConfigs.data.map((config, index) =>
-                    <MenuItem key={config.id} value={config.id} label={config.title} primaryText={config.title}/>
-                  )}
-                </DropDownMenu>
-                <DropDownMenu ref="academicYear" value={this.state.academicYear} onChange={::this.selectedYear} style={{marginRight: "0px"}} >
-                  {::classes.getDivisionYears(this.state.divisionConfig).map((year, index) =>
-                    <MenuItem key={year.id} value={year.id} label={moment(year.startDate).format("YYYY")} primaryText={moment(year.startDate).format("YYYY")}/>
-                  )}
-                </DropDownMenu>
-                <DropDownMenu ref="divisions" value={this.state.division} onChange={::this.selectedDivision} style={{marginRight: "0px"}} >
-                  {::this.state.divSchedules.map((div, index) =>
-                    <MenuItem key={div.id} value={div.id} label={div.title} primaryText={div.title}/>
-                  )}
-                </DropDownMenu>
-              </ToolbarGroup>
-              <ToolbarGroup key={1} float="right" className={"hidden-xs"}>
-                <ToolbarSeparator />
-                <RaisedButton label="New Schedule" primary={true} />
-              </ToolbarGroup>
-            </Toolbar>
-          </Col>
-        </Row>
-        <Row>
-              {::this.state.schedule.map((division, index) =>
-              <Col xs={12} sm={12} md={12} lg={12} key={division.id}>
+              {::classes.getDivisionSchedule(this.state.division).map((division, index) =>
+              <Col xs={12} sm={12} md={12} lg={12} key={index}>
                 <div style={{marginBottom: "10px"}}>
                   <Card>
                     <CardHeader
@@ -411,102 +475,15 @@ class Schedules extends Component {
                     </CardHeader>
                     <CardMedia>
                       <MediaQuery query='(min-device-width: 1024px)'>
-                        <Table
-                          fixedHeader={this.state.fixedHeader}
-                          fixedFooter={this.state.fixedFooter}
-                          selectable={this.state.selectable}
-                          multiSelectable={this.state.multiSelectable}
-                          onRowSelection={this._onRowSelection}>
-                          <TableHeader
-                            adjustForCheckbox={this.state.adjustForCheckbox}
-                            displaySelectAll={this.state.displaySelectAll}
-                            enableSelectAll={this.state.enableSelectAll}>
-                            <TableRow>
-                              <TableHeaderColumn>Class</TableHeaderColumn>
-                              {::classes.getDivisionMeetingDays(division.divisionConfigId).map((day, index) =>
-                                <TableHeaderColumn key={day.id}>{moment().isoWeekday(day.day).format("dddd")}</TableHeaderColumn>
-                              )}
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody
-                            displayRowCheckbox={this.state.displayRowCheckbox}
-                            deselectOnClickaway={this.state.deselectOnClickaway}
-                            showRowHover={this.state.showRowHover}
-                            stripedRows={this.state.stripedRows}>
-                            {classes.getCurrentDivisionClasses(division.id).map((divisionClass, index) =>
-                              <TableRow selected={false} key={divisionClass.divisionClass.id}>
-                                <TableRowColumn>
-                                  <h6><a style={{color: Colors.deepOrange500}} href="">{divisionClass.class.title}</a></h6>
-                                  <p style={{color: Colors.grey600}}>{divisionClass.class.description}</p>
-                                </TableRowColumn>
-                                {::this.renderClassTeachers(divisionClass, division).map((teacherDay, index) =>
-                                  <TableRowColumn key={index}>
-                                    {teacherDay.teachers.map((teacher, index) =>
-                                      <div key={index} style={{width: "100%", clear: "both"}}>
-                                        <IconButton
-                                          style={{
-                                            float: "left"
-                                          }}
-                                          touch={true}
-                                          onTouchTap={((...args)=>this.confirmTeacher(divisionClass, teacherDay, teacher, ...args))}>
-                                        <ActionGrade
-                                          color={(teacher.divClassTeacher.confirmed) ? Colors.deepOrange500 : Colors.grey400} />
-                                        </IconButton>
-                                        <FlatButton
-                                          style={{
-                                            float: "left",
-                                            marginTop: "8px"
-                                          }}
-                                          key={teacher.id}
-                                          label={teacher.person.firstName+" "+teacher.person.lastName}
-                                          secondary={true}
-                                          onTouchTap={(...args) =>this.handleEditDay(divisionClass, teacherDay, ...args)}
-                                          labelPosition="after" />
-                                      </div>
-                                    )}
-                                  </TableRowColumn>
-                                )}
-                              </TableRow>
-                            )}
-                          </TableBody>
-                        </Table>
+                        <div>
+                          <DisplayDivisionClasses type="table" tableStyle={tableStyle} division={division} classes={classes.getCurrentDivisionClasses(division.id)} />
+                        </div>
                       </MediaQuery>
                       <MediaQuery query='(max-device-width: 1023px)'>
-                        {classes.getCurrentDivisionClasses(division.id).map((divisionClass, index) =>
-                          <div key={divisionClass.divisionClass.id}>
-                            <Divider />
-                            <List>
-                              <Subheader>{divisionClass.class.title}</Subheader>
-                              {::this.renderClassTeachers(divisionClass, division).map((teacherDay, index) =>
-                                <ListItem
-                                  key={index}
-                                  primaryText={moment().isoWeekday(teacherDay.day.day).format("dddd")}
-                                  initiallyOpen={false}
-                                  primaryTogglesNestedList={true}
-                                  rightIconButton={
-                                    <IconMenu
-                                      iconButtonElement={iconButtonElement}
-                                      onItemTouchTap={((...args)=>this.handleEditDay(divisionClass, teacherDay, ...args))}>
-                                      <MenuItem>Edit</MenuItem>
-                                    </IconMenu>
-                                  }
-                                  nestedItems={teacherDay.teachers.map((teacher, index) =>
-                                      <ListItem
-                                        key={teacher.id}
-                                        primaryText={teacher.person.firstName+" "+teacher.person.lastName}
-                                        leftIcon={
-                                          <ActionGrade
-                                            onTouchTap={((...args)=>this.confirmTeacher(divisionClass, teacherDay, teacher, ...args))}
-                                            color={(teacher.divClassTeacher.confirmed) ? Colors.deepOrange500 : Colors.grey400} />
-                                        }
-                                      />,
-                                    )}
-
-                                />
-                              )}
-                            </List>
-                          </div>
-                        )}
+                        <div>
+                          <Divider />
+                          <DisplayDivisionClasses type="list" division={division} classes={classes.getCurrentDivisionClasses(division.id)} />
+                        </div>
                       </MediaQuery>
                     </CardMedia>
                   </Card>

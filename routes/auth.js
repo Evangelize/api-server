@@ -4,7 +4,9 @@ import utils from '../src/lib/utils';
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
-const key = fs.readFileSync(path.join(__dirname, '../private.key')),
+import settings from '../config/settings.json';
+console.log(settings.jwtKey);
+const key = fs.readFileSync(settings.jwtKey),
       prefix = "/api/auth";
 
 module.exports = [

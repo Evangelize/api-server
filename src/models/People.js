@@ -12,6 +12,26 @@ module.exports = function (sequelize, DataTypes) {
           this.setDataValue('id', new Buffer(val, "hex"));
         }
       },
+      "familyId": {
+        type: DataTypes.BLOB,
+        primaryKey: true,
+        get: function()  {
+          return this.getDataValue('familyId').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('familyId', new Buffer(val, "hex"));
+        }
+      },
+      "cohort": {
+        type: DataTypes.BLOB,
+        primaryKey: true,
+        get: function()  {
+          return this.getDataValue('cohort').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('cohort', new Buffer(val, "hex"));
+        }
+      },
       "familyName": DataTypes.STRING,
       "lastName": DataTypes.STRING,
       "firstName": DataTypes.STRING,

@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import _ from 'lodash';
 import { observer } from "mobx-react";
-import connect from '../components/connect';
+import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
 import DashboardMedium from '../components/DashboardMedium';
 import ReactGridLayout from 'react-grid-layout';
@@ -19,10 +19,7 @@ import Toggle from 'material-ui/Toggle';
 import { Grid, Row, Col } from 'react-bootstrap';
 import { getPeople, setPerson } from '../actions';
 
-@connect(state => ({
-  classes: state.classes
-}))
-@observer
+@connect
 class People extends Component {
   constructor(props, context) {
     super(props, context);
@@ -32,7 +29,7 @@ class People extends Component {
   }
 
   _handleInputChange(e) {
-    const { classes } = this.props,
+    const { classes } = this.context.state,
           { searchType } = this.state,
           filter = e.target.value;
     if (filter && filter.length > 1) {

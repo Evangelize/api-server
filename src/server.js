@@ -26,6 +26,7 @@ import Provider from './components/Provider';
 import reactCookie from 'react-cookie';
 
 // React-router routes and history imports
+import Db from '../src/stores/db';
 import Classes from '../src/stores/classes';
 import Settings from '../src/stores/settings';
 import createRoutes from '../src/routes';
@@ -40,13 +41,15 @@ import {createClient} from './lib/redisClient';
 import { NotAuthorizedException, AccessDeniedException, RedirectException } from './lib/errors';
 
 let subClient,
-    cert = fs.readFileSync(path.join(__dirname, '../private.pem'));
+    cert;
 const CronJob = Cron.CronJob,
       pushResults = function(message, result) {
         let update = {
           type: message.type,
           collection: message.collection,
-          record: result
+          prior: message.target,
+          record: result,
+          error: result.error
         }
         utils.pushMessage("changes."+message.type, update);
       },
@@ -66,10 +69,11 @@ const CronJob = Cron.CronJob,
                 api[message.collection].insert(record)
                 .then(
                   function(results) {
+                    results.error = false;
                     pushResults(message, results);
                   },
                   function(err) {
-                    console.log(err);
+                    pushResults(message, err);
                   }
                 );
                 break;
@@ -77,10 +81,11 @@ const CronJob = Cron.CronJob,
                 api[message.collection].update(record)
                 .then(
                   function(results) {
+                    results.error = false;
                     pushResults(message, results);
                   },
                   function(err) {
-                    console.log(err);
+                    pushResults(message, err);
                   }
                 );
                 break;
@@ -88,10 +93,11 @@ const CronJob = Cron.CronJob,
                 api[message.collection].delete(record)
                 .then(
                   function(results) {
+                    results.error = false;
                     pushResults(message, results);
                   },
                   function(err) {
-                    console.log(err);
+                    pushResults(message, err);
                   }
                 );
                 break;
@@ -154,6 +160,8 @@ export default function( HOST, PORT, callback ) {
       settings = nconf.argv()
        .env()
        .file({ file: path.join(__dirname, '../config/settings.json') });
+  //console.log("jwtCert", settings.get("jwtCert"));
+  cert = fs.readFileSync(settings.get("jwtCert"));
   //console.log("mysql", settings.get("mysql"));
   const server = new Hapi.Server();
   server.connection(
@@ -212,15 +220,26 @@ export default function( HOST, PORT, callback ) {
       const cookie = parseCookies(request.headers, "accessToken");
       const location = createLocation( request.path );
       let authenticated = false,
-          retFunc = function(db, person) {
+          retFunc = function(data, person) {
             console.log(authenticated);
-            const data = Object.assign({}, db);
-            const finalDb = JSON.stringify(data);
+            const _data = Object.assign({}, data);
+            const finalDb = JSON.stringify(_data);
+            const db = new Db(data);
             const classes = new Classes(db);
             const appSettings = new Settings();
-            appSettings.user = person;
+            appSettings.user = {person: person};
             appSettings.authenticated = authenticated;
             const routes = createRoutes(appSettings);
+            const context = {
+              state: {
+                db: db,
+                classes: classes, 
+                settings: appSettings
+              },
+              store: {
+
+              }
+            };
             //console.log(finalDb);
             match({ routes, location }, ( error, redirectLocation, renderProps ) => {
               if ( error || !renderProps ) {
@@ -230,7 +249,7 @@ export default function( HOST, PORT, callback ) {
                 reply.redirect( redirectLocation.pathname + redirectLocation.search );
               } else if ( renderProps ) {
                 const reactString = ReactDOM.renderToString(
-                  <Provider store={{classes: classes, settings: appSettings}}><RouterContext {...renderProps} /></Provider>
+                  <Provider context={context}><RouterContext {...renderProps} /></Provider>
                 );
                 let settings = nconf.argv()
                    .env()
@@ -244,12 +263,13 @@ export default function( HOST, PORT, callback ) {
                       <script>
                         var wsUri = '${websocketUri}',
                             dbJson = ${finalDb},
-                            user = '${JSON.stringify(person)}';
+                            user = '${JSON.stringify({person: person})}';
                       </script>
                       <meta charset="utf-8">
                       <meta name="viewport" content="width=device-width, initial-scale=1">
                       <title>Congregation Class Management</title>
                       <link rel="stylesheet" href="/css/sanitize.css" />
+                      <link rel="stylesheet" href="/css/typography.css" />
                       <link rel="stylesheet" href="/chartist/css/chartist.min.css">
                       <link rel="shortcut icon" sizes="16x16 32x32 48x48 64x64 128x128 256x256" href="/favicon.ico?v2">
                       <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700" type="text/css">
@@ -283,7 +303,8 @@ export default function( HOST, PORT, callback ) {
                 console.log("error authenticated already");
                 throw new RedirectException('/dashboard');
               }
-
+              
+              console.log("Create Window Object");
               if (typeof(window) == 'undefined'){
                 global.window = new Object();
               }
@@ -336,3 +357,9 @@ export default function( HOST, PORT, callback ) {
   // Start Development Server
   return server.start(() => callback( server ));
 }
+
+process.on('uncaughtException', function (err) {
+  console.error((new Date).toUTCString() + ' uncaughtException:', err.message);
+  console.error(err.stack);
+  process.exit(1);
+});

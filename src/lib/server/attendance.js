@@ -36,8 +36,11 @@ export default {
         ],
         function(error, result) {
           if (error) {
-            console.log(error);
-            reject(error);
+            let result = {
+              error: err,
+              record: null
+            };
+            reject(result);
             return null;
           } else {
             resolve(result);
@@ -79,14 +82,18 @@ export default {
           resolve(attendance);
         },
         function(err){
-          console.log(err)
-          reject(err);
+          let result = {
+            error: err,
+            record: null
+          };
+          reject(result);
         }
       );
     });
   },
   insert(record) {
     record.id = new Buffer(record.id, 'hex');
+    record.divisionClassId = new Buffer(record.divisionClassId, 'hex');
     return new Promise(function(resolve, reject){
       models.DivisionClassAttendance.create(
         record
@@ -95,8 +102,31 @@ export default {
           resolve(result);
         },
         function(err){
-          console.log(err)
-          reject(err);
+          console.log(err);
+          models.DivisionClassAttendance.findOne(
+            {
+                where: {
+                  divisionClassId: record.divisionClassId,
+                  day: 0,
+                  attendanceDate: '2016-05-01 00:00:00'
+                }
+            }
+          ).then(
+            function(attendance) {
+              let result = {
+                error: err,
+                record: attendance
+              };
+              reject(result);
+            },
+            function(err){
+              let result = {
+                error: err,
+                record: null
+              };
+              reject(result);
+            }
+          );
         }
       );
     });
@@ -125,8 +155,11 @@ export default {
           );
         },
         function(err){
-          console.log(err)
-          reject(err);
+          let result = {
+            error: err,
+            record: null
+          };
+          reject(result);
         }
       );
     });
@@ -142,8 +175,11 @@ export default {
           resolve(record);
         },
         function(err){
-          console.log(err)
-          reject(err);
+          let result = {
+            error: err,
+            record: null
+          };
+          reject(result);
         }
       );
     });

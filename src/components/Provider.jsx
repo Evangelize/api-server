@@ -1,38 +1,14 @@
 import { Component, PropTypes, Children } from 'react';
+import { contextTypes } from 'mobx-connect';
 
 export default class Provider extends Component {
+  static childContextTypes = contextTypes;
+
   getChildContext() {
-    return { store: this.store };
+    //console.log(this.props.context);
+    return this.props.context;
   }
-
-  constructor(props, context) {
-    super(props, context);
-    this.store = props.store;
-  }
-
   render() {
-    let { children } = this.props;
-    return Children.only(children);
+    return this.props.children;
   }
-}
-
-if (process.env.NODE_ENV !== 'production') {
-  Provider.prototype.componentWillReceiveProps = function (nextProps) {
-    const { store } = this;
-    const { store: nextStore } = nextProps;
-  }
-}
-
-Provider.propTypes = {
-  store: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.array
-  ]).isRequired,
-  children: PropTypes.element.isRequired
-}
-Provider.childContextTypes = {
-  store: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.array
-  ]).isRequired
 }

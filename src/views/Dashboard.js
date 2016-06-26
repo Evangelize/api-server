@@ -1,13 +1,17 @@
 import React, { Component, PropTypes } from 'react';
 import _ from 'lodash';
 import moment from 'moment-timezone';
-import MasonryCtl from 'react-masonry-component';
+import Masonry from 'react-masonry-component';
 import Radium from 'radium';
 import { observer } from "mobx-react";
-import connect from '../components/connect';
+import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
 import DashboardComponentSmall from '../components/DashboardComponentSmall';
 import DashboardMediumGraph from '../components/DashboardMediumGraph';
+import DisplayClassAttendance from '../components/DisplayClassAttendance';
+import DisplayTeachers from '../components/DisplayTeachers';
+import DivisionConfigsAttendance from '../components/DivisionConfigsAttendance';
+import DisplayNotes from '../components/DisplayNotes';
 import ReactGridLayout from 'react-grid-layout';
 import Paper from 'material-ui/Paper';
 import * as Colors from 'material-ui/styles/colors';
@@ -37,13 +41,9 @@ import { Grid, Row, Col } from 'react-bootstrap';
 
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/medium-editor.css';
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/themes/default.css';
-let Masonry = MasonryCtl(React);
+//let Masonry = MasonryCtl(React);
 
-@connect(state => ({
-  classes: state.classes,
-  settings: state.settings
-}))
-@observer
+@connect
 class Dashboard extends Component {
   constructor(props, context){
     super(props, context);
@@ -71,7 +71,7 @@ class Dashboard extends Component {
   }
 
   componentWillMount() {
-    const { classes, settings } = this.props;
+    const { classes, settings } = this.context.state;
     let today = moment().weekday();
     settings.authenticated = true;
 
@@ -104,7 +104,7 @@ class Dashboard extends Component {
   }
 
   displayAttendance(divisionConfig) {
-    const { classes } = this.props,
+    const { classes } = this.context.state,
           { now } = this.state;
     //console.log("displayAttendance", classes);
     let today = moment().weekday(),
@@ -125,7 +125,7 @@ class Dashboard extends Component {
   }
 
   getClasses(divisionConfig) {
-    const { classes } = this.props,
+    const { classes } = this.context.state,
           { now } = this.state;
     let today = moment().weekday(),
         division = classes.getCurrentDivision(now),
@@ -135,7 +135,7 @@ class Dashboard extends Component {
   }
 
   displayTeachers(divClass) {
-    const { classes } = this.props,
+    const { classes } = this.context.state,
           { now } = this.state,
           classDay = divClass.class.day,
           divisionClassId = divClass.divisionClass.id;
@@ -145,14 +145,14 @@ class Dashboard extends Component {
   }
 
   attendanceUpdate(divClass, e) {
-    const { classes } = this.props,
+    const { classes } = this.context.state,
           { now } = this.state;
     classes.updateClassAttendance(divClass.divisionClass.id, now, parseInt(e.target.value, 10));
   }
 
   getClassAttendance(divClass) {
     const { now } = this.state,
-          { classes } = this.props;
+          { classes } = this.context.state;
     let attendance = classes.getClassAttendanceToday(divClass.divisionClass.id),
         day = moment().format("YYYY-MM-DD"),
         isToday = false;
@@ -174,7 +174,7 @@ class Dashboard extends Component {
   }
 
   getGraphAttendance(day, length) {
-    const { classes } = this.props;
+    const { classes } = this.context.state;
     let attendance = classes.latestAttendance(day, length),
         labels = attendance.map(function(day, index){
           return moment.utc(day.attendanceDate).tz("America/Chicago").format("MM/DD");
@@ -202,71 +202,6 @@ class Dashboard extends Component {
     return false;
   }
 
-  handleCardTouchTap(note, e) {
-    this.setState({
-      currentNote: note,
-      showDialog: true
-    });
-  }
-
-  handleDialogClose(e) {
-    if (!this.state.currentNote.id) {
-      let title = (this.refs.title.getValue().length) ? this.refs.title.getValue() : null;
-      this.setState({
-        currentNote: {
-          id: this.state.currentNote.id,
-          text: this.state.currentNote.text,
-          title: title
-        }
-      });
-      /*
-      dispatch(
-        addNote(
-          this.state.currentNote
-        )
-      );
-      */
-    }
-    this.setState({
-      showDialog: false
-    });
-  }
-
-  handleEditorChange(text) {
-    if (this.state.currentNote.id) {
-      this.delayedNoteUpdate(this.state.currentNote, {text: text});
-    } else {
-      this.setState({
-        currentNote: {
-          id: this.state.currentNote.id,
-          text: text,
-          title: this.state.currentNote.title
-        }
-      });
-    }
-  }
-
-  handleTitleChange(e) {
-    let title = (this.refs.title.getValue().length) ? this.refs.title.getValue() : null;
-    if (this.state.currentNote.id) {
-      this.delayedNoteUpdate(this.state.currentNote, {title: title});
-    } else {
-      this.setState({
-        currentNote: {
-          id: this.state.currentNote.id,
-          text: this.state.currentNote.text,
-          title: title
-        }
-      });
-    }
-  }
-
-  getNotes() {
-    const { classes } = this.props;
-    let results = classes.getNotes();
-    return results;
-  }
-
   handleNewNote(e) {
     this.setState({
       currentNote: {
@@ -278,11 +213,6 @@ class Dashboard extends Component {
     });
   }
 
-  handleNoteDelete(note, e) {
-    e.stopPropagation();
-    const { classes } = this.props;
-    classes.deleteRecord("notes", note.id);
-  }
 
   highlightText(e) {
     if (e) {
@@ -291,7 +221,7 @@ class Dashboard extends Component {
   }
 
   render() {
-    const { classes, ...props } = this.props;
+    const { classes } = this.context.state;
     const { masonryOptions, now } = this.state;
     let paperStyle = {
           display: 'flex',
@@ -313,13 +243,6 @@ class Dashboard extends Component {
           low: 0,
           showArea: true
         },
-        customActions = [
-          <FlatButton
-            key={0}
-            label="Done"
-            primary={true}
-            onTouchTap={::this.handleDialogClose} />
-        ],
         halogenContainer = {
           height: "25px",
           width: "25px"
@@ -333,44 +256,7 @@ class Dashboard extends Component {
     return (
       <div>
         <Grid fluid={true}>
-          {classes.getDivisionConfigs().map((divisionConfig, index) =>
-            <Row key={index}>
-            {this.displayAttendance(divisionConfig).map((attendance, index) =>
-                <Col xs={12} sm={12} md={12} lg={12} key={index}>
-                  <Card>
-                    <CardHeader
-                      title={attendance.config.title+" Attendance"}
-                      subtitle={moment().format("dddd MM/DD/YYYY")}
-                      avatar={<Avatar>{moment().format("dd")}</Avatar>}>
-                    </CardHeader>
-                    <CardMedia>
-                      <Grid fluid={true} key={1}>
-                        <Row>
-                        {attendance.classes.map((divClass, index) =>
-                          <Col style={{display: "flex", alignItems: "center", justifyContent: "center"}} key={index} xs={12} sm={6} md={4} lg={3}>
-                            <div style={{width: "85%"}}>
-                              <TextField
-                                type="number"
-                                hintText="Enter attendance"
-                                value={::this.getClassAttendance(divClass)}
-                                min="0"
-                                max="500"
-                                ref={"inputAttendance"+divClass.id}
-                                onFocus={((...args)=>this.highlightText(...args))}
-                                onChange={((...args)=>this.attendanceUpdate(divClass, ...args))}
-                                floatingLabelText={divClass.class.title} />
-                            </div>
-                            <div style={{width: "13%", margin: "0 1%", height: "50px", overflow: "hidden"}}><CircularProgress style={{display: (this.isUpdating(divClass)) ? "block" : "none"}} size={0.35} mode="indeterminate" /></div>
-                          </Col>
-                        )}
-                        </Row>
-                      </Grid>
-                    </CardMedia>
-                  </Card>
-                </Col>
-            )}
-            </Row>
-          )}
+          <DivisionConfigsAttendance style={(classes.isClassDay()) ? null : {display: 'none'}}/>
           <Masonry className={"row"} options={masonryOptions}>
             {classes.getClassMeetingDays().map((day, index) =>
               <Col xs={12} sm={12} md={6} lg={6} key={index}>
@@ -384,50 +270,13 @@ class Dashboard extends Component {
               </Col>
             )}
             {classes.getDivisionConfigs().map((divisionConfig, index) =>
-              <Col xs={12} sm={12} md={6} lg={6} key={index} style={(this.displayAttendance(divisionConfig).length) ? null : {display: 'none'}}>
-                <Card>
-                  <CardHeader
-                    title={divisionConfig.title + " Teachers"}
-                    subtitle={moment().tz("America/Chicago").format("dddd")}
-                    avatar={<Avatar>T</Avatar>}>
-                  </CardHeader>
-                  <CardMedia>
-                    {::this.getClasses(divisionConfig).map((divClass, index) =>
-                      <div key={index}>
-                        <Divider />
-                        <List>
-                          <Subheader>{divClass.class.title}</Subheader>
-                          {this.displayTeachers(divClass).map((teacher, index) =>
-                            <ListItem
-                              key={teacher.divClassTeacher.id}
-                              primaryText={teacher.person.firstName+" "+teacher.person.lastName}
-                              leftAvatar={
-                                <Avatar 
-                                  src={
-                                    (teacher.person.individualPhotoUrl) ? 
-                                      teacher.person.individualPhotoUrl : 
-                                      teacher.person.familyPhotoUrl
-                                    }
-                                  >
-                                    {
-                                      (teacher.person.individualPhotoUrl || teacher.person.familyPhotoUrl) ? 
-                                        null : 
-                                        teacher.person.firstName.charAt(0)
-                                    }
-                                  </Avatar>
-                              }
-                            />
-                          )}
-                        </List>
-                      </div>
-                    )}
-                  </CardMedia>
-                </Card>
+              <Col xs={12} sm={12} md={6} lg={6} key={divisionConfig.id} style={(this.displayAttendance(divisionConfig).length) ? null : {display: 'none'}}>
+                <DisplayTeachers divisionConfig={divisionConfig} />
               </Col>
             )}
             <Col xs={12} sm={12} md={6} lg={6}>
               {classes.getClassMeetingDays().map((day, index) =>
-                <div>
+                <div key={day.id}>
                 <Col xs={12} sm={6} md={6} lg={6} key={index}>
                   <DashboardComponentSmall
                     zDepth={1}
@@ -460,53 +309,12 @@ class Dashboard extends Component {
                   />
                 </ToolbarGroup>
               </Toolbar>
-              <Masonry>
-                {this.getNotes().map((note, index) =>
-                  <Col key={note.id} xs={12} sm={6} md={6} lg={6} key={index}>
-                    <Card>
-                      <CardTitle title={note.title} style={(note.title) ? null : {display: 'none'}} />
-                      <CardMedia onClick={((...args)=>this.handleCardTouchTap(note, ...args))}>
-                        <div style={{padding: "10px 25px"}} dangerouslySetInnerHTML={{__html: note.text}} />
-                        <div style={{display: "flex", flexDirection: "row", justifyContent: "flex-end"}}>
-                          <IconButton
-                            iconClassName="material-icons"
-                            tooltipPosition="top-center"
-                            tooltip="Delete"
-                            iconStyle={{color: "grey"}}
-                            onTouchTap={((...args)=>this.handleNoteDelete(note, ...args))}>
-                              delete
-                          </IconButton>
-                        </div>
-                      </CardMedia>
-                    </Card>
-                  </Col>
-                )}
-              </Masonry>
+              <DisplayNotes />
             </Col>
+            
           </Masonry>
         </Grid>
-        <Dialog
-          title={
-            <TextField
-              style={{margin: "25px"}}
-              ref="title"
-              hintText="Title"
-              onChange={::this.handleTitleChange}
-              defaultValue={this.state.currentNote.title} />
-          }
-          actions={customActions}
-          autoDetectWindowHeight={true}
-          autoScrollBodyContent={true}
-          open={this.state.showDialog}
-          onRequestClose={::this.handleDialogClose}>
-          <Editor
-            className="editor"
-            ref="editor"
-            text={this.state.currentNote.text}
-            onChange={::this.handleEditorChange}
-            options={{toolbar: {buttons: ['bold', 'italic', 'underline', 'unorderedlist']}}}
-          />
-        </Dialog>
+        
       </div>
     );
   }

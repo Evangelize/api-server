@@ -5,10 +5,10 @@ import async from 'async';
 import momentFquarter from 'moment-fquarter';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
-import connect from '../components/connect';
+import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
 import DashboardMediumGraph from '../components/DashboardMediumGraph';
-import MasonryCtl from 'react-masonry-component';
+import Masonry from 'react-masonry-component';
 import Styles from 'material-ui/styles';
 import Card from 'material-ui/Card/Card';
 import CardHeader from 'material-ui/Card/CardHeader';
@@ -20,8 +20,10 @@ import ListItem from 'material-ui/List/ListItem';
 import Divider from 'material-ui/Divider';
 import FlatButton from 'material-ui/FlatButton';
 import Snackbar from 'material-ui/Snackbar';
+import TextField from 'material-ui/TextField';
 import {Tabs, Tab} from 'material-ui/Tabs';
 import { Grid, Row, Col } from 'react-bootstrap';
+import NavToolBar from '../components/NavToolBar';
 
 const styles = {
   headline: {
@@ -31,12 +33,9 @@ const styles = {
     fontWeight: 400,
   },
 };
-let Masonry = MasonryCtl(React);
+//let Masonry = MasonryCtl(React);
 
-@connect(state => ({
-  classes: state.classes
-}))
-@observer
+@connect
 class Class extends Component {
   constructor(props, context) {
     super(props, context);
@@ -44,13 +43,14 @@ class Class extends Component {
 
   componentWillMount() {
     //this.setState({});
-    const { classes, params } = this.props;
-    let cls = classes.getClass(params.classId);
-    console.log("class", cls);
+    //console.log("class", cls);
     this.setState({
-      class: cls,
       masonryOptions: {}
     });
+  }
+
+  componentWillUpdate(nextProps, nextState) {
+    console.log("will update", nextProps, nextState);
   }
 
   componentDidMount() {
@@ -66,8 +66,9 @@ class Class extends Component {
   }
   
   getGraphAttendance(day, length) {
-    const { classes } = this.props;
-    let attendance = classes.getClassAttendanceByDay(this.state.class.id, day),
+    const { params } = this.props;
+    const { classes } = this.context.state;
+    let attendance = classes.getClassAttendanceByDay(params.classId, day),
         labels = attendance.map(function(day, index){
           return moment.utc(day.attendanceDate).tz("America/Chicago").format("MM/DD");
         }),
@@ -81,8 +82,21 @@ class Class extends Component {
     };
   }
 
+  updateTitle(e) {
+    const { classes } = this.context.state;
+    const { params } = this.props,
+          { now } = this.state;
+    classes.updateCollectionFields("classes", params.classId, {title: e.target.value});
+  }
+
   render() {
-    const { classes } = this.props;
+    const { params } = this.props;
+    const { classes } = this.context.state;
+    const cls = classes.getClass(params.classId),
+          teachers = classes.getClassTeachers(cls.id),
+          currentDivision = classes.getCurrentDivision(),
+          divisionClass = classes.getDivisionClassByDivAndClass(currentDivision.id, cls.id),
+          meetingDays = classes.getClassMeetingDays();
     const { masonryOptions } = this.state;
     let lineChartOptions = {
           low: 0,
@@ -93,15 +107,7 @@ class Class extends Component {
         <Grid fluid={true}>
           <Row>
             <Col xs={12} sm={12} md={12} lg={12}>
-              <nav className={"grey darken-1"}>
-                <div className={"nav-wrapper"}>
-                  <div style={{margin: "0 0.5em"}}>
-                    <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
-                    <a href="#!" onTouchTap={((...args)=>this.navigate("/classes", ...args))} className={"breadcrumb"}>Classes</a>
-                    <a className={"breadcrumb"}>{this.state.class.title}</a>
-                  </div>
-                </div>
-              </nav>
+              <NavToolBar navLabel={cls.title} goBackTo="/classes" />
             </Col>
           </Row>
           <Row>
@@ -109,9 +115,18 @@ class Class extends Component {
               
               <Tabs>
                 <Tab label="Overview" >
+                  <Row>
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                      <div>
+                        <span className="button">{currentDivision.title}</span> <br />
+                        <span className="caption">{moment(currentDivision.start).tz("America/Chicago").format("dddd, MMM DD YYYY")} - {moment(currentDivision.end).tz("America/Chicago").format("dddd, MMM DD YYYY")}</span>
+                      </div>
+                    </Col>
+                  </Row>
                   <Masonry className={"row"} options={masonryOptions}>
-                    {classes.getClassMeetingDays().map((day, index) =>
-                      <Col xs={12} sm={12} md={6} lg={6} key={index}>
+                    
+                    {meetingDays.map((day, index) =>
+                      <Col xs={12} sm={12} md={6} lg={6} key={day.id}>
                         <DashboardMediumGraph
                           title={moment().weekday(day.day).format("dddd") + " Attendance"}
                           subtitle={"Past 8 weeks"}
@@ -121,53 +136,95 @@ class Class extends Component {
                         />
                       </Col>
                     )}
-                    <Col xs={12} sm={12} md={12} lg={12}>
-                      <Card>
-                        <CardHeader
-                          title={"Teachers"}
-                          subtitle={"All teachers who have taught class"}
-                          avatar={<Avatar>{"T"}</Avatar>}>
-                        </CardHeader>
-                        <CardMedia>
-                          <List>
-                            {::classes.getClassTeachers(this.state.class.id).map((teacher, index) =>
-                              <div
-                                key={index} > 
-                                <Divider />
-                                <ListItem
-                                  leftAvatar={
-                                    <Avatar 
-                                      src={
-                                        (teacher.person.individualPhotoUrl) ? 
-                                          teacher.person.individualPhotoUrl : 
-                                          teacher.person.familyPhotoUrl
-                                       }
-                                      >
-                                        {
-                                          (teacher.person.individualPhotoUrl || teacher.person.familyPhotoUrl) ? 
-                                            null : 
-                                            teacher.person.firstName.charAt(0)
-                                        }
-                                      </Avatar>
-                                  }
-                                  primaryText={teacher.person.lastName + ", " + teacher.person.firstName}
-                                  secondaryText={"Last Taught: "+teacher.division.title+" "+moment(teacher.division.start, "x").fquarter(-4).year+" - "+moment().isoWeekday(teacher.divClassTeacher.day).format("dddd")}
-                                />
-                              </div>
-                            )}
-                          </List>
-                        </CardMedia>
-                      </Card>
-                    </Col>
+
+                    {meetingDays.map((day, index) =>
+                      <Col xs={12} sm={12} md={6} lg={6} key={day.id}>
+                        <Card>
+                          <CardHeader
+                            title={"Teachers"}
+                            subtitle={moment().weekday(day.day).format("dddd")}
+                            avatar={<Avatar>{moment().weekday(day.day).format("dd")}</Avatar>}>
+                          </CardHeader>
+                          <CardMedia>
+                            <List>
+                              {classes.getDivisionClassTeachers(divisionClass.divisionClass.id, day.day).map((teacher, index) =>
+                                <div
+                                  key={index} > 
+                                  <Divider />
+                                  <ListItem
+                                    leftAvatar={
+                                      <Avatar 
+                                        src={
+                                          (teacher.person.individualPhotoUrl) ? 
+                                            teacher.person.individualPhotoUrl : 
+                                            teacher.person.familyPhotoUrl
+                                          }
+                                        >
+                                          {
+                                            (teacher.person.individualPhotoUrl || teacher.person.familyPhotoUrl) ? 
+                                              null : 
+                                              teacher.person.firstName.charAt(0)
+                                          }
+                                        </Avatar>
+                                    }
+                                    primaryText={teacher.person.lastName + ", " + teacher.person.firstName}
+                                  />
+                                </div>
+                              )}
+                            </List>
+                          </CardMedia>
+                        </Card>
+                      </Col>
+                    )}
+                    
                   </Masonry>
                 </Tab>
-                <Tab label="Teachers" >
+                <Tab
+                  label="Edit">
                   <div>
-                    <h2 style={styles.headline}>Tab Two</h2>
-                    <p>
-                      This is another example tab.
-                    </p>
+                    <TextField
+                      value={cls.title}
+                      onChange={((...args)=>this.updateTitle(...args))}
+                      hintText="Class Title" />
                   </div>
+                </Tab>
+                <Tab label="Teacher History" >
+                  <Card>
+                    <CardHeader
+                      title={"Teachers"}
+                      subtitle={"All teachers who have taught class"}
+                      avatar={<Avatar>{"T"}</Avatar>}>
+                    </CardHeader>
+                    <CardMedia>
+                      <List>
+                        {teachers.map((teacher, index) =>
+                          <div
+                            key={index} > 
+                            <Divider />
+                            <ListItem
+                              leftAvatar={
+                                <Avatar 
+                                  src={
+                                    (teacher.person.individualPhotoUrl) ? 
+                                      teacher.person.individualPhotoUrl : 
+                                      teacher.person.familyPhotoUrl
+                                    }
+                                  >
+                                    {
+                                      (teacher.person.individualPhotoUrl || teacher.person.familyPhotoUrl) ? 
+                                        null : 
+                                        teacher.person.firstName.charAt(0)
+                                    }
+                                  </Avatar>
+                              }
+                              primaryText={teacher.person.lastName + ", " + teacher.person.firstName}
+                              secondaryText={"Last Taught: "+teacher.division.title+" "+moment(teacher.division.start, "x").fquarter(-4).year+" - "+moment().isoWeekday(teacher.divClassTeacher.day).format("dddd")}
+                            />
+                          </div>
+                        )}
+                      </List>
+                    </CardMedia>
+                  </Card>
                 </Tab>
                 <Tab
                   label="Students"

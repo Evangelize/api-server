@@ -4,7 +4,7 @@ import _ from 'lodash';
 import async from 'async';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
-import connect from '../components/connect';
+import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
 import Card from 'material-ui/Card/Card';
 import CardHeader from 'material-ui/Card/CardHeader';
@@ -29,11 +29,9 @@ import FlatButton from 'material-ui/FlatButton';
 import Snackbar from 'material-ui/Snackbar';
 import CircularProgress from 'material-ui/CircularProgress';
 import { Grid, Row, Col } from 'react-bootstrap';
+import NavToolBar from '../components/NavToolBar';
 
-@connect(state => ({
-  classes: state.classes
-}))
-@observer
+@connect
 class EditDayAttendance extends Component {
   constructor(props, context) {
     super(props, context);
@@ -41,10 +39,12 @@ class EditDayAttendance extends Component {
 
   componentWillMount() {
     console.log("EditDayAttendance:componentWillMount");
-    const { classes, params } = this.props;
+    const { classes } = this.context.state;
+    const { params } = this.props;
     console.log("date", params.date);
     this.setState({
-      now: parseInt(params.date, 10)
+      now: parseInt(params.date, 10),
+      attendance: classes.getDayAttendance(params.date)
     });
   }
 
@@ -61,7 +61,8 @@ class EditDayAttendance extends Component {
   }
 
   displayAttendance(divisionConfig) {
-    const { classes, params } = this.props,
+    const { classes } = this.context.state;
+    const { params } = this.props,
           { now } = this.state;
     //console.log("displayAttendance", classes);
     let today = moment(params.date, "x").weekday(),
@@ -82,13 +83,14 @@ class EditDayAttendance extends Component {
   }
 
   attendanceUpdate(divClass, e) {
-    const { classes } = this.props,
+    const { classes } = this.context.state,
           { now } = this.state;
-    classes.updateClassAttendance(divClass.divisionClass.id, now, e.target.value);
+    classes.updateClassAttendance(divClass.divisionClassId, now, e.target.value);
   }
 
   getClassAttendance(divClass) {
-    const { classes, params } = this.props,
+    const { classes } = this.context.state;
+    const { params } = this.props,
           { now } = this.state;
     let attendance = classes.collections.divisionClassAttendance.chain()
               .find(
@@ -149,21 +151,14 @@ class EditDayAttendance extends Component {
   }
 
   render() {
-    const { params, classes, ...props } = this.props;
+    const { classes } = this.context.state;
+    const { params } = this.props;
     return (
       <div>
         <Grid fluid={true}>
           <Row>
             <Col xs={12} sm={12} md={12} lg={12}>
-              <nav className={"grey darken-1"}>
-                <div className={"nav-wrapper"}>
-                  <div style={{margin: "0 0.5em"}}>
-                    <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
-                    <a href="#!" onTouchTap={((...args)=>this.navigate("/attendance", ...args))} className={"breadcrumb"}>Attendance</a>
-                    <a className={"breadcrumb"}>Edit</a>
-                  </div>
-                </div>
-              </nav>
+              <NavToolBar navLabel="Edit Attendance" goBackTo="/attendance" />
             </Col>
           </Row>
           {classes.getDivisionConfigs().map((divisionConfig, index) =>
@@ -179,19 +174,22 @@ class EditDayAttendance extends Component {
                     <CardMedia>
                       <Grid fluid={true} key={1}>
                         <Row>
-                        {attendance.classes.map((divClass, index) =>
+                        {this.state.attendance.map((divClass, index) =>
                           <Col style={{display: "flex", alignItems: "center", justifyContent: "center"}} key={index} xs={12} sm={6} md={4} lg={3}>
                             <div style={{width: "85%"}}>
-                              <TextField
-                                type="number"
-                                hintText="Enter attendance"
-                                value={::this.getClassAttendance(divClass)}
-                                min="0"
-                                max="500"
-                                ref={"inputAttendance"+divClass.id}
-                                onFocus={((...args)=>this.highlightText(...args))}
-                                onChange={((...args)=>this.attendanceUpdate(divClass, ...args))}
-                                floatingLabelText={divClass.class.title} />
+                              
+                                
+                                <TextField
+                                  type="number"
+                                  hintText="Enter attendance"
+                                  value={divClass.divisionClassAttendance.count}
+                                  min="0"
+                                  max="500"
+                                  ref={"inputAttendance"+divClass.id}
+                                  onFocus={((...args)=>this.highlightText(...args))}
+                                  onChange={((...args)=>this.attendanceUpdate(divClass, ...args))}
+                                  floatingLabelText={divClass.class.title}  />
+                                
                             </div>
                             <div style={{width: "13%", margin: "0 1%", height: "50px", overflow: "hidden"}}><CircularProgress style={{display: (this.isUpdating(divClass)) ? "block" : "none"}} size={0.35} mode="indeterminate" /></div>
                           </Col>

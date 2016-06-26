@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import { observer } from "mobx-react";
-import connect from '../components/connect';
+import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
 import AppBar from 'material-ui/AppBar';
 import IconButton from 'material-ui/IconButton';
@@ -15,19 +15,19 @@ import * as Colors from 'material-ui/styles/colors';
 import NavigationMenu from 'material-ui/svg-icons/navigation/menu';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import Drawer from 'material-ui/Drawer';
+import {Modal} from 'react-overlays';
+import MediaQuery from 'react-responsive';
 
-@connect(state => ({
-  classes: state.classes,
-  settings: state.settings
-}))
-@observer
+@connect
 class App extends Component {
   constructor(props, context) {
     super(props, context);
+    console.log(context);
     this.state = {
       muiTheme: getMuiTheme(CustomColors),
       open: false,
-      name: (props.settings.user) ? props.settings.user.firstName+" "+props.settings.user.lastName : ""
+      name: (context.state.settings.user) ? context.state.settings.user.firstName+" "+context.state.settings.user.lastName : "",
+      modal: context.state.classes.isUpdating
     };
   }
 
@@ -51,9 +51,24 @@ class App extends Component {
     console.log("showLeftNavClick", e);
     this.setState({open: true});
   }
+  
+  close() {
+    this.setState({ modal: false });
+  }
 
   render() {
-    const { settings } = this.props,
+    const { settings } = this.context.state,
+          modalStyle = {
+            position: 'fixed',
+            zIndex: 1040,
+            top: 0, bottom: 0, left: 0, right: 0
+          },
+          backdropStyle = {
+            ...modalStyle,
+            zIndex: 'auto',
+            backgroundColor: '#000',
+            opacity: 0.5
+          },
           textColor = this.state.muiTheme.rawTheme.palette.alternateTextColor,
           navHeader = {
             backgroundColor: this.state.muiTheme.rawTheme.palette.primary1Color,
@@ -78,13 +93,24 @@ class App extends Component {
     //console.log("settings", this.props);
     return (
       <div>
+        <Modal
+          aria-labelledby='modal-label'
+          style={modalStyle}
+          backdropStyle={backdropStyle}
+          show={this.state.modal}
+          onHide={this.close}
+        >
+          <div /> 
+        </Modal>
         <div style={{display: (settings.authenticated) ? "block": "none"}}>
           <AppBar
             title="Evangelize"
             iconElementLeft={<IconButton onTouchTap={::this.showLeftNavClick}><NavigationMenu /></IconButton>}>
-            <div style={brandingStyle}>
-              <h6>Twin City church of Christ</h6>
-            </div>
+            <MediaQuery query='(min-device-width: 1024px)'>
+              <div style={brandingStyle}>
+                <h6>Twin City church of Christ</h6>
+              </div>
+            </MediaQuery>
           </AppBar>
         </div>
         <div>
@@ -98,7 +124,7 @@ class App extends Component {
             <div
               style={navHeader}>
               <div className="navName">
-                {this.state.name}
+                {settings.userFullName}
               </div>
             </div>
 

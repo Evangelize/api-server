@@ -11,89 +11,61 @@ import change from 'percent-change';
 export default class Classes {
   db;
   ws;
-  collections = {};
   @observable peopleFilter;
-  constructor(data, websocket) {
-    this.db = new loki('classes');
+  @observable isUpdating = false;
+  
+  constructor(db, websocket) {
     let self = this;
+    if (db) {
+      this.setupDb(db);
+    }
     if (websocket) {
-      this.ws = websocket;
-
-      this.ws.on('changes', data => {
-        console.log('changes', data);
-        self.wsHandler(self.ws, data);
-      });
-
-      this.ws.on('global', data => {
-        console.log('global', data);
-        //self.wsHandler(self.ws, data);
-      });
-
-      this.ws.on('connect', () => {
-        console.log("websocket: connected");
-      });
-
-      this.ws.on('error', err => {
-        self.wsError(err);
-      });
+      this.setupWs(websocket);
     }
+    
+  }
+  
+  setupDb(db) {
+    this.db = db;
+  }
 
-    Object.keys(data).map(function(key) {
-      //console.log("collection", key, data[key]);
-      let coll = self.db.addCollection(key,{asyncListeners: true, disableChangesApi: false, clone: false});
-      self.collections[key] = coll;
-      extendObservable(self.collections[key], {data: coll.data})
-      if ("$loki" in data[key][0]) {
-        coll.update(data[key]);
-      } else {
-        coll.insert(data[key]);
-      }
-      //data[coll.name] = coll.data;
-      //coll.on('update', ((...args)=>self.collectionChange(coll.name, 'update', ...args)));
-      //coll.on('insert', ((...args)=>self.collectionChange(coll.name, 'insert', ...args)));
+  setupWs(websocket) {
+    let self = this;
+    this.ws = websocket;
+
+    this.ws.on('changes', data => {
+      //console.log('changes', data);
+      self.wsHandler(self.ws, data);
     });
-    //extendObservable(this, {data: data});
 
+    this.ws.on('global', data => {
+      //console.log('global', data);
+      //self.wsHandler(self.ws, data);
+    });
+
+    this.ws.on('connect', () => {
+      //console.log("websocket: connected");
+    });
+
+    this.ws.on('error', err => {
+      self.wsError(err);
+    });
+    
+    this.ws.on('disconnect', () => {
+      console.log("disconnect");
+    });
   }
 
-  collectionChange(collection, type, target) {
-    console.log(collection, type, target);
-  }
-
-  wsHandler(ws, update) {
-    let data = update.payload.data,
-        record;
-    console.log("websocket:", ws);
-    console.log("websocket update:", update);
-    if (data.type === "insert" || data.type === "update" || data.type === "delete") {
-      record = this.collections[data.collection]
-                .findOne(
-                  {
-                    $and: [
-                      {
-                        id: data.record.id
-                      }
-                    ]
-                  }
-                );
-      if (record) {
-        let deleted = (data.type === "delete") ? true : false;
-        record = Object.assign(record, data.record);
-        this.updateCollection(data.collection, record, true, deleted);
-      } else if (data.type !== "delete") {
-        this.insertDocument(data.collection, data.record);
-      }
-
-    }
-  }
-
-  wsError(err) {
-    console.log("websocket error:", err);
+  isClassDay(divisionConfig) {
+     let today = moment().weekday(),
+         classDay = this.getMeetingDay(today);
+        
+     return (classDay) ? true : false;
   }
 
   getDivisionConfigs() {
-    //console.log( this.collections.divisionConfigs.data);
-    let records = this.collections.divisionConfigs.chain()
+    //console.log( this.db.collections.divisionConfigs.data);
+    let records = this.db.collections.divisionConfigs.chain()
         .find({deletedAt: null})
         .data();
     //console.log("years", years);
@@ -101,16 +73,16 @@ export default class Classes {
   }
   
   getClasses() {
-    let classes = this.collections.classes.chain()
+    let classes = this.db.collections.classes.chain()
         .find({deletedAt: null})
-        .simplesort("title")
+        .simplesort("order")
         .data();
     //console.log("years", years);
     return classes;
   }
 
   getDivisionYears(divisionConfigId) {
-    let years = this.collections.divisionYears.chain()
+    let years = this.db.collections.divisionYears.chain()
         .find({$and:[{divisionConfigId: divisionConfigId}, {deletedAt: null}]})
         .simplesort("endDate")
         .data();
@@ -119,32 +91,31 @@ export default class Classes {
   }
 
   getDivision(divisionId) {
-    let division = this.collections.divisions.chain()
-        .find({$and:[{id: divisionId}, {deletedAt: null}]})
-        .data();
+    let division = this.db.collections.divisions
+        .findOne({$and:[{id: divisionId}, {deletedAt: null}]});
     //console.log("years", years);
-    return division[0];
+    return division;
   }
 
   getCurrentDivisionYear(divisionConfigId) {
     let now = moment().valueOf(),
-        year = this.collections.divisionYears.chain()
+        year = this.db.collections.divisionYears.chain()
                 .find({$and: [{endDate: {$gte: now}}, {startDate: {$lte: now}}, {divisionConfigId: divisionConfigId}, {deletedAt: null}]})
                 .data();
-    console.log("year", year);
+    //console.log("year", year);
     return year[0];
   }
 
   getDivisionScheduleOrdered(configId, yearId) {
-    configId = configId || this.collections.divisionConfig.data[0];
+    configId = configId || this.db.collections.divisionConfig.data[0];
     let now = moment().valueOf(),
         schedule, future = [], past = [];
     if (!yearId) {
-      yearId = this.collections.divisionYears.chain()
+      yearId = this.db.collections.divisionYears.chain()
                 .find({$and: [{endDate: {$gte: now}}, {startDate: {$lte: now}}, {divisionConfigId: configId}, {deletedAt: null}]})
                 .data()[0].id;
     }
-    schedule = this.collections.divisions.chain()
+    schedule = this.db.collections.divisions.chain()
                 .find({$and: [{divisionYear: yearId}, {divisionConfigId: configId}, {deletedAt: null}]})
                 .data();
 
@@ -158,13 +129,13 @@ export default class Classes {
     future = _.sortBy(future, 'end');
     past = _.sortBy(past, 'end');
     schedule = future.concat(past)
-    console.log("schedule", schedule);
+    //console.log("schedule", schedule);
     return schedule;
   }
 
   getDivisionSchedules(configId, yearId) {
     let schedules;
-    schedules = this.collections.divisions.chain()
+    schedules = this.db.collections.divisions.chain()
                 .find({$and: [{divisionYear: yearId}, {divisionConfigId: configId}, {deletedAt: null}]})
                 .simplesort("end")
                 .data();
@@ -174,7 +145,7 @@ export default class Classes {
   getCurrentDivisionSchedule(configId, yearId) {
     let now = moment().valueOf(),
         schedule;
-    schedule = this.collections.divisions.chain()
+    schedule = this.db.collections.divisions.chain()
                 .find({$and: [{end: {$gte: now}}, {start: {$lte: now}}, {divisionYear: yearId}, {divisionConfigId: configId}, {deletedAt: null}]})
                 .data();
     return schedule;
@@ -183,16 +154,16 @@ export default class Classes {
   getDivisionSchedule(id) {
     let now = moment().valueOf(),
         schedule;
-    schedule = this.collections.divisions.chain()
+    schedule = this.db.collections.divisions.chain()
                 .find({$and: [{id: id}, {deletedAt: null}]})
                 .data();
     return schedule;
   }
 
   latestAttendance(day, length) {
-    console.log(day, length);
+    //console.log(day, length);
     let now = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(length, "week").valueOf(),
-        latest = this.collections.divisionClassAttendance.chain()
+        latest = this.db.collections.divisionClassAttendance.chain()
           .find({$and:[{attendanceDate: {$gte: now}}, {day: day}, {deletedAt: null}]})
           .simplesort("attendanceDate")
           .data()
@@ -207,12 +178,12 @@ export default class Classes {
   }
 
   avgAttendance(day, begin, end) {
-    let divClass = this.collections.divisionClassAttendance;
+    let divClass = this.db.collections.divisionClassAttendance;
     day = day || 0;
     begin = begin || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(4, "week").valueOf();
-    end = end || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
+    end = end || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD HH:mm:ss')).valueOf();
 
-    let latest = this.collections.divisionClassAttendance.chain()
+    let latest = this.db.collections.divisionClassAttendance.chain()
         .find({$and: [{attendanceDate: {$gte: begin}}, {attendanceDate: {$lte: end}}, {day: day}, {deletedAt: null}]})
         .simplesort("attendanceDate")
         .data()
@@ -230,11 +201,11 @@ export default class Classes {
   }
 
   attendancePercentChange(day) {
-    let divClass = this.collections.divisionClassAttendance;
+    let divClass = this.db.collections.divisionClassAttendance;
     day = day || 0;
 
     let priorBegin = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(8, "week").valueOf(),
-        priorEnd = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(4, "week").valueOf(),
+        priorEnd = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD HH:mm:ss')).subtract(4, "week").valueOf(),
         priorAvg =  this.avgAttendance(day, priorBegin, priorEnd),
         currAvg =  this.avgAttendance(day),
         percChange = change(priorAvg, currAvg, true);
@@ -243,7 +214,7 @@ export default class Classes {
 
   getClassAttendanceToday(classId) {
     let today = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')),
-        attendance = this.collections.divisionClassAttendance.chain()
+        attendance = this.db.collections.divisionClassAttendance.chain()
         .find(
           {
             $and: [
@@ -263,11 +234,11 @@ export default class Classes {
     return attendance;
   }
 
-  getDailyAttendance(endMonth) {
+  getDailyAttendance(startMonth, endMonth) {
+    startMonth = startMonth || moment(moment().format("MM/01/YYYY")+" 00:00:00").subtract(3, "month")
     endMonth = endMonth || moment(moment().format("MM/01/YYYY")+" 00:00:00").valueOf();
     let dailyAttendance = [],
-        startMonth = moment(endMonth).subtract(3, "month"),
-        latest = this.collections.divisionClassAttendance.chain()
+        latest = this.db.collections.divisionClassAttendance.chain()
         .find({$and: [{attendanceDate: {$gte: startMonth}}, {attendanceDate: {$lte: endMonth}}, {deletedAt: null}]})
         .simplesort("attendanceDate", true)
         .data()
@@ -285,14 +256,19 @@ export default class Classes {
         count: latest[day]
       })
     });
-    console.log(dailyAttendance);
+    /*
+    dailyAttendance = _.sortBy(dailyAttendance, function(day){
+        return day.date * -1;
+    });
+    */
+    //console.log(dailyAttendance);
     return dailyAttendance;
   }
   
   getClassAttendanceByDay(classId, day, begin, end) {
     begin = begin || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(8, "week").valueOf();
     end = end || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
-    let divisionClasses = this.collections.divisionClasses.chain()
+    let divisionClasses = this.db.collections.divisionClasses.chain()
         .find(
           {
             $and: [
@@ -304,7 +280,7 @@ export default class Classes {
         .data().map(function(cls, index){
           return cls.id;
         }),
-        dailyAttendance = this.collections.divisionClassAttendance.chain()
+        dailyAttendance = this.db.collections.divisionClassAttendance.chain()
         .find(
           {
             $and: [
@@ -316,7 +292,7 @@ export default class Classes {
              ]
            }
         )
-        .simplesort("attendanceDate", true)
+        .simplesort("attendanceDate")
         .data();
     return dailyAttendance;
   }
@@ -324,32 +300,54 @@ export default class Classes {
   getDayAttendance(date) {
     let self = this,
         dailyAttendance = [],
-        latest = this.collections.divisionClassAttendance.chain()
-        .find({$and: [{attendanceDate: date}, {deletedAt: null}]})
-        .simplesort("divisionClassId")
-        .eqJoin(self.collections.divisionClasses.data.toJSON(), 'classId', 'id', function (left, right) {
-          return {
-            divisionClassAttendance: right,
-            divisionClasses: left
-          }
-        })
-        .eqJoin(self.collections.divisionClasses.data.toJSON(), 'divisionClassId', 'id', function (left, right) {
-          return Object.assign({}, left, right, {divisionClassAttendanceId: left.id })
-        })
-        .eqJoin(self.collections.classes.data.toJSON(), 'classId', 'id', function (left, right) {
-          return Object.assign({}, left, right, {classId: right.id })
-        });
-    console.log(latest);
-    return latest;
+        attendance = this.db.collections.divisionClassAttendance.chain()
+          .find({$and: [{attendanceDate: parseInt(date)}, {deletedAt: null}]})
+          .data(),
+        division = this.db.collections.divisions.find({$and: [{start: {$lte: date}}, {end: {$gte: date}}, {deletedAt: null}]}),
+        classes = this.db.collections.divisionClasses.chain()
+          .find({$and: [{divisionId: division[0].id}, {deletedAt: null}]})
+          .eqJoin(self.db.collections.classes.data.toJS(), 'classId', 'id', function (left, right) {
+            return {
+              divisionClassId: left.id,
+              classId: left.classId,
+              divisionClasses: left,
+              class: right
+            }
+          })
+          .simplesort("divisionClassId")
+          .data();
+    classes.forEach(function(cls, index) {
+      let classAttendance = _.find(attendance, { 'divisionClassId': cls.divisionClassId }),
+          divisionClassAttendance = (classAttendance) ? classAttendance : {count: 0, updatedAt: null};
+      cls.divisionClassAttendance = divisionClassAttendance;
+    });
+    
+    return classes;
   }
 
   getCurrentDivision(now) {
-    let div = this.collections.divisions.chain().find({$and:[{end: {$gte: now}}, {deletedAt: null}]}).simplesort('end').limit(1).data()[0];
+    now = now || moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
+    let div = this.db.collections.divisions.chain().find({$and:[{end: {$gte: now}}, {deletedAt: null}]}).simplesort('end').limit(1).data()[0];
     return div;
+  }
+  
+  getMeetingDay(day) {
+    return this.db.collections.classMeetingDays.find({
+      $and: [
+        {
+          day: {
+            $eq: day
+          }
+        },
+        {
+          deletedAt: null
+        }
+      ]
+    });
   }
 
   getCurrentDivisionMeetingDays(divisionConfig, today) {
-    return this.collections.classMeetingDays.find({
+    return this.db.collections.classMeetingDays.find({
       $and: [
         {
           day: {
@@ -369,7 +367,7 @@ export default class Classes {
   }
 
   getDivisionMeetingDays(divisionConfigId) {
-    return this.collections.classMeetingDays.find({
+    return this.db.collections.classMeetingDays.find({
       $and: [
         {
           divisionConfigId: {
@@ -386,21 +384,24 @@ export default class Classes {
   getCurrentDivisionClasses(divisionId) {
     //console.log("getCurrentDivisionClasses", divisionId);
     let self = this;
-    return this.collections.divisionClasses
+    return this.db.collections.divisionClasses
     .chain()
     .find({$and:[{divisionId: divisionId}, {deletedAt: null}]})
-    .eqJoin(self.collections.classes.data.toJSON(), 'classId', 'id', function (left, right) {
+    .eqJoin(self.db.collections.classes.data.toJS(), 'classId', 'id', function (left, right) {
       return {
         class: right,
+        order: right.order,
         divisionClass: left
       }
-    }).data();
+    })
+    .simplesort("order")
+    .data();
   }
 
   getDivisionClass(divisionClassId) {
     //console.log("getCurrentDivisionClasses", divisionClassId);
     let self = this,
-        divClass = this.collections.divisionClasses
+        divClass = this.db.collections.divisionClasses
           .chain()
           .find(
             {
@@ -414,7 +415,37 @@ export default class Classes {
               ]
             }
           )
-          .eqJoin(self.collections.classes.data.toJSON(), 'classId', 'id', function (left, right) {
+          .eqJoin(self.db.collections.classes.data.toJS(), 'classId', 'id', function (left, right) {
+            return {
+              class: right,
+              divisionClass: left
+            }
+          }).data();
+    //console.log(divClass);
+    return divClass[0];
+  }
+
+  getDivisionClassByDivAndClass(divisionId, classId) {
+    //console.log("getCurrentDivisionClasses", divisionClassId);
+    let self = this,
+        divClass = this.db.collections.divisionClasses
+          .chain()
+          .find(
+            {
+              $and:[
+                {
+                  divisionId: divisionId
+                },
+                {
+                  classId: classId
+                },
+                {
+                  deletedAt: null
+                }
+              ]
+            }
+          )
+          .eqJoin(self.db.collections.classes.data.toJS(), 'classId', 'id', function (left, right) {
             return {
               class: right,
               divisionClass: left
@@ -426,7 +457,7 @@ export default class Classes {
 
   getCurrentClassTeachers(divisionClassId) {
     let day = moment().weekday(),
-        teachers = this.collections.divisionClassTeachers
+        teachers = this.db.collections.divisionClassTeachers
           .chain()
           .find(
             {
@@ -437,7 +468,7 @@ export default class Classes {
               ]
             }
           )
-          .eqJoin(this.collections.people.data.toJSON(), 'peopleId', 'id', function (left, right) {
+          .eqJoin(this.db.collections.people.data.toJS(), 'peopleId', 'id', function (left, right) {
             return {
               person: right,
               divClassTeacher: left
@@ -448,7 +479,7 @@ export default class Classes {
   }
 
   getDivisionClassTeachers(divisionClassId, day) {
-    let teachers = this.collections.divisionClassTeachers
+    let teachers = this.db.collections.divisionClassTeachers
           .chain()
           .find(
             {
@@ -459,7 +490,7 @@ export default class Classes {
               ]
             }
           )
-          .eqJoin(this.collections.people.data.toJSON(), 'peopleId', 'id', function (left, right) {
+          .eqJoin(this.db.collections.people.data.toJS(), 'peopleId', 'id', function (left, right) {
             return {
               person: right,
               divClassTeacher: left
@@ -470,11 +501,11 @@ export default class Classes {
   }
 
   getClassMeetingDays() {
-    return this.collections.classMeetingDays.data.toJSON();
+    return this.db.collections.classMeetingDays.chain().find({deletedAt: null}).simplesort("day").data();
   }
 
   getClass(classId) {
-    let cls = this.collections.classes
+    let cls = this.db.collections.classes
           .findOne(
             {
               $and: [
@@ -488,7 +519,7 @@ export default class Classes {
   }
   
   getClassTeachers(classId) {
-    let divisionClasses = this.collections.divisionClasses.chain()
+    let divisionClasses = this.db.collections.divisionClasses.chain()
         .find(
           {
             $and: [
@@ -501,7 +532,7 @@ export default class Classes {
           return cls.id;
         });
        
-    let teachers = this.collections.divisionClassTeachers
+    let teachers = this.db.collections.divisionClassTeachers
           .chain()
           .find(
             {
@@ -512,14 +543,14 @@ export default class Classes {
             }
           )
           .simplesort("createdAt", true)
-          .eqJoin(this.collections.people.data.toJSON(), 'peopleId', 'id', function (left, right) {
+          .eqJoin(this.db.collections.people.data.toJS(), 'peopleId', 'id', function (left, right) {
             return {
               person: right,
               divisionClassId: left.divisionClassId,
               divClassTeacher: left
             }
           })
-          .eqJoin(this.collections.divisionClasses.data.toJSON(), 'divisionClassId', 'id', function (left, right) {
+          .eqJoin(this.db.collections.divisionClasses.data.toJS(), 'divisionClassId', 'id', function (left, right) {
             return { 
               person: left.person,
               divisionClassId: left.divisionClassId,
@@ -528,7 +559,7 @@ export default class Classes {
               divClass: right
             };
           })
-          .eqJoin(this.collections.divisions.data.toJSON(), 'divisionId', 'id', function (left, right) {
+          .eqJoin(this.db.collections.divisions.data.toJS(), 'divisionId', 'id', function (left, right) {
             return { 
               person: left.person,
               personId: left.person.id,
@@ -549,12 +580,12 @@ export default class Classes {
           }
           return a;
         },[]);
-    console.log("getClassTeachers", uniq);
+    //console.log("getClassTeachers", uniq);
     return uniq;
   }
 
   getNotes() {
-    let results = this.collections.notes.chain().find({deletedAt: null}).simplesort('createdAt').data();
+    let results = this.db.collections.notes.chain().find({deletedAt: null}).simplesort('createdAt').data();
     return results;
   }
 
@@ -562,7 +593,7 @@ export default class Classes {
     let srch = {},
         regex = new RegExp('^'+search, "i");
     srch[type] = {$regex: regex};
-    let people = this.collections.people
+    let people = this.db.collections.people
           .chain()
           .find(
             {
@@ -576,7 +607,7 @@ export default class Classes {
   }
 
   confirmTeacher(confirm, divClassId, teacherId) {
-    let record = this.collections.divisionClassTeachers
+    let record = this.db.collections.divisionClassTeachers
                 .findOne(
                   {
                     $and: [
@@ -592,71 +623,47 @@ export default class Classes {
     if (record) {
       record = record.valueOf();
       record.confirmed = confirm;
-      this.updateCollection("divisionClassTeachers", record, false);
+      this.db.updateCollection("divisionClassTeachers", record, false);
     }
 
   }
 
-  deleteRecord(collection, id) {
-    const ts = moment.utc().format("YYYY-MM-DDTHH:mm:ss.sssZ");
-    let record = this.collections[collection]
+  updateClassOrder(classId, currentPos, newPos) {
+    let record = this.db.collections.classes
                 .findOne(
                   {
                     $and: [
                       {
-                        id: id
+                        id: classId
+                      },
+                      {
+                        deletedAt: null
                       }
                     ]
                   }
                 );
     if (record) {
-      record.deletedAt = ts;
-      this.updateCollection(collection, record, false, true);
+      record = record.valueOf();
+      record.order = newPos;
+      this.db.updateCollection("classes", record, false);
     }
+
   }
 
-  updateCollection(collection, record, remote, deleted) {
-    deleted = deleted || false;
-    remote = remote || false;
-    const ts = moment.utc().format("YYYY-MM-DDTHH:mm:ss.sssZ");
-    let results, type = 'insert';
-    if (record) {
-      if (record.id) {
-        type = (deleted) ? 'delete' : 'update';
-        record.updatedAt = ts;
-        if (deleted) {
-          this.collections[collection].remove(record);
-          results = record;
-        } else {
-          results = this.collections[collection].update(record);
-        }
-      } else {
-        record.createdAt = ts;
-        record.updatedAt = ts;
-        record.id = iouuid.generate().toLowerCase();
-        results = this.insertDocument(collection, record);
-      }
+  updateCollectionFields(collection, id, updates) {
+    this.db.updateCollectionFields(collection, id, updates);
+  }
 
-      if (!remote) {
-        this.ws.emit(
-          type,
-          {
-            type: type,
-            collection: collection,
-            target: results
-          }
-        );
-      }
-    }
+  deleteRecord(collection, id) {
+    this.db.updateCollectionFields(collection, id);
   }
 
   insertDocument(collection, record) {
-    return this.collections[collection].insert(record);
+    return this.db.collections[collection].insert(record);
   }
 
   updateClassAttendance(divisionClassId, now, count) {
-    console.log("delayedAttendanceUpdate", count);
-    let record = this.collections.divisionClassAttendance
+    let record = this.db.collections.divisionClassAttendance
                 .findOne(
                   {
                     $and: [
@@ -688,11 +695,11 @@ export default class Classes {
       record = record.valueOf();
       record.count = count;
     }
-    this.updateCollection("divisionClassAttendance", record, false);
+    this.db.updateCollection("divisionClassAttendance", record, false);
   }
 
   updateClassDayTeacher(divisionClassId, day, peopleId) {
-    let record = this.collections.divisionClassTeachers
+    let record = this.db.collections.divisionClassTeachers
                 .findOne(
                   {
                     $and: [
@@ -729,6 +736,6 @@ export default class Classes {
       record.day = day;
       record.divisionClassId = divisionClassId;
     }
-    this.updateCollection("divisionClassTeachers", record, false);
+    this.db.updateCollection("divisionClassTeachers", record, false);
   }
 }

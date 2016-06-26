@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import _ from 'lodash';
 import { observer } from "mobx-react";
-import connect from '../components/connect';
+import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
 import ReactGridLayout from 'react-grid-layout';
 import Paper from 'material-ui/Paper';
@@ -9,6 +9,7 @@ import * as Colors from 'material-ui/styles/colors';
 import Transitions from 'material-ui/styles/transitions';
 import { Sparklines, SparklinesBars } from 'react-sparklines';
 
+@observer
 class DashboardComponentSmall extends Component {
 
   constructor(props, context) {

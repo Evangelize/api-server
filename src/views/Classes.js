@@ -4,9 +4,10 @@ import _ from 'lodash';
 import async from 'async';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
-import connect from '../components/connect';
+import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
 import DashboardMedium from '../components/DashboardMedium';
+import ListClasses from '../components/ListClasses';
 import ReactGridLayout from 'react-grid-layout';
 import Styles from 'material-ui/styles';
 import Card from 'material-ui/Card/Card';
@@ -21,7 +22,9 @@ import FlatButton from 'material-ui/FlatButton';
 import Snackbar from 'material-ui/Snackbar';
 import Divider from 'material-ui/Divider';
 import {Tabs, Tab} from 'material-ui/Tabs';
+import Toggle from 'material-ui/Toggle';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+import NavToolBar from '../components/NavToolBar';
 import { Grid, Row, Col } from 'react-bootstrap';
 
 const styles = {
@@ -31,19 +34,21 @@ const styles = {
     marginBottom: 12,
     fontWeight: 400,
   },
+  toggle: {
+
+  },
 };
 
-@connect(state => ({
-  classes: state.classes
-}))
-@observer
+@connect
 class Classes extends Component {
   constructor(props, context) {
     super(props, context);
   }
 
   componentWillMount() {
-  
+    this.setState({
+      sortable: false
+    });
   }
 
   componentDidMount() {
@@ -57,39 +62,46 @@ class Classes extends Component {
   navigate(path, e) {
     browserHistory.push(path);
   }
+
+  goBack() {
+    this.context.router.goBack();
+  }
   
   handleNewClass(){
     
   }
 
+  toggleSortable() {
+    this.setState({
+      sortable: !this.state.sortable
+    });
+  }
+
   render() {
-    const { classes, ...props } = this.props;
+    const { classes } = this.context.state;
     return (
       <div>
         <Grid fluid={true}>
           <Row>
             <Col xs={12} sm={12} md={12} lg={12}>
-              <nav className={"grey darken-1"}>
-                <div className={"nav-wrapper"}>
-                  <div style={{margin: "0 0.5em"}}>
-                    <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
-                    <a className={"breadcrumb"}>Classes</a>
+              <NavToolBar navLabel="Classes" goBackTo="/dashboard">
+                <ToolbarGroup key={3} float={"right"} lastChild={true}>
+                  <div style={{display: 'flex', alignItems: 'center'}}>
+                    <Toggle
+                      label="Sortable"
+                      labelPosition="right"
+                      style={styles.toggle}
+                      onToggle={((...args)=>this.toggleSortable())}
+                      toggled={this.state.sortable}
+                    />
                   </div>
-                </div>
-              </nav>
-            </Col>
-          </Row>
-          <Row>
-            <Col xs={12} sm={12} md={12} lg={12}>
-              <Toolbar style={{justifyContent: "flex-end"}}>
-                <ToolbarGroup key={1} float={"right"} lastChild={true}>
                   <RaisedButton
                     label="Add Class"
                     secondary={true}
                     onTouchTap={::this.handleNewClass}
                   />
                 </ToolbarGroup>
-              </Toolbar>
+              </NavToolBar>
             </Col>
           </Row>
           <Row>
@@ -101,18 +113,7 @@ class Classes extends Component {
                   avatar={<Avatar>{"C"}</Avatar>}>
                 </CardHeader>
                 <CardMedia>
-                  <List>
-                    {::classes.getClasses().map((cls, index) =>
-                      <div
-                        key={index} >
-                        <Divider />
-                        <ListItem
-                          onTouchTap={((...args)=>this.navigate("/classes/"+cls.id, ...args))}
-                          primaryText={cls.title}
-                        />
-                       </div>
-                    )}
-                  </List>
+                  <ListClasses sortable={this.state.sortable}/>
                 </CardMedia>
               </Card>
             </Col>
