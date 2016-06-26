@@ -16,7 +16,11 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.BLOB,
         primaryKey: true,
         get: function()  {
-          return this.getDataValue('familyId').toString('hex');
+          if (this.getDataValue('familyId')) {
+            return this.getDataValue('familyId').toString('hex');
+          } else {
+            return null;
+          }
         },
         set: function(val) {
           this.setDataValue('familyId', new Buffer(val, "hex"));
@@ -26,7 +30,11 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.BLOB,
         primaryKey: true,
         get: function()  {
-          return this.getDataValue('cohort').toString('hex');
+          if (this.getDataValue('cohort')) {
+            return this.getDataValue('cohort').toString('hex');
+          } else {
+            return null;
+          }
         },
         set: function(val) {
           this.setDataValue('cohort', new Buffer(val, "hex"));
