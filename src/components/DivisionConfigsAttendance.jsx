@@ -30,25 +30,21 @@ class DivisionConfigsAttendance extends Component {
 
  
   componentWillMount() {
-    const { classes } = this.context.state;
     this.setState({
-      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf(),
-      divisionConfigs: classes.getDivisionConfigs()
+      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
     });
   }
   
   render() {
-    const { divisionConfigs } = this.state;
+    const { divisionConfigs } = this.props;
     return (
-      <div>
+      <Row>
         {divisionConfigs.map((divisionConfig, index) =>
-          <Row key={index}>
-            <Col xs={12} sm={12} md={12} lg={12} key={index}>
+          <Col xs={12} sm={12} md={12} lg={12} key={divisionConfig.id}>
             <DisplayClassAttendance divisionConfig={divisionConfig} />
-            </Col>
-          </Row>
+          </Col>
         )}
-      </div>
+      </Row>
     );
   }
 }

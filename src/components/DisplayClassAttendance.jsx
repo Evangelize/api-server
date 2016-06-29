@@ -56,11 +56,12 @@ class DisplayClassAttendance extends Component {
   }
 
   render() {
-    const attendances = this.getClasses();
+    const { classes } = this.context.state;
+    const { divisionConfig } = this.props;
     return (
       <div>
-        {attendances.map((attendance, index) =>
-          <Card style={(attendance) ? null : {display: 'none'}}>
+        {classes.getDivisionConfigClasses(divisionConfig.id).map((attendance, index) =>
+          <Card key={attendance.id} style={(attendance) ? null : {display: 'none'}}>
             <CardHeader
                 title={attendance.config.title+" Attendance"}
                 subtitle={moment().format("dddd MM/DD/YYYY")}
@@ -68,11 +69,7 @@ class DisplayClassAttendance extends Component {
             </CardHeader>
             <CardMedia>
               <Grid fluid={true} key={1}>
-                <Row>
-                {attendance.classes.map((divClass, index) =>
-                  <RenderClassAttendance divClass={divClass} />
-                )}
-                </Row>
+                <RenderClassAttendance divClasses={attendance.classes} />
               </Grid>
             </CardMedia>
           </Card>

@@ -35,7 +35,7 @@ export default class Classes {
 
     this.ws.on('changes', data => {
       //console.log('changes', data);
-      self.wsHandler(self.ws, data);
+      //self.wsHandler(self.ws, data);
     });
 
     this.ws.on('global', data => {
@@ -48,7 +48,7 @@ export default class Classes {
     });
 
     this.ws.on('error', err => {
-      self.wsError(err);
+      //self.wsError(err);
     });
     
     this.ws.on('disconnect', () => {
@@ -70,6 +70,19 @@ export default class Classes {
         .data();
     //console.log("years", years);
     return records;
+  }
+
+  getDivisionConfig(id) {
+    //console.log( this.db.collections.divisionConfigs.data);
+    let record = this.db.collections.divisionConfigs
+        .findOne(
+          {
+            id: id,
+            deletedAt: null
+          }
+        );
+    //console.log("years", years);
+    return record;
   }
   
   getClasses() {
@@ -210,6 +223,32 @@ export default class Classes {
         currAvg =  this.avgAttendance(day),
         percChange = change(priorAvg, currAvg, true);
     return percChange;
+  }
+
+  getClassAttendance(classId, date) {
+    date = date || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD'));
+    let attendance = this.db.collections.divisionClassAttendance.chain()
+        .find(
+          {
+            $and: [
+              {
+                attendanceDate: {$gte: date}
+              },
+              {
+                divisionClassId: {$eq: classId}
+              },
+              {
+                deletedAt: null
+              }
+            ]
+          }
+        )
+        .data();
+    if (attendance.length && attendance[0].count) {
+      return attendance[0].count.toString();
+    } else {
+      return "0";
+    }
   }
 
   getClassAttendanceToday(classId) {
@@ -391,11 +430,31 @@ export default class Classes {
       return {
         class: right,
         order: right.order,
+        id: left.id,
         divisionClass: left
       }
     })
     .simplesort("order")
     .data();
+  }
+
+  getDivisionConfigClasses(divisionConfigId) {
+    const now  = moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
+    let today = moment().weekday(),
+        divisionConfig = this.getDivisionConfig(divisionConfigId),
+        division = this.getCurrentDivision(now),
+        classDay = this.getCurrentDivisionMeetingDays(divisionConfig, today),
+        divClasses = this.getCurrentDivisionClasses(division.id);
+    if (!Array.isArray(classDay) && classDay !== null) {
+      classDay = [classDay];
+    } else if (classDay === null) {
+      classDay = [];
+    }
+    let results = classDay.map(function(day, index){
+      day.classes = divClasses;
+      day.config = divisionConfig;
+    });
+    return classDay;
   }
 
   getDivisionClass(divisionClassId) {

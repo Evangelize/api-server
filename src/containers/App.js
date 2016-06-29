@@ -42,14 +42,22 @@ class App extends Component {
  }
 
   handleLeftNavChange(url, e) {
+    const { settings } = this.context.state;
     console.log("handleLeftNavChange");
-    this.setState({open: false});
+    settings.leftNavOpen = false;
     browserHistory.push(url);
   }
 
   showLeftNavClick(e) {
+    const { settings } = this.context.state;
     console.log("showLeftNavClick", e);
-    this.setState({open: true});
+    settings.leftNavOpen = true;
+  }
+
+  leftNavState(state) {
+    const { settings } = this.context.state;
+    console.log("leftNavState", state.open);
+    settings.leftNavOpen = state.open;
   }
   
   close() {
@@ -118,8 +126,7 @@ class App extends Component {
             ref="leftNav"
             docked={false}
             disableSwipeToOpen={true}
-            open={this.state.open}
-            onRequestChange={open => this.setState({open})}
+            open={settings.leftNavOpen}
           >
             <div
               style={navHeader}>

@@ -402,7 +402,11 @@ export default {
           .get(decoded.peopleId)
           .then(
             function(results) {
-              resolve(results.toJSON());
+              if (results) {
+                resolve(results.toJSON());
+              } else {
+                resolve(null);
+              }
               return null;
             },
             function(err) {

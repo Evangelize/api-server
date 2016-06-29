@@ -71,6 +71,7 @@ class Root extends Component {
         <Provider context={context}>
           <Router history={browserHistory} routes={r}></Router>
         </Provider>
+
       </div>
     );
   }

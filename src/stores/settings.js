@@ -12,6 +12,7 @@ import jwt from 'jsonwebtoken';
 export default class Settings {
   @observable authenticated = false;
   @observable user = null;
+  @observable leftNavOpen = false;
   ws;
   events;
   constructor(websocket, events) {

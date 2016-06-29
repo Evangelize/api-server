@@ -266,7 +266,7 @@ export default function( HOST, PORT, callback ) {
                             user = '${JSON.stringify({person: person})}';
                       </script>
                       <meta charset="utf-8">
-                      <meta name="viewport" content="width=device-width, initial-scale=1">
+                      <meta name="viewport" content="width=device-width, minimum-scale=1.0">
                       <title>Congregation Class Management</title>
                       <link rel="stylesheet" href="/css/sanitize.css" />
                       <link rel="stylesheet" href="/css/typography.css" />

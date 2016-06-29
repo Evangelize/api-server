@@ -254,9 +254,9 @@ class Dashboard extends Component {
         today = moment().weekday();
     //console.log("classes.divisionConfigs:", classes);
     return (
-      <div>
+      <Row>
         <Grid fluid={true}>
-          <DivisionConfigsAttendance style={(classes.isClassDay()) ? null : {display: 'none'}}/>
+          <DivisionConfigsAttendance divisionConfigs={classes.getDivisionConfigs()} style={(classes.isClassDay()) ? null : {display: 'none'}}/>
           <Masonry className={"row"} options={masonryOptions}>
             {classes.getClassMeetingDays().map((day, index) =>
               <Col xs={12} sm={12} md={6} lg={6} key={index}>
@@ -315,7 +315,7 @@ class Dashboard extends Component {
           </Masonry>
         </Grid>
         
-      </div>
+      </Row>
     );
   }
 }

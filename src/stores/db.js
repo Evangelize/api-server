@@ -1,4 +1,4 @@
-import { extendObservable, observable, autorun, isObservable, isObservableMap, map } from "mobx";
+import { extendObservable, observable, autorun, isObservable, isObservableMap, map, action } from "mobx";
 import _ from 'lodash';
 import loki from 'lokijs';
 import moment from 'moment-timezone';
@@ -100,13 +100,13 @@ export default class Db {
                     ]
                   }
                 );
-      if (record) {
-        let deleted = (data.type === "delete") ? true : false;
-        record = Object.assign(record, data.record);
-        this.updateCollection(data.collection, record, true, deleted);
-      } else if (data.type !== "delete") {
-        this.insertDocument(data.collection, data.record);
-      }
+        if (record) {
+          let deleted = (data.type === "delete") ? true : false;
+          record = Object.assign(record, data.record);
+          this.updateCollection(data.collection, record, true, deleted);
+        } else if (data.type !== "delete") {
+          this.insertDocument(data.collection, data.record);
+        }
       }
     } else if (data.type === "insert" || data.type === "update" || data.type === "delete") {
       record = this.collections[data.collection]
@@ -150,7 +150,7 @@ export default class Db {
     }
   }
 
-  deleteRecord(collection, id) {
+  @action deleteRecord(collection, id) {
     const ts = moment.utc().format("YYYY-MM-DDTHH:mm:ss.sssZ");
     let record = this.collections[collection]
                 .findOne(
@@ -168,7 +168,7 @@ export default class Db {
     }
   }
 
-  updateCollection(collection, record, remote, deleted) {
+  @action updateCollection(collection, record, remote, deleted) {
     deleted = deleted || false;
     remote = remote || false;
     const ts = moment.utc().format("YYYY-MM-DDTHH:mm:ss.sssZ");
@@ -203,7 +203,7 @@ export default class Db {
     }
   }
 
-  insertDocument(collection, record) {
+  @action insertDocument(collection, record) {
     return this.collections[collection].insert(record);
   }
 
