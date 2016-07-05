@@ -37,36 +37,12 @@ class ClassAttendance extends Component {
   
   
   attendanceUpdate(e) {
-    const { divClass } = this.props;
+    const { divClass, date } = this.props;
     const { classes } = this.context.state,
           { now } = this.state;
-    classes.updateClassAttendance(divClass.divisionClass.id, now, parseInt(e.target.value, 10));
+    console.log("attendanceUpdate", moment().unix());
+    classes.updateClassAttendance(divClass.divisionClass.id, date, parseInt(e.target.value, 10));
   }
-
-  getClassAttendance() {
-    const { divClass } = this.props;
-    const { now } = this.state,
-          { classes } = this.context.state;
-    let attendance = classes.getClassAttendanceToday(divClass.divisionClass.id),
-        day = moment().format("YYYY-MM-DD"),
-        isToday = false;
-    //console.log("getClassAttendance", divClass, attendance);
-    if (attendance.length && attendance[0].count) {
-      /*
-      isToday = moment.utc(attendance[0].attendanceDate).tz('America/Chicago').isSame(day, 'day');
-      if (isToday) {
-        let count = (attendance[0].count === null) ? "0" : attendance[0].count.toString();
-        return count;
-      } else {
-        return "0";
-      }
-      */
-      return attendance[0].count.toString();
-    } else {
-      return "0";
-    }
-  }
-
 
   isUpdating() {
     /*
@@ -88,7 +64,7 @@ class ClassAttendance extends Component {
   }
 
   render() {
-    const { divClass } = this.props;
+    const { divClass, date } = this.props;
     const { now } = this.state,
           { classes } = this.context.state;
 
@@ -98,7 +74,7 @@ class ClassAttendance extends Component {
             <TextField
                 type="tel"
                 hintText="Enter attendance"
-                value={classes.getClassAttendance(divClass.id)}
+                value={classes.getClassAttendance(divClass.id, date)}
                 min="0"
                 max="500"
                 ref={"inputAttendance"+divClass.id}

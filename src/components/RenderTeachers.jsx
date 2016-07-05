@@ -17,41 +17,50 @@ import Subheader from 'material-ui/Subheader/Subheader';
 import Divider from 'material-ui/Divider';
 import ActionGrade from 'material-ui/svg-icons/action/grade';
 import Avatar from 'material-ui/Avatar';
+import waterfall from 'async/waterfall';
+import DisplayTeacher from './DisplayTeacher';
 import { Grid, Row, Col } from 'react-bootstrap';
-import { context, resolve } from "react-resolver";
-import DisplayClassAttendance from './DisplayClassAttendance';
 
 @connect
-class DivisionConfigsAttendance extends Component {
+class RenderTeachers extends Component {
 
   constructor(props, context) {
     super(props, context);
 
   }
 
- 
   componentWillMount() {
     this.setState({
-      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
+      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf(),
+      teachers: []
     });
   }
 
-  componentWillReact() {
-    console.log("divisionConfigsAttendance:componentWillReact", moment().unix());
+  componentDidMount() {
+    const { classes } = this.context.state,
+          { divClass, day } = this.props,
+          divisionClassId = divClass.divisionClass.id;
+    let self = this;
+    classes.getDivisionClassTeachers(divisionClassId, day).then(
+      function(data) {
+        self.setState({
+          teachers: data
+        });
+      }
+    );
   }
-  
+
   render() {
-    const { divisionConfigs, date } = this.props;
-    console.log("divisionConfigsAttendance:render", moment().unix());
+    const { divClass } = this.props;
+    const { teachers } = this.state;
     return (
-      <Row>
-        {divisionConfigs.map((divisionConfig, index) =>
-          <Col xs={12} sm={12} md={12} lg={12} key={divisionConfig.id}>
-            <DisplayClassAttendance date={date} divisionConfig={divisionConfig} />
-          </Col>
+      <List>
+        <Subheader>{divClass.class.title}</Subheader>
+        {teachers.map((teacher, index) =>
+          <DisplayTeacher teacher={teacher} key={teacher.id} />
         )}
-      </Row>
+      </List>
     );
   }
 }
-export default DivisionConfigsAttendance;
+export default RenderTeachers;

@@ -9,7 +9,7 @@ import { browserHistory } from 'react-router';
 import DashboardComponentSmall from '../components/DashboardComponentSmall';
 import DashboardMediumGraph from '../components/DashboardMediumGraph';
 import DisplayClassAttendance from '../components/DisplayClassAttendance';
-import DisplayTeachers from '../components/DisplayTeachers';
+import DivisionConfigsTeachers from '../components/DivisionConfigsTeachers';
 import DivisionConfigsAttendance from '../components/DivisionConfigsAttendance';
 import DisplayNotes from '../components/DisplayNotes';
 import ReactGridLayout from 'react-grid-layout';
@@ -38,6 +38,7 @@ import Divider from 'material-ui/Divider';
 import ActionGrade from 'material-ui/svg-icons/action/grade';
 import Editor from 'react-medium-editor';
 import { Grid, Row, Col } from 'react-bootstrap';
+import { context, resolve } from "react-resolver";
 
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/medium-editor.css';
 //import 'react-medium-editor/node_modules/medium-editor/dist/css/themes/default.css';
@@ -63,10 +64,29 @@ class Dashboard extends Component {
   }
 
   componentDidMount() {
+    let self = this;
+    const { classes, settings } = this.context.state;
     window.addEventListener('resize', this.resize);
+    classes.getDivisionConfigs().then(function(data) {
+      self.setState({
+        divisionConfigs: data
+      })
+    });
+
+    classes.getClassMeetingDays().then(function(data) {
+      self.setState({
+        classMeetingDays: data
+      })
+    });
+    
+  }
+
+  componentWillReact() {
+    console.log("dashboard:componentWillReact", moment().unix());
   }
 
   componentWillReceiveProps(nextProps) {
+    console.log("dashboard:componentWillReceiveProps", moment().unix());
     //console.log("componentWillReceiveProps", nextProps);
   }
 
@@ -86,6 +106,8 @@ class Dashboard extends Component {
 
 
     this.setState({
+      divisionConfigs: [],
+      classMeetingDays: [],
       sparklineWidth: 100,
       showDialog: false,
       currentNote: {
@@ -94,6 +116,7 @@ class Dashboard extends Component {
         text: null
       },
       masonryOptions: {},
+      isClassDay: classes.isClassDay(),
       now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
     });
   }
@@ -221,8 +244,11 @@ class Dashboard extends Component {
   }
 
   render() {
+    console.log("dashboard:pre-render", moment().unix());
     const { classes } = this.context.state;
-    const { masonryOptions, now } = this.state;
+    const { masonryOptions, now, isClassDay } = this.state;
+    console.log("render:isClassDay", isClassDay);
+    const { divisionConfigs } = this.props;
     let paperStyle = {
           display: 'flex',
           flexDirection: 'row',
@@ -253,29 +279,16 @@ class Dashboard extends Component {
         },
         today = moment().weekday();
     //console.log("classes.divisionConfigs:", classes);
+    console.log("dashboard:render", moment().unix());
     return (
       <Row>
         <Grid fluid={true}>
-          <DivisionConfigsAttendance divisionConfigs={classes.getDivisionConfigs()} style={(classes.isClassDay()) ? null : {display: 'none'}}/>
+          {isClassDay && <DivisionConfigsAttendance divisionConfigs={this.state.divisionConfigs} date={now} />}
           <Masonry className={"row"} options={masonryOptions}>
-            {classes.getClassMeetingDays().map((day, index) =>
-              <Col xs={12} sm={12} md={6} lg={6} key={index}>
-                <DashboardMediumGraph
-                  title={moment().weekday(day.day).format("dddd") + " Attendance"}
-                  subtitle={"Past 8 weeks"}
-                  avatar={<Avatar>A</Avatar>}
-                  lineChartData={::this.getGraphAttendance(day.day, 8)}
-                  lineChartOptions={lineChartOptions}
-                />
-              </Col>
-            )}
-            {classes.getDivisionConfigs().map((divisionConfig, index) =>
-              <Col xs={12} sm={12} md={6} lg={6} key={divisionConfig.id} style={(this.displayAttendance(divisionConfig).length) ? null : {display: 'none'}}>
-                <DisplayTeachers divisionConfig={divisionConfig} />
-              </Col>
-            )}
+            
+            {isClassDay && <DivisionConfigsTeachers divisionConfigs={this.state.divisionConfigs} />}
             <Col xs={12} sm={12} md={6} lg={6}>
-              {classes.getClassMeetingDays().map((day, index) =>
+              {this.state.classMeetingDays.map((day, index) =>
                 <div key={day.id}>
                 <Col xs={12} sm={6} md={6} lg={6} key={index}>
                   <DashboardComponentSmall

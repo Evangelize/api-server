@@ -17,41 +17,50 @@ import Subheader from 'material-ui/Subheader/Subheader';
 import Divider from 'material-ui/Divider';
 import ActionGrade from 'material-ui/svg-icons/action/grade';
 import Avatar from 'material-ui/Avatar';
+import waterfall from 'async/waterfall';
 import { Grid, Row, Col } from 'react-bootstrap';
-import { context, resolve } from "react-resolver";
-import DisplayClassAttendance from './DisplayClassAttendance';
 
 @connect
-class DivisionConfigsAttendance extends Component {
+class DisplayTeacher extends Component {
 
   constructor(props, context) {
     super(props, context);
 
   }
 
- 
   componentWillMount() {
     this.setState({
       now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
     });
   }
 
-  componentWillReact() {
-    console.log("divisionConfigsAttendance:componentWillReact", moment().unix());
+  componentDidMount() {
+    
   }
-  
+
   render() {
-    const { divisionConfigs, date } = this.props;
-    console.log("divisionConfigsAttendance:render", moment().unix());
+    const { teacher } = this.props;
     return (
-      <Row>
-        {divisionConfigs.map((divisionConfig, index) =>
-          <Col xs={12} sm={12} md={12} lg={12} key={divisionConfig.id}>
-            <DisplayClassAttendance date={date} divisionConfig={divisionConfig} />
-          </Col>
-        )}
-      </Row>
+      <ListItem
+          key={teacher.divClassTeacher.id}
+          primaryText={teacher.person.firstName+" "+teacher.person.lastName}
+          leftAvatar={
+          <Avatar 
+              src={
+              (teacher.person.individualPhotoUrl) ? 
+                  teacher.person.individualPhotoUrl : 
+                  teacher.person.familyPhotoUrl
+              }
+              >
+              {
+                  (teacher.person.individualPhotoUrl || teacher.person.familyPhotoUrl) ? 
+                  null : 
+                  teacher.person.firstName.charAt(0)
+              }
+              </Avatar>
+          }
+      />
     );
   }
 }
-export default DivisionConfigsAttendance;
+export default DisplayTeacher;

@@ -6,7 +6,7 @@ module.exports = {
 	cache:   false,
 	context: __dirname,
     debug: true,
-    devtool: 'eval',
+    devtool: '#inline-source-map',
 	entry:  [
       'webpack-hot-middleware/client?path=/__webpack_hmr&reload=true',
       path.join(__dirname, '../src/index.js')
@@ -35,22 +35,23 @@ module.exports = {
           exclude: /node_modules/,
           loader: 'babel',
           query: {
-            stage: 0,
-            plugins: [ 'react-transform' ],
-            extra: {
-              'react-transform': {
+            presets: [ 'react', 'es2015', 'stage-0' ],
+            plugins: [ 
+              ['transform-runtime'],
+              ['transform-decorators-legacy'],
+              ['react-transform', {
                 transforms: [
                   {
                     transform: 'react-transform-hmr',
-                    imports: [ 'react' ],
-                    locals: [ 'module' ]
+                    imports: ['react'],
+                    locals: ['module'],
                   }, {
                     transform: 'react-transform-catch-errors',
-                    imports: [ 'react', 'redbox-react' ]
-                  }
-                ]
-              }
-            }
+                    imports: ['react', 'redbox-react'],
+                  },
+                ],
+              }],
+            ],
           }
         }, {
           test: /\.json?$/,

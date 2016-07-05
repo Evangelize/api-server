@@ -224,71 +224,90 @@ export default function( HOST, PORT, callback ) {
             console.log(authenticated);
             const _data = Object.assign({}, data);
             const finalDb = JSON.stringify(_data);
-            const db = new Db(data);
-            const classes = new Classes(db);
-            const appSettings = new Settings();
-            appSettings.user = {person: person};
-            appSettings.authenticated = authenticated;
-            const routes = createRoutes(appSettings);
-            const context = {
-              state: {
-                db: db,
-                classes: classes, 
-                settings: appSettings
-              },
-              store: {
+            const db = new Db();
+            let classes, appSettings, routes, context;
+            async.waterfall(
+              [
+                function(callback) {
+                  db.init(data).then(
+                    function(data) {
+                      callback(null);
+                    }
+                  );
+                },
+                function(callback) {
+                  classes = new Classes(db);
+                  appSettings = new Settings();
+                  appSettings.user = {person: person};
+                  appSettings.authenticated = authenticated;
+                  routes = createRoutes(appSettings);
+                  context = {
+                    state: {
+                      db: db,
+                      classes: classes, 
+                      settings: appSettings
+                    },
+                    store: {
+
+                    }
+                  };
+                  callback(null);
+                }
+              ],
+              function(err, result) {
+
+                match({ routes, location }, ( error, redirectLocation, renderProps ) => {
+                  if ( error || !renderProps ) {
+                    // reply("500: " + error.message)
+                    reply.continue();
+                  } else if ( redirectLocation ) {
+                    reply.redirect( redirectLocation.pathname + redirectLocation.search );
+                  } else if ( renderProps ) {
+                    const reactString = ReactDOM.renderToString(
+                      <Provider context={context}><RouterContext {...renderProps} /></Provider>
+                    );
+                    let settings = nconf.argv()
+                      .env()
+                      .file({ file: path.join(__dirname, '../config/settings.json') });
+                    const script = process.env.NODE_ENV === 'production' ? '/dist/client.min.js' : '/hot/client.js',
+                          websocketUri = "//"+settings.get("websocket:host")+":"+settings.get("websocket:port");
+                    let output = (
+                      `<!doctype html>
+                      <html lang="en-us">
+                        <head>
+                          <script>
+                            var wsUri = '${websocketUri}',
+                                dbJson = ${finalDb},
+                                user = '${JSON.stringify({person: person})}';
+                          </script>
+                          <meta charset="utf-8">
+                          <meta name="viewport" content="width=device-width, minimum-scale=1.0">
+                          <title>Evangelize</title>
+                          <link rel="stylesheet" href="/css/sanitize.css" />
+                          <link rel="stylesheet" href="/css/typography.css" />
+                          <link rel="stylesheet" href="/chartist/css/chartist.min.css">
+                          <link rel="shortcut icon" sizes="16x16 32x32 48x48 64x64 128x128 256x256" href="/favicon.ico?v2">
+                          <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700" type="text/css">
+                          <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.3.15/slick.css" />
+                          <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/medium-editor/5.11.0/css/medium-editor.css" />
+                          <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/medium-editor/5.11.0/css/themes/default.css" />
+                          <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons" />
+                          <link rel="stylesheet" href="/css/custom.css" />
+                        </head>
+                        <body>
+                          <div id="root"><div>${reactString}</div></div>
+                          <script async=async src=${script}></script>
+                        </body>
+                      </html>`
+                    );
+                    let eTag = etag(output);
+                    reply(output).header('cache-control', 'max-age=0, private, must-revalidate').header('etag', eTag);
+                  }
+                });
 
               }
-            };
-            //console.log(finalDb);
-            match({ routes, location }, ( error, redirectLocation, renderProps ) => {
-              if ( error || !renderProps ) {
-                // reply("500: " + error.message)
-                reply.continue();
-              } else if ( redirectLocation ) {
-                reply.redirect( redirectLocation.pathname + redirectLocation.search );
-              } else if ( renderProps ) {
-                const reactString = ReactDOM.renderToString(
-                  <Provider context={context}><RouterContext {...renderProps} /></Provider>
-                );
-                let settings = nconf.argv()
-                   .env()
-                   .file({ file: path.join(__dirname, '../config/settings.json') });
-                const script = process.env.NODE_ENV === 'production' ? '/dist/client.min.js' : '/hot/client.js',
-                      websocketUri = "//"+settings.get("websocket:host")+":"+settings.get("websocket:port");
-                let output = (
-                  `<!doctype html>
-                  <html lang="en-us">
-                    <head>
-                      <script>
-                        var wsUri = '${websocketUri}',
-                            dbJson = ${finalDb},
-                            user = '${JSON.stringify({person: person})}';
-                      </script>
-                      <meta charset="utf-8">
-                      <meta name="viewport" content="width=device-width, minimum-scale=1.0">
-                      <title>Congregation Class Management</title>
-                      <link rel="stylesheet" href="/css/sanitize.css" />
-                      <link rel="stylesheet" href="/css/typography.css" />
-                      <link rel="stylesheet" href="/chartist/css/chartist.min.css">
-                      <link rel="shortcut icon" sizes="16x16 32x32 48x48 64x64 128x128 256x256" href="/favicon.ico?v2">
-                      <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700" type="text/css">
-                      <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.3.15/slick.css" />
-                      <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/medium-editor/5.11.0/css/medium-editor.css" />
-                      <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/medium-editor/5.11.0/css/themes/default.css" />
-                      <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons" />
-                      <link rel="stylesheet" href="/css/custom.css" />
-                    </head>
-                    <body>
-                      <div id="root"><div>${reactString}</div></div>
-                      <script async=async src=${script}></script>
-                    </body>
-                  </html>`
-                );
-                let eTag = etag(output);
-                reply(output).header('cache-control', 'max-age=0, private, must-revalidate').header('etag', eTag);
-              }
-            });
+            );
+            
           },
           processRequest = function(person) {
             person = person || null;

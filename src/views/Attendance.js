@@ -125,7 +125,7 @@ class Attendance extends Component {
                 <CardMedia>
                   <List>
                     {classes.getDailyAttendance(this.state.start, this.state.end).map((day, index) =>
-                      <div>
+                      <div key={index}>
                         <Divider />
                         <ListItem
                           key={index}

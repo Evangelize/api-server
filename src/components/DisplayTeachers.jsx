@@ -17,6 +17,8 @@ import Subheader from 'material-ui/Subheader/Subheader';
 import Divider from 'material-ui/Divider';
 import ActionGrade from 'material-ui/svg-icons/action/grade';
 import Avatar from 'material-ui/Avatar';
+import waterfall from 'async/waterfall';
+import RenderTeachers from './RenderTeachers';
 import { Grid, Row, Col } from 'react-bootstrap';
 
 @connect
@@ -31,8 +33,20 @@ class DisplayTeachers extends Component {
   componentWillMount() {
     this.setState({
       now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf(),
-      classes: this.getClasses()
+      classes: []
     });
+  }
+
+  componentDidMount() {
+    const { classes } = this.context.state;
+    let self = this;
+    classes.getCurrentDivisionClasses().then(
+      function(data) {
+        self.setState({
+          classes: data
+        });
+      }
+    );
   }
   
   getClasses() {
@@ -41,7 +55,6 @@ class DisplayTeachers extends Component {
            now = moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
     let today = moment().weekday(),
         division = classes.getCurrentDivision(now),
-        classDay = classes.getCurrentDivisionMeetingDays(divisionConfig, today),
         divClasses = classes.getCurrentDivisionClasses(division.id);
     return divClasses;
   }
@@ -69,31 +82,8 @@ class DisplayTeachers extends Component {
         <CardMedia>
         {classes.map((divClass, index) =>
             <div key={index}>
-            <Divider />
-            <List>
-                <Subheader>{divClass.class.title}</Subheader>
-                {this.displayTeachers(divClass).map((teacher, index) =>
-                <ListItem
-                    key={teacher.divClassTeacher.id}
-                    primaryText={teacher.person.firstName+" "+teacher.person.lastName}
-                    leftAvatar={
-                    <Avatar 
-                        src={
-                        (teacher.person.individualPhotoUrl) ? 
-                            teacher.person.individualPhotoUrl : 
-                            teacher.person.familyPhotoUrl
-                        }
-                        >
-                        {
-                            (teacher.person.individualPhotoUrl || teacher.person.familyPhotoUrl) ? 
-                            null : 
-                            teacher.person.firstName.charAt(0)
-                        }
-                        </Avatar>
-                    }
-                />
-                )}
-            </List>
+              <Divider />
+              <RenderTeachers divClass={divClass} day={divClass.class.day} />
             </div>
         )}
         </CardMedia>

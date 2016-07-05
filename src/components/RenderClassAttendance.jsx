@@ -37,12 +37,12 @@ class RenderClassAttendance extends Component {
   }
 
   render() {
-    const { divClasses } = this.props;
+    const { divClasses, date } = this.props;
 
     return (
       <Row>
         {divClasses.map((divClass, index) =>     
-          <ClassAttendance divClass={divClass} />
+          <ClassAttendance date={date} divClass={divClass} key={divClass.id} />
         )}
       </Row>
     );

@@ -42,6 +42,10 @@ class DisplayNotes extends Component {
       showDialog: false
     });
   }
+
+  componentWillReact() {
+    console.log("displayNotes:componentWillReact", moment().unix());
+  }
   
   handleNoteDelete(note, e) {
     e.stopPropagation();
@@ -123,6 +127,7 @@ class DisplayNotes extends Component {
               primary={true}
               onTouchTap={::this.handleDialogClose} />
           ];
+    console.log("displayNotes:render", moment().unix());
     return (
       <div>
         <Masonry>

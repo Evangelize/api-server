@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 import _ from 'lodash';
-import async from 'async';
+import waterfall from 'async/waterfall';
 import momentFquarter from 'moment-fquarter';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
@@ -24,6 +24,7 @@ import TextField from 'material-ui/TextField';
 import {Tabs, Tab} from 'material-ui/Tabs';
 import { Grid, Row, Col } from 'react-bootstrap';
 import NavToolBar from '../components/NavToolBar';
+import RenderTeachers from '../components/RenderTeachers';
 
 const styles = {
   headline: {
@@ -45,7 +46,12 @@ class Class extends Component {
     //this.setState({});
     //console.log("class", cls);
     this.setState({
-      masonryOptions: {}
+      masonryOptions: {},
+      cls: null, 
+      teachers: [], 
+      currentDivision: null, 
+      divisionClass: null, 
+      meetingDays: []
     });
   }
 
@@ -54,7 +60,55 @@ class Class extends Component {
   }
 
   componentDidMount() {
-
+    let self = this;
+    const { params } = this.props;
+    const { classes } = this.context.state;
+    waterfall(
+      [
+        function(callback) {
+          classes.getClass(params.classId).then(
+            function(data) {
+              callback(null, {cls: data});
+            }
+          );
+        },
+        function(store, callback) {
+          classes.getClassTeachers(store.cls.id).then(
+            function(data) {
+              store.teachers = data;
+              callback(null, store);
+            }
+          );
+        },
+        function(store, callback) {
+          classes.getCurrentDivision().then(
+            function(data) {
+              store.currentDivision = data;
+              callback(null, store);
+            }
+          );
+        },
+        function(store, callback) {
+          classes.getDivisionClassByDivAndClass(store.currentDivision.id, store.cls.id).then(
+            function(data) {
+              store.divisionClass = data;
+              callback(null, store);
+            }
+          );
+        },
+        function(store, callback) {
+           classes.getClassMeetingDays().then(
+            function(data) {
+              store.meetingDays = data;
+              callback(null, store);
+            }
+          );
+        }
+      ],
+      function(err, store) {
+        self.setState(store);
+      }
+    )
   }
 
   formatDateRange(division) {
@@ -86,24 +140,19 @@ class Class extends Component {
     const { classes } = this.context.state;
     const { params } = this.props,
           { now } = this.state;
-    classes.updateCollectionFields("classes", params.classId, {title: e.target.value});
+    classes.db.updateCollectionFields("classes", params.classId, {title: e.target.value});
   }
 
   render() {
     const { params } = this.props;
     const { classes } = this.context.state;
-    const cls = classes.getClass(params.classId),
-          teachers = classes.getClassTeachers(cls.id),
-          currentDivision = classes.getCurrentDivision(),
-          divisionClass = classes.getDivisionClassByDivAndClass(currentDivision.id, cls.id),
-          meetingDays = classes.getClassMeetingDays();
-    const { masonryOptions } = this.state;
+    const { masonryOptions, cls, teachers, currentDivision, divisionClass, meetingDays } = this.state;
     let lineChartOptions = {
           low: 0,
           showArea: true
         };
-    return (
-      <div>
+    if (cls) {
+      return (
         <Grid fluid={true}>
           <Row>
             <Col xs={12} sm={12} md={12} lg={12}>
@@ -146,32 +195,7 @@ class Class extends Component {
                             avatar={<Avatar>{moment().weekday(day.day).format("dd")}</Avatar>}>
                           </CardHeader>
                           <CardMedia>
-                            <List>
-                              {classes.getDivisionClassTeachers(divisionClass.divisionClass.id, day.day).map((teacher, index) =>
-                                <div
-                                  key={index} > 
-                                  <Divider />
-                                  <ListItem
-                                    leftAvatar={
-                                      <Avatar 
-                                        src={
-                                          (teacher.person.individualPhotoUrl) ? 
-                                            teacher.person.individualPhotoUrl : 
-                                            teacher.person.familyPhotoUrl
-                                          }
-                                        >
-                                          {
-                                            (teacher.person.individualPhotoUrl || teacher.person.familyPhotoUrl) ? 
-                                              null : 
-                                              teacher.person.firstName.charAt(0)
-                                          }
-                                        </Avatar>
-                                    }
-                                    primaryText={teacher.person.lastName + ", " + teacher.person.firstName}
-                                  />
-                                </div>
-                              )}
-                            </List>
+                            <RenderTeachers divClass={divisionClass} day={day.day} />
                           </CardMedia>
                         </Card>
                       </Col>
@@ -188,7 +212,7 @@ class Class extends Component {
                       hintText="Class Title" />
                   </div>
                 </Tab>
-                <Tab label="Teacher History" >
+                <Tab label="Teachers" >
                   <Card>
                     <CardHeader
                       title={"Teachers"}
@@ -241,8 +265,18 @@ class Class extends Component {
             </Col>
           </Row>
         </Grid>
-      </div>
-    );
+      );
+    } else {
+      return (
+        <Grid fluid={true}>
+          <Row>
+            <Col xs={12} sm={12} md={12} lg={12}>
+              <NavToolBar navLabel="No Class Selected" goBackTo="/classes" />
+            </Col>
+          </Row>
+        </Grid>
+      );
+    }
   }
 }
 

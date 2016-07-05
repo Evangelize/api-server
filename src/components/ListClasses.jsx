@@ -94,8 +94,21 @@ class ListClasses extends Component {
     const { classes } = this.context.state;
     //console.log("ListClasses:willMount", context);
     this.setState({
-      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
+      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf(),
+      classes: []
     });
+  }
+
+  componentDidMount() {
+    const { classes } = this.context.state;
+    let self = this;
+    classes.getClasses().then(
+      function(data) {
+        self.setState({
+          classes: data
+        })
+      }
+    )
   }
   
   moveClass(dragObject, e) {
@@ -113,16 +126,15 @@ class ListClasses extends Component {
   }
 
   render() {
-    const { classes } = this.context.state;
-    const listClasses = classes.getClasses();
+    const { classes } = this.state;
     if (this.props.sortable) {
       return (
-        <SortableComponent items={listClasses} onSortEnd={::this.moveClass}/>
+        <SortableComponent items={classes} onSortEnd={::this.moveClass}/>
       );
     } else {
       return (
         <List>
-        {classes.getClasses().map((item, index) =>
+        {classes.map((item, index) =>
           <Class key={item.id} index={index} item={item} />
         )}
         </List>

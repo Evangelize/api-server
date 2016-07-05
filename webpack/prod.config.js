@@ -41,7 +41,14 @@ module.exports = {
       {
         test: /\.js[x]?$/,
         exclude: /node_modules/,
-        loader: 'babel'
+        loader: 'babel',
+        query: {
+            presets: [ 'react', 'es2015', 'stage-0' ],
+            plugins: [ 
+              ['transform-runtime'],
+              ['transform-decorators-legacy']
+            ],
+          }
       },
       {
         test: /\.json?$/,

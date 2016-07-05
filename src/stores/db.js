@@ -1,11 +1,13 @@
-import { extendObservable, observable, autorun, isObservable, isObservableMap, map, action } from "mobx";
+import { extendObservable, observable, autorun, isObservable, isObservableMap, map, action, runInAction } from "mobx";
 import _ from 'lodash';
+import each from 'async/each';
 import loki from 'lokijs';
 import moment from 'moment-timezone';
 import api from '../api';
 import * as types from '../constants';
 import conv from 'binstring';
 import iouuid from 'innodb-optimized-uuid';
+import Promise from 'bluebird';
 
 export default class Db {
   db;
@@ -17,48 +19,60 @@ export default class Db {
     this.isUpdating = true;
     this.db = new loki('evangelize');
     let self = this;
-    if (websocket) {
-      this.setupWs(websocket);
-    }
-    let indices = {
-      divisionClasses: ['classId', 'divisionId', 'deletedAt'],
-      divisionClassTeachers: ['divisionClassId', 'day', 'deletedAt'],
-      divisionClassAttendance: ['divisionClassId', 'day', 'attendanceDate', 'deletedAt'],
-      divisionYears: ['divisionConfigId', 'startDate', 'endDate' ,'deletedAt'],
-      divisions:  ['divisionConfigId', 'divisionYear', 'start', 'end', ' deletedAt'],
-    };
-    Object.keys(data).map(function(key) {
-      //console.log("collection", key, data[key]);
-      let index = (key in indices) ? indices[key] : [];
-      let coll = self.db.addCollection(
-        key,
-        {
-          asyncListeners: true, 
-          disableChangesApi: true, 
-          clone: false,
-          unique: ['id'],
-          indices: index
+  }
+
+  init(data, websocket) {
+    let self = this;
+    return new Promise(function(resolve, reject){
+      if (websocket) {
+        self.setupWs(websocket);
+      }
+      let indices = {
+        divisionClasses: ['classId', 'divisionId', 'deletedAt'],
+        divisionClassTeachers: ['divisionClassId', 'day', 'deletedAt'],
+        //divisionClassAttendance: ['divisionClassId', 'day', 'attendanceDate', 'deletedAt'],
+        divisionYears: ['divisionConfigId', 'startDate', 'endDate' ,'deletedAt'],
+        divisions:  ['divisionConfigId', 'divisionYear', 'start', 'end', ' deletedAt'],
+      };
+      each(
+        Object.keys(data),
+          function(key, callback) {
+          //console.log("collection", key, data[key]);
+          let index = (key in indices) ? indices[key] : [];
+          let coll = self.db.addCollection(
+            key,
+            {
+              asyncListeners: true, 
+              disableChangesApi: true, 
+              clone: false,
+              unique: ['id'],
+              indices: index
+            }
+          );
+          self.collections[key] = coll;
+          extendObservable(self.collections[key], {data: coll.data})
+          if (data[key].length) {
+            if ("$loki" in data[key][0]) {
+              coll.update(data[key]);
+            } else {
+              coll.insert(data[key]);
+            }
+          }
+          self.collections[key].setChangesApi(true);
+          //data[coll.name] = coll.data;
+          coll.on('update', ((...args)=>self.collectionChange(coll.name, 'update', ...args)));
+          coll.on('insert', ((...args)=>self.collectionChange(coll.name, 'insert', ...args)));
+          callback(null)
+        },
+        function(err) {
+          self.isUpdating = false;
+          resolve(true);
         }
       );
-      self.collections[key] = coll;
-      extendObservable(self.collections[key], {data: coll.data})
-      if (data[key].length) {
-        if ("$loki" in data[key][0]) {
-          coll.update(data[key]);
-        } else {
-          coll.insert(data[key]);
-        }
-      }
-      self.collections[key].setChangesApi(true);
-      //data[coll.name] = coll.data;
-      //coll.on('update', ((...args)=>self.collectionChange(coll.name, 'update', ...args)));
-      //coll.on('insert', ((...args)=>self.collectionChange(coll.name, 'insert', ...args)));
     });
-    //extendObservable(this, {data: data});
-    this.isUpdating = false;
   }
   
-  setupWs(websocket) {
+  async setupWs(websocket) {
     let self = this;
     this.ws = websocket;
 
@@ -66,20 +80,23 @@ export default class Db {
       //console.log('changes', data);
       self.wsHandler(self.ws, data);
     });
+    this.ws.emitAsync = Promise.promisify(this.ws.emit);
+    return true;
   }
 
   collectionChange(collection, type, target) {
-    //console.log(collection, type, target);
+    console.log(moment().unix(), collection, type, target);
   }
 
-  wsHandler(ws, update) {
+  async wsHandler(ws, update) {
     let data = update.payload.data,
         record;
     //console.log("websocket:", ws);
     //console.log("websocket update:", update);
+    console.log("wsHandler", moment().unix());
     if (data.error) {
       if (data.error.name === 'SequelizeUniqueConstraintError') {
-        record = this.collections[data.collection]
+        record = await this.collections[data.collection]
                 .findOne(
                   {
                     $and: [
@@ -90,7 +107,7 @@ export default class Db {
                   }
                 );
         this.updateCollection(data.collection, record, true, deleted);
-        record = this.collections[data.collection]
+        record = await this.collections[data.collection]
                 .findOne(
                   {
                     $and: [
@@ -103,9 +120,9 @@ export default class Db {
         if (record) {
           let deleted = (data.type === "delete") ? true : false;
           record = Object.assign(record, data.record);
-          this.updateCollection(data.collection, record, true, deleted);
+          return await this.updateCollection(data.collection, record, true, deleted);
         } else if (data.type !== "delete") {
-          this.insertDocument(data.collection, data.record);
+          return await this.insertDocument(data.collection, data.record);
         }
       }
     } else if (data.type === "insert" || data.type === "update" || data.type === "delete") {
@@ -122,11 +139,13 @@ export default class Db {
       if (record) {
         let deleted = (data.type === "delete") ? true : false;
         record = Object.assign(record, data.record);
-        this.updateCollection(data.collection, record, true, deleted);
+        return await this.updateCollection(data.collection, record, true, deleted);
       } else if (data.type !== "delete") {
-        this.insertDocument(data.collection, data.record);
+        return await this.insertDocument(data.collection, data.record);
       }
 
+    } else {
+      return false;
     }
   }
 
@@ -146,13 +165,13 @@ export default class Db {
                 );
     if (record) {
       record = Object.assign({}, record, updates);
-      this.updateCollection(collection, record, false);
+      return this.updateCollection(collection, record, false);
     }
   }
 
-  @action deleteRecord(collection, id) {
+  @action async deleteRecord(collection, id) {
     const ts = moment.utc().format("YYYY-MM-DDTHH:mm:ss.sssZ");
-    let record = this.collections[collection]
+    let record = await this.collections[collection]
                 .findOne(
                   {
                     $and: [
@@ -164,47 +183,79 @@ export default class Db {
                 );
     if (record) {
       record.deletedAt = ts;
-      this.updateCollection(collection, record, false, true);
+      return await this.updateCollection(collection, record, false, true);
+    } else {
+      return null;
     }
   }
 
-  @action updateCollection(collection, record, remote, deleted) {
+  @action async updateCollection(collection, record, remote, deleted) {
+    console.log("updateCollection", moment().unix());
     deleted = deleted || false;
     remote = remote || false;
     const ts = moment.utc().format("YYYY-MM-DDTHH:mm:ss.sssZ");
-    let results, type = 'insert';
+    let results, type = 'insert',
+        self = this;
+    const sendRemote = function(record) {
+      return new Promise(function(resolve, reject){
+        if (!remote) {
+          console.log("updateCollection:emit", moment().unix());
+          self.ws.emitAsync(
+            type,
+            {
+              type: type,
+              collection: collection,
+              target: record
+            }
+          ).then(
+            function(data) {
+              resolve(data);
+            }
+          );
+        } else {
+          resolve(true);
+        }
+      });
+    };
     if (record) {
       if (record.id) {
+        console.log("updateCollection:pre-update", moment().unix());
         type = (deleted) ? 'delete' : 'update';
         record.updatedAt = ts;
         if (deleted) {
           this.collections[collection].remove(record);
+          console.log("updateCollection:removed", moment().unix());
           results = record;
         } else {
-          results = this.collections[collection].update(record);
+          results = await this.collections[collection].update(record);
+          console.log("updateCollection:updated", moment().unix());
         }
+        sendRemote(record);
       } else {
+        
         record.createdAt = ts;
         record.updatedAt = ts;
+        console.log("updateCollection:pre-guid", moment().unix());
         record.id = iouuid.generate().toLowerCase();
-        results = this.insertDocument(collection, record);
-      }
-
-      if (!remote) {
-        this.ws.emit(
-          type,
-          {
-            type: type,
-            collection: collection,
-            target: results
+        console.log("updateCollection:guid", moment().unix());
+        console.log("updateCollection:pre-insert", moment().unix());
+        results = this.insertDocument(collection, record).then(
+          function(data) {
+            console.log("updateCollection:inserted", moment().unix());
+            sendRemote(record);
           }
         );
+        
       }
     }
   }
 
   @action insertDocument(collection, record) {
-    return this.collections[collection].insert(record);
+    let self = this;
+    return new Promise(function(resolve, reject){
+      let result = self.collections[collection].insert(record);
+      resolve(result);
+    });
   }
 
 }

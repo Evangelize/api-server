@@ -17,6 +17,8 @@ import CircularProgress from 'material-ui/CircularProgress';
 import Avatar from 'material-ui/Avatar';
 import { Grid, Row, Col } from 'react-bootstrap';
 import RenderClassAttendance from './RenderClassAttendance';
+import { context, resolve } from "react-resolver";
+
 
 @connect
 class DisplayClassAttendance extends Component {
@@ -28,48 +30,49 @@ class DisplayClassAttendance extends Component {
 
  
   componentWillMount() {
-    this.setState({
-      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
-    });
-  }
-  
-  getClasses() {
     const { classes } = this.context.state;
-    const { divisionConfig } = this.props,
-          now  = moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
-    //console.log("displayAttendance", classes);
-    let today = moment().weekday(),
-        division = classes.getCurrentDivision(now),
-        classDay = classes.getCurrentDivisionMeetingDays(divisionConfig, today),
-        divClasses = classes.getCurrentDivisionClasses(division.id);
-    if (!Array.isArray(classDay) && classDay !== null) {
-      classDay = [classDay];
-    } else if (classDay === null) {
-      classDay = [];
-    }
-    let results = classDay.map(function(day, index){
-      day.classes = divClasses;
-      day.config = divisionConfig;
+    const { divisionConfig, date } = this.props,
+          dow = moment(date).weekday();
+
+    this.setState({
+      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf(),
+      divisionConfigClasses: [],
+      dow: dow,
+      isClassDay: classes.isClassDay(dow)
     });
-    console.log("classDay", classDay);
-    return classDay;
   }
 
+  componentDidMount() {
+    const { classes } = this.context.state;
+    const { divisionConfig, date } = this.props;
+    const { dow } = this.state;
+    let self = this;
+    classes.getDivisionConfigClasses(divisionConfig.id, date, dow).then(
+      function(data) {
+        console.log(data);
+        self.setState({divisionConfigClasses: data});
+      }
+    );
+  }
+  
   render() {
     const { classes } = this.context.state;
-    const { divisionConfig } = this.props;
+    const { divisionConfig, date } = this.props;
+    const { dow, isClassDay } = this.state;
+    let self = this;
+    
     return (
       <div>
-        {classes.getDivisionConfigClasses(divisionConfig.id).map((attendance, index) =>
-          <Card key={attendance.id} style={(attendance) ? null : {display: 'none'}}>
+        {isClassDay && this.state.divisionConfigClasses.map((attendance, index) =>
+          <Card key={attendance.id}>
             <CardHeader
                 title={attendance.config.title+" Attendance"}
-                subtitle={moment().format("dddd MM/DD/YYYY")}
-                avatar={<Avatar>{moment().format("dd")}</Avatar>}>
+                subtitle={moment(date).tz('America/Chicago').format("dddd MM/DD/YYYY")}
+                avatar={<Avatar>{moment(date).tz('America/Chicago').format("dd")}</Avatar>}>
             </CardHeader>
             <CardMedia>
               <Grid fluid={true} key={1}>
-                <RenderClassAttendance divClasses={attendance.classes} />
+                <RenderClassAttendance divClasses={attendance.classes} date={date} />
               </Grid>
             </CardMedia>
           </Card>

@@ -1,5 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import _ from 'lodash';
+import moment from 'moment-timezone';
 import { observer } from "mobx-react";
 import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
@@ -9,7 +10,7 @@ import * as Colors from 'material-ui/styles/colors';
 import Transitions from 'material-ui/styles/transitions';
 import { Sparklines, SparklinesBars } from 'react-sparklines';
 
-@observer
+@connect
 class DashboardComponentSmall extends Component {
 
   constructor(props, context) {
@@ -17,25 +18,16 @@ class DashboardComponentSmall extends Component {
 
   }
 
-  resize() {
-    _.throttle(() => {
-      const graphDiv = this.refs.graphDiv;
-      console.log(graphDiv.clientWidth);
-      this.setState({
-          sparklineWidth: graphDiv.offsetWidth - 40
-      });
-    }, 30)
+  componentDidMount() {
+
   }
 
-  componentDidMount() {
-    this.setState({
-      sparklineWidth: 100
-    });
-    this.resize();
-    window.addEventListener('resize', this.resize);
+  componentWillReact() {
+    console.log("dashboardComponentSmall:componentWillReact", moment().unix());
   }
 
   render() {
+    console.log("dashboardComponentSmall:render", moment().unix());
     let attendanceStyle = {
           backgroundColor: Colors.cyan500,
           width: "50%",
@@ -58,30 +50,10 @@ class DashboardComponentSmall extends Component {
           width: "50%",
           fontSize: '14px',
           color: '#fff'
-        },
-        iconMenuStyle = {
-          float: 'right',
-          verticalAlign: 'top'
-        },
-        lineChartData = {
-          labels: [1, 2, 3, 4, 5, 6, 7, 8],
-          series: [
-            [5, 9, 7, 8, 5, 3, 5, 4]
-          ]
-        },
-        lineChartOptions = {
-          low: 0,
-          showArea: true
         };
-    const {
-      zDepth,
-      sparkLineData,
-      title,
-      body,
-      ...other,
-    } = this.props;
+    const { zDepth, title, body, style } = this.props;
     return (
-      <Paper zDepth={this.props.zDepth} style={this.props.style}>
+      <Paper zDepth={zDepth} style={style}>
         <div ref="graphDiv" style={attendanceStyle}>
           {body}
         </div>

@@ -16,7 +16,7 @@ import Menu from 'material-ui/Menu';
 import MenuItem from 'material-ui/MenuItem';
 import ChartistGraph from 'react-chartist';
 
-@observer
+@connect
 class DashboardMedium extends Component {
   constructor(props, context) {
     super(props, context);

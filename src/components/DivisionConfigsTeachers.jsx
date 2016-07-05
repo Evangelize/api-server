@@ -32,9 +32,12 @@ class DivisionConfigsTeachers extends Component {
   componentWillMount() {
     const { classes } = this.context.state;
     this.setState({
-      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf(),
-      divisionConfigs: classes.getDivisionConfigs()
+      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
     });
+  }
+
+  componentWillReact() {
+    console.log("divisionConfigsTeachers:componentWillReact", moment().unix());
   }
   
   display(divisionConfig) {
@@ -55,15 +58,16 @@ class DivisionConfigsTeachers extends Component {
   }
   
   render() {
-    const { divisionConfigs } = this.state;
+    const { divisionConfigs } = this.props;
+    console.log("divisionConfigsTeachers:render", moment().unix());
     return (
-      <div>
+      <Col xs={12} sm={12} md={6} lg={6}>
         {divisionConfigs.map((divisionConfig, index) =>
-          <Col xs={12} sm={12} md={6} lg={6} key={divisionConfig.id} style={(this.display(divisionConfig).length) ? null : {display: 'none'}}>
+          
             <DisplayTeachers divisionConfig={divisionConfig} />
-          </Col>
+          
         )}
-      </div>
+      </Col>
     );
   }
 }
