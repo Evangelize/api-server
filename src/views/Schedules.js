@@ -1,7 +1,5 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
-import _ from 'lodash';
-import async from 'async';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
 import { connect } from 'mobx-connect';
@@ -43,7 +41,6 @@ import NavigationExpandMoreIcon from 'material-ui/svg-icons/navigation/expand-mo
 import { Grid, Row, Col } from 'react-bootstrap';
 import NavToolBar from '../components/NavToolBar';
 import DisplayDivisionClasses from '../components/DisplayDivisionClasses';
-import { manageDivisionClassTeacher, getDivisionsConfigs } from '../actions';
 
 @connect
 class Schedules extends Component {
@@ -53,10 +50,6 @@ class Schedules extends Component {
 
   componentWillMount() {
     const { classes } = this.context.state;
-    let divisionConfig = classes.getDivisionConfigs()[0],
-        year = classes.getCurrentDivisionYear(divisionConfig.id),
-        divSchedules = classes.getDivisionSchedules(divisionConfig.id, year.id),
-        schedule = classes.getCurrentDivisionSchedule(divisionConfig.id, year.id);
 
     this.setState({
       fixedHeader: true,
@@ -67,11 +60,13 @@ class Schedules extends Component {
       height: '300px',
       adjustForCheckbox: false,
       displaySelectAll: false,
-      academicYear: year.id,
-      divisionConfig: divisionConfig.id,
-      divSchedules: divSchedules,
-      division: schedule[0].id,
-      schedule: schedule,
+      academicYear: null,
+      divisionConfigs: [],
+      divisionConfig: null,
+      divSchedules: [],
+      division: null,
+      schedule: null,
+      divisionYears: [],
       snackBar: {
         autoHideDuration: 2500,
         message: "No teacher selected",
@@ -82,165 +77,94 @@ class Schedules extends Component {
   }
 
   componentDidMount() {
-
+    this.fetchData();
   }
 
-  getSchedule(config, year) {
-    const { configs } = this.context,
-          state = (config && year) ? false : true;
-    if (state) {
-      const { divisionConfig, academicYear } = this.state;
-    }
-    config = config || divisionConfig;
-    year = year || academicYear;
-    let db = spahql.db(configs.data),
-        schedule = db.select("/*[/id == "+config+"]/divisionYears/*[/id == "+year+"]/divisions/*");
-    if (state) {
-      this.setState({
-        schedule: schedule.values()
-      });
-    } else {
-      return schedule.values();
-    }
-  }
-
-  getClassMeetingDays() {
-    const { configs } = this.context,
-          { divisionConfig, academicYear } = this.state;
-    let db = spahql.db(configs.data),
-        days = db.select("/*[/id == "+divisionConfig+"]/classMeetingDays/*");
-
-    return days.values();
+  fetchData() {
+    const { classes } = this.context.state;
+    let self = this;
+    classes.getDivisionConfigs().then(
+      function(data) {
+        self.setState(
+          {
+            divisionConfigs: data,
+            divisionConfig: data[0].id
+          }
+        );
+        return classes.getCurrentDivisionYear(data[0].id);
+      }
+    ).then(
+      function(data) {
+        self.setState(
+          {
+            year: data,
+            academicYear: data.id
+          }
+        );
+        return classes.getDivisionSchedules(self.state.divisionConfig, self.state.year.id);
+      }
+    ).then(
+      function(data) {
+        self.setState(
+          {
+            divSchedules: data
+          }
+        );
+        return classes.getCurrentDivisionSchedule(self.state.divisionConfig, self.state.year.id);
+      }
+    ).then(
+      function(data) {
+        self.setState(
+          {
+            schedule: data,
+            division: data.id
+          }
+        );
+        return classes.getDivisionYears(self.state.divisionConfig);
+      }
+    ).then(
+      function(data) {
+        self.setState(
+          {
+            divisionYears: data
+          }
+        );
+      }
+    );
   }
 
   selectedYear(event, selectedIndex, value) {
+    let self = this;
     this.setState({academicYear: value});
-    //console.log(menuItem);
+    classes.getDivisionYears(this.state.divisionConfig).then((data) => self.setState({divisionYears: value}));
   }
 
   selectedDivisionConfig(event, selectedIndex, value) {
+    let self = this;
     this.setState({divisionConfig: value});
     //console.log(menuItem);
   }
 
   selectedDivision(event, selectedIndex, value) {
     const { classes } = this.context.state;
+    let self = this;
     this.setState({
-      division: value,
-      schedule: classes.getDivisionSchedule(value, this.state.academicYear)
+      division: value
     });
-    //console.log(menuItem);
-  }
-
-  formatYears() {
-    const { configs } = this.props,
-          { divisionConfig, academicYear } = this.state;
-    let db = spahql.db(configs.data),
-        years = db.select("/*[/id == "+divisionConfig+"]/divisionYears/*").values();
-    //console.log("years", years);
-    return years.map(function(year, index){
-      return {
-        'id': year.id,
-        'year': moment(year.endDate).format("YYYY")
+    classes.getDivisionSchedule(value, self.state.academicYear).then(
+      function(data) {
+        self.setState(
+          {
+            schedule: data
+          }
+        );
       }
-    });
+    );
+    //console.log(menuItem);
   }
 
   formatDateRange(division) {
     return moment(division.start).format("MMM D YYYY") + " - " + moment(division.end).format("MMM D YYYY")
-  }
-
-  getMeetingDays(division) {
-    const { configs } = this.props;
-    let days = configs.data[this.state.divisionConfig].classMeetingDays;
-    return days.map(function(day, index){
-      return {
-        'id': day.id,
-        'year': moment(day.day).format("YYYY")
-      }
-    });
-  }
-
-  renderClassTeachers(divClass, division) {
-    const { classes } = this.context.state;
-    let days = classes.getDivisionMeetingDays(division.divisionConfigId),
-        classTeachers = [];
-    //console.log(divClass);
-    days.forEach(function(day, index){
-      let results = classes.getDivisionClassTeachers(divClass.divisionClass.id, day.day);
-      //console.log("teachers", day.day, results);
-      if (results.length) {
-        classTeachers.push({
-          viewing: false,
-          day: day,
-          id: _.uniqueId(),
-          teachers: results
-        });
-      } else {
-        classTeachers.push({
-          day: day,
-          viewing: false,
-          id: _.uniqueId(),
-          teachers: [{
-            'id': _.uniqueId(),
-            'day': day.day,
-            'divisionClassId': divClass.divisionClass.id,
-            'peopleId': 0,
-            'person': {
-              'lastName': 'Assigned',
-              'firstName': 'Not'
-            },
-            'divClassTeacher': {
-              confirmed: false
-            }
-          }]
-        });
-      }
-    });
-
-    return classTeachers;
-  }
-
-  setAnchor(positionElement, position='bottom') {
-    let {anchorOrigin} = this.state;
-    anchorOrigin[positionElement] = position;
-
-    this.setState({
-      anchorOrigin:anchorOrigin,
-    });
-  }
-
-  setTarget(positionElement, position='bottom') {
-    let {targetOrigin} = this.state;
-    targetOrigin[positionElement] = position;
-
-    this.setState({
-      targetOrigin:targetOrigin,
-    });
-  }
-
-  handleTeacherTouchTap(teacher, divisionClass, e, el) {
-    //console.log(teacher);
-    this.refs.snackbar.setState({
-      teacher: teacher,
-      divClass: divisionClass
-    })
-    this.handleEditDay(divClass, teacher, e);
-  }
-
-  handleSnackbarAction(e) {
-    let { teacher, divClass } = this.refs.snackbar.state;
-    this.handleEditDay(divClass, teacher, e);
-  }
-
-  handleEditDay(divClass, day, e) {
-    let { divisionConfig, academicYear} = this.state,
-        path = "/schedule/" + divisionConfig + "/" + academicYear + "/" + divClass.divisionClass.id + "/" + day.day.day;
-    browserHistory.push(path);
-  }
-
-  listToggle(day, e) {
-    day.viewing = !day.viewing;
   }
 
   getLeftIcon(day) {
@@ -361,7 +285,9 @@ class Schedules extends Component {
         iconMenuStyle = {
           float: 'right',
           verticalAlign: 'top'
-        };
+        },
+        divisionYears = [];
+  
     //console.log("academicYear", this.state.academicYear);
     if (window) {
       const { innerWidth } = window;
@@ -385,17 +311,17 @@ class Schedules extends Component {
               <NavToolBar navLabel="Schedules" goBackTo="/dashboard">
                 <ToolbarGroup key={2} lastChild={true} float="right">
                   <DropDownMenu value={this.state.divisionConfig} ref="divisionConfig" onChange={::this.selectedDivisionConfig} style={{marginRight: "12px"}}>
-                    {classes.getDivisionConfigs().map((config, index) =>
+                    {this.state.divisionConfigs.map((config, index) =>
                       <MenuItem key={index} value={config.id} label={config.title} primaryText={config.title}/>
                     )}
                   </DropDownMenu>
                   <DropDownMenu ref="academicYear" value={this.state.academicYear} onChange={::this.selectedYear} style={{marginRight: "0px"}} >
-                    {::classes.getDivisionYears(this.state.divisionConfig).map((year, index) =>
+                    {this.state.divisionYears.map((year, index) =>
                       <MenuItem key={index} value={year.id} label={moment(year.startDate).format("YYYY")} primaryText={moment(year.startDate).format("YYYY")}/>
                     )}
                   </DropDownMenu>
                   <DropDownMenu ref="divisions" value={this.state.division} onChange={::this.selectedDivision} style={{marginRight: "0px"}} >
-                    {::classes.getDivisionSchedules(this.state.divisionConfig, this.state.academicYear).map((div, index) =>
+                    {this.state.divSchedules.map((div, index) =>
                       <MenuItem key={index} value={div.id} label={div.title} primaryText={div.title}/>
                     )}
                   </DropDownMenu>
@@ -415,14 +341,14 @@ class Schedules extends Component {
                       <MenuItem
                         primaryText="Class Grouping"
                         rightIcon={<ArrowDropRight />}
-                        menuItems={::classes.getDivisionConfigs().map((config, index) =>
+                        menuItems={::this.state.divisionConfigs.map((config, index) =>
                             <MenuItem 
                               checked={(this.state.divisionConfig === config.id) ? true : false}
                               key={config.id} 
                               value={config.id} 
                               label={config.title} 
                               primaryText={config.title} 
-                              onTouchTap={((...args)=>this.itemSelected(config, 'divisionConfig', ...args))} />,
+                              onClick={((...args)=>this.itemSelected(config, 'divisionConfig', ...args))} />,
                           )
                         }
                       />
@@ -430,14 +356,14 @@ class Schedules extends Component {
                       <MenuItem
                         primaryText="Year"
                         rightIcon={<ArrowDropRight />}
-                        menuItems={::classes.getDivisionYears(this.state.divisionConfig).map((year, index) =>
+                        menuItems={this.state.divisionYears.map((year, index) =>
                             <MenuItem
                               checked={(this.state.academicYear === year.id) ? true : false}
                               key={year.id} 
                               value={year.id} 
                               label={moment(year.startDate).format("YYYY")} 
                               primaryText={moment(year.startDate).format("YYYY")}
-                              onTouchTap={((...args)=>this.itemSelected(year, 'academicYear', ...args))} />,
+                              onClick={((...args)=>this.itemSelected(year, 'academicYear', ...args))} />,
                           )
                         }
                       />
@@ -445,15 +371,16 @@ class Schedules extends Component {
                       <MenuItem
                         primaryText="Quarter"
                         rightIcon={<ArrowDropRight />}
-                        menuItems={::classes.getDivisionSchedules(this.state.divisionConfig, this.state.academicYear).map((div, index) =>
+                        menuItems={this.state.divSchedules.map((div, index) =>
                           <MenuItem
                             checked={(this.state.division === div.id) ? true : false}
                             key={div.id} 
                             value={div.id} 
                             label={div.title} 
                             primaryText={div.title}
-                            onTouchTap={((...args)=>this.itemSelected(div, 'division', ...args))} />,
-                        )}
+                            onClick={((...args)=>this.itemSelected(div, 'division', ...args))} />,
+                          )
+                       }
                       />
                       <Divider />
                       <MenuItem value="manage-schedules" primaryText="Manage Schedules" />
@@ -464,32 +391,32 @@ class Schedules extends Component {
           </Col>
         </Row>
         <Row>
-              {::classes.getDivisionSchedule(this.state.division).map((division, index) =>
-              <Col xs={12} sm={12} md={12} lg={12} key={index}>
+              {this.state.schedule &&
+              <Col xs={12} sm={12} md={12} lg={12}>
                 <div style={{marginBottom: "10px"}}>
                   <Card>
                     <CardHeader
-                      title={division.title}
-                      subtitle={this.formatDateRange(division)}
-                      avatar={<Avatar>Q{division.position}</Avatar>}>
+                      title={this.state.schedule.title}
+                      subtitle={this.formatDateRange(this.state.schedule)}
+                      avatar={<Avatar>Q{this.state.schedule.position}</Avatar>}>
                     </CardHeader>
                     <CardMedia>
                       <MediaQuery query='(min-device-width: 1024px)'>
                         <div>
-                          <DisplayDivisionClasses type="table" tableStyle={tableStyle} division={division} classes={classes.getCurrentDivisionClasses(division.id)} />
+                          <DisplayDivisionClasses type="table" tableStyle={tableStyle} division={this.state.schedule} />
                         </div>
                       </MediaQuery>
                       <MediaQuery query='(max-device-width: 1023px)'>
                         <div>
                           <Divider />
-                          <DisplayDivisionClasses type="list" division={division} classes={classes.getCurrentDivisionClasses(division.id)} />
+                          <DisplayDivisionClasses type="list" division={this.state.schedule} />
                         </div>
                       </MediaQuery>
                     </CardMedia>
                   </Card>
                 </div>
               </Col>
-              )}
+              }
         </Row>
       </Grid>
     );

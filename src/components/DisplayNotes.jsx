@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react';
-import _ from 'lodash';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
 import { connect } from 'mobx-connect';
@@ -34,6 +33,7 @@ class DisplayNotes extends Component {
     const { classes } = this.context.state;
     this.setState({
       now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf(),
+      notes: [],
       currentNote: {
         id: null,
         title: null,
@@ -41,6 +41,11 @@ class DisplayNotes extends Component {
       },
       showDialog: false
     });
+  }
+
+  componentDidMount() {
+    const { classes } = this.context.state;
+    this.getNotes();
   }
 
   componentWillReact() {
@@ -114,8 +119,14 @@ class DisplayNotes extends Component {
 
   getNotes() {
     const { classes } = this.context.state;
-    let results = classes.getNotes();
-    return results;
+    let self = this;
+    classes.getNotes().then(
+      function(data) {
+        self.setState({
+          notes: data
+        });
+      }
+    );
   }
   
   render() {
@@ -125,13 +136,13 @@ class DisplayNotes extends Component {
               key={0}
               label="Done"
               primary={true}
-              onTouchTap={::this.handleDialogClose} />
+              onClick={::this.handleDialogClose} />
           ];
     console.log("displayNotes:render", moment().unix());
     return (
       <div>
         <Masonry>
-          {this.getNotes().map((note, index) =>
+          {this.state.notes.map((note, index) =>
             <Col key={note.id} xs={12} sm={6} md={6} lg={6}>
               <Card>
                 <CardTitle title={note.title} style={(note.title) ? null : {display: 'none'}} />
@@ -143,7 +154,7 @@ class DisplayNotes extends Component {
                     tooltipPosition="top-center"
                     tooltip="Delete"
                     iconStyle={{color: "grey"}}
-                    onTouchTap={((...args)=>this.handleNoteDelete(note, ...args))}>
+                    onClick={((...args)=>this.handleNoteDelete(note, ...args))}>
                         delete
                     </IconButton>
                 </div>

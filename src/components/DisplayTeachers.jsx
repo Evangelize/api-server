@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react';
-import _ from 'lodash';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
 import { connect } from 'mobx-connect';
@@ -70,8 +69,9 @@ class DisplayTeachers extends Component {
   }
 
   render() {
-    const { divisionConfig } = this.props;
+    const { divisionConfig, day } = this.props;
     const { classes } = this.state;
+    let today = day || moment().weekday();
     return (
       <Card>
         <CardHeader
@@ -83,7 +83,7 @@ class DisplayTeachers extends Component {
         {classes.map((divClass, index) =>
             <div key={index}>
               <Divider />
-              <RenderTeachers divClass={divClass} day={divClass.class.day} />
+              <RenderTeachers key={divClass.id} divClass={divClass} day={today} />
             </div>
         )}
         </CardMedia>

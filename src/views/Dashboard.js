@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react';
-import _ from 'lodash';
+import { throttle } from 'lodash/fp';
 import moment from 'moment-timezone';
 import Masonry from 'react-masonry-component';
 import Radium from 'radium';
@@ -40,19 +40,16 @@ import Editor from 'react-medium-editor';
 import { Grid, Row, Col } from 'react-bootstrap';
 import { context, resolve } from "react-resolver";
 
-//import 'react-medium-editor/node_modules/medium-editor/dist/css/medium-editor.css';
-//import 'react-medium-editor/node_modules/medium-editor/dist/css/themes/default.css';
 //let Masonry = MasonryCtl(React);
 
 @connect
 class Dashboard extends Component {
   constructor(props, context){
     super(props, context);
-    //this.attendanceUpdate = _.debounce(this.attendanceUpdate, 2000);
   }
 
   resize() {
-    _.throttle(() => {
+    throttle(30)(() => {
       const { masonryOptions } = this.state;
       const graphDiv = this.refs.graphDiv;
       //console.log(graphDiv.clientWidth);
@@ -60,7 +57,7 @@ class Dashboard extends Component {
       this.setState({
           sparklineWidth: graphDiv.offsetWidth - 40
       });
-    }, 30)
+    });
   }
 
   componentDidMount() {
@@ -95,16 +92,6 @@ class Dashboard extends Component {
     let today = moment().weekday();
     settings.authenticated = true;
 
-    this.delayedAttendanceUpdate = _.debounce(function (divClass, count, event) {
-      //console.log(divClass, event.target.value, attendanceDay);
-      classes.updateClassAttendance(divClass.id, today, moment().format('YYYY-MM-DD 00:00:00'), count);
-    }, 500);
-
-    this.delayedNoteUpdate = _.debounce(function (note, changes) {
-      //dispatch(updateNote(note, changes));
-    }, 500);
-
-
     this.setState({
       divisionConfigs: [],
       classMeetingDays: [],
@@ -124,37 +111,6 @@ class Dashboard extends Component {
   handleAttendanceUpdate() {
     let currentValue = select(store.getState());
     //console.log("handleAttendance", currentValue);
-  }
-
-  displayAttendance(divisionConfig) {
-    const { classes } = this.context.state,
-          { now } = this.state;
-    //console.log("displayAttendance", classes);
-    let today = moment().weekday(),
-        division = classes.getCurrentDivision(now),
-        classDay = classes.getCurrentDivisionMeetingDays(divisionConfig, today),
-        divClasses = classes.getCurrentDivisionClasses(division.id);
-    if (!Array.isArray(classDay) && classDay !== null) {
-      classDay = [classDay];
-    } else if (classDay === null) {
-      classDay = [];
-    }
-    let results = classDay.map(function(day, index){
-      day.classes = divClasses;
-      day.config = divisionConfig;
-    });
-    //console.log("classDay", classDay);
-    return classDay;
-  }
-
-  getClasses(divisionConfig) {
-    const { classes } = this.context.state,
-          { now } = this.state;
-    let today = moment().weekday(),
-        division = classes.getCurrentDivision(now),
-        classDay = classes.getCurrentDivisionMeetingDays(divisionConfig, today),
-        divClasses = classes.getCurrentDivisionClasses(division.id);
-    return divClasses;
   }
 
   displayTeachers(divClass) {
@@ -285,7 +241,17 @@ class Dashboard extends Component {
         <Grid fluid={true}>
           {isClassDay && <DivisionConfigsAttendance divisionConfigs={this.state.divisionConfigs} date={now} />}
           <Masonry className={"row"} options={masonryOptions}>
-            
+            {this.state.classMeetingDays.map((day, index) =>
+              <Col xs={12} sm={12} md={6} lg={6} key={index}>
+                <DashboardMediumGraph
+                  title={moment().weekday(day.day).format("dddd") + " Attendance"}
+                  subtitle={"Past 8 weeks"}
+                  avatar={<Avatar>A</Avatar>}
+                  lineChartData={::this.getGraphAttendance(day.day, 8)}
+                  lineChartOptions={lineChartOptions}
+                />
+              </Col>
+            )}
             {isClassDay && <DivisionConfigsTeachers divisionConfigs={this.state.divisionConfigs} />}
             <Col xs={12} sm={12} md={6} lg={6}>
               {this.state.classMeetingDays.map((day, index) =>
@@ -318,7 +284,7 @@ class Dashboard extends Component {
                   <RaisedButton
                     label="Add Note"
                     secondary={true}
-                    onTouchTap={::this.handleNewNote}
+                    onClick={::this.handleNewNote}
                   />
                 </ToolbarGroup>
               </Toolbar>

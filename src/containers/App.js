@@ -113,7 +113,7 @@ class App extends Component {
         <div style={{display: (settings.authenticated) ? "block": "none"}}>
           <AppBar
             title="Evangelize"
-            iconElementLeft={<IconButton onTouchTap={::this.showLeftNavClick}><NavigationMenu /></IconButton>}>
+            iconElementLeft={<IconButton onClick={::this.showLeftNavClick}><NavigationMenu /></IconButton>}>
             <MediaQuery query='(min-device-width: 1024px)'>
               <div style={brandingStyle}>
                 <h6>Twin City church of Christ</h6>
@@ -136,7 +136,7 @@ class App extends Component {
             </div>
 
             <List>
-              <ListItem primaryText="Dashboard" onTouchTap={((...args)=>this.handleLeftNavChange("/dashboard", ...args))} />
+              <ListItem primaryText="Dashboard" onClick={((...args)=>this.handleLeftNavChange("/dashboard", ...args))} />
               <ListItem
                 primaryText="Class Management"
                 initiallyOpen={true}
@@ -144,28 +144,28 @@ class App extends Component {
                 nestedItems={[
                   <ListItem
                     key={1}
-                    onTouchTap={((...args)=>this.handleLeftNavChange("/attendance", ...args))}
+                    onClick={((...args)=>this.handleLeftNavChange("/attendance", ...args))}
                     primaryText="Attendance"
                   />,
                   <ListItem
                     key={2}
-                    onTouchTap={((...args)=>this.handleLeftNavChange("/classes", ...args))}
+                    onClick={((...args)=>this.handleLeftNavChange("/classes", ...args))}
                     primaryText="Classes"
                   />,
                   <ListItem
                     key={3}
-                    onTouchTap={((...args)=>this.handleLeftNavChange("/teachers", ...args))}
+                    onClick={((...args)=>this.handleLeftNavChange("/teachers", ...args))}
                     primaryText="Teachers"
                   />,
                   <ListItem
                     key={4}
-                    onTouchTap={((...args)=>this.handleLeftNavChange("/schedules", ...args))}
+                    onClick={((...args)=>this.handleLeftNavChange("/schedules", ...args))}
                     primaryText="Schedules"
                   />,
                 ]}
               />
-              <ListItem value={"/people"} primaryText="Members" onTouchTap={((...args)=>this.handleLeftNavChange("/people", ...args))} />
-              <ListItem value={"/settings"} primaryText="Settings" onTouchTap={((...args)=>this.handleLeftNavChange("/settings", ...args))} />
+              <ListItem value={"/people"} primaryText="Members" onClick={((...args)=>this.handleLeftNavChange("/people", ...args))} />
+              <ListItem value={"/settings"} primaryText="Settings" onClick={((...args)=>this.handleLeftNavChange("/settings", ...args))} />
             </List>
           </Drawer>
         </div>

@@ -1,5 +1,6 @@
 import React, { Component, PropTypes } from 'react';
-import _ from 'lodash';
+import { uniqueId } from 'lodash/fp';
+import each from 'async/each';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
 import { connect } from 'mobx-connect';
@@ -38,56 +39,95 @@ class DisplayDivisionClass extends Component {
  
   componentWillMount() {
     this.setState({
-      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
+      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf(),
+      meetingDays: [],
+      division: null,
+      teachers: []
     });
+  }
+
+  componentDidMount() {
+    console.log("DisplayDivisionClass:componentDidMount", moment().format("X"));
+    this.fetchData();
+  }
+
+  componentWillReact() {
+    console.log("DisplayDivisionClass:componentWillReact", moment().format("X"));
+  }
+
+  componentDidUpdate() {
+    console.log("DisplayDivisionClass:componentDidUpdate", moment().format("X"));
+    //this.fetchData();
+  }
+
+  componentWillReceiveProps(props) {
+    console.log("DisplayDivisionClass:componentWillReceiveProps", moment().format("X"));
+    this.fetchData(props);
+  }
+
+  fetchData(props) {
+    props = props || this.props;
+    const divClass = props.class;
+    const { classes } = this.context.state;
+    let self = this;
+    classes.getDivision(divClass.divisionClass.divisionId).then(
+      (data) => {
+        self.setState({division: data});
+        return classes.getDivisionMeetingDays(data.divisionConfigId);
+      }
+    ).then(
+      (data) => {
+        let classTeachers = [];
+        self.setState({meetingDays: data});
+        each(
+          self.state.meetingDays,
+          function(day, callback){
+            classes.getDivisionClassTeachers(divClass.divisionClass.id, day.day).then(
+              function(data) {
+                //console.log("teachers", day.day, results);
+                if (data.length) {
+                  classTeachers.push({
+                    viewing: false,
+                    day: day,
+                    id: divClass.divisionClass.id,
+                    teachers: data
+                  });
+                } else {
+                  classTeachers.push({
+                    day: day,
+                    viewing: false,
+                    id: divClass.divisionClass.id,
+                    teachers: [{
+                      'id': uniqueId(),
+                      'day': day.day,
+                      'divisionClassId': divClass.divisionClass.id,
+                      'peopleId': 0,
+                      'person': {
+                        'lastName': 'Assigned',
+                        'firstName': 'Not'
+                      },
+                      'divClassTeacher': {
+                        confirmed: false
+                      }
+                    }]
+                  });
+                }
+                callback();
+              }
+            );
+          },
+          function(err) {
+            self.setState({teachers: classTeachers});
+          }
+        );
+      }
+    );
   }
 
   handleEditDay(divClass, day, e) {
     let { divisionConfig, academicYear} = this.state,
         path = "/schedule/" + divisionConfig + "/" + academicYear + "/" + divClass.divisionClass.id + "/" + day.day.day;
     browserHistory.push(path);
-  }
-  
-  renderClassTeachers() {
-    const divClass = this.props.class;
-    const { classes } = this.context.state;
-    let division = classes.getDivision(divClass.divisionClass.divisionId),
-        days = classes.getDivisionMeetingDays(division.divisionConfigId),
-        classTeachers = [];
-    //console.log(divClass);
-    days.forEach(function(day, index){
-      let results = classes.getDivisionClassTeachers(divClass.divisionClass.id, day.day);
-      //console.log("teachers", day.day, results);
-      if (results.length) {
-        classTeachers.push({
-          viewing: false,
-          day: day,
-          id: _.uniqueId(),
-          teachers: results
-        });
-      } else {
-        classTeachers.push({
-          day: day,
-          viewing: false,
-          id: _.uniqueId(),
-          teachers: [{
-            'id': _.uniqueId(),
-            'day': day.day,
-            'divisionClassId': divClass.divisionClass.id,
-            'peopleId': 0,
-            'person': {
-              'lastName': 'Assigned',
-              'firstName': 'Not'
-            },
-            'divClassTeacher': {
-              confirmed: false
-            }
-          }]
-        });
-      }
-    });
-
-    return classTeachers;
   }
 
   render() {
@@ -107,7 +147,7 @@ class DisplayDivisionClass extends Component {
             <h6><a style={{color: Colors.deepOrange500}} href="">{divisionClass.class.title}</a></h6>
             <p style={{color: Colors.grey600}}>{divisionClass.class.description}</p>
           </TableRowColumn>
-          {::this.renderClassTeachers().map((teacherDay, index) =>
+          {this.state.teachers.map((teacherDay, index) =>
             <TableRowColumn key={teacherDay.id}>
               {teacherDay.teachers.map((teacher, index) =>
                 <div key={index} style={{width: "100%", clear: "both"}}>
@@ -116,7 +156,7 @@ class DisplayDivisionClass extends Component {
                       float: "left"
                     }}
                     touch={true}
-                    onTouchTap={((...args)=>this.confirmTeacher(divisionClass, teacherDay, teacher, ...args))}>
+                    onClick={((...args)=>this.confirmTeacher(divisionClass, teacherDay, teacher, ...args))}>
                   <ActionGrade
                     color={(teacher.divClassTeacher.confirmed) ? Colors.deepOrange500 : Colors.grey400} />
                   </IconButton>
@@ -127,7 +167,7 @@ class DisplayDivisionClass extends Component {
                     }}
                     label={teacher.person.firstName+" "+teacher.person.lastName}
                     secondary={true}
-                    onTouchTap={(...args) =>this.handleEditDay(divisionClass, teacherDay, ...args)}
+                    onClick={(...args) =>this.handleEditDay(divisionClass, teacherDay, ...args)}
                     labelPosition="after" />
                 </div>
               )}
@@ -139,7 +179,7 @@ class DisplayDivisionClass extends Component {
       return (
         <div>
           <Subheader>{divisionClass.class.title}</Subheader>
-          {::this.renderClassTeachers().map((teacherDay, index) =>
+          {this.state.teachers.map((teacherDay, index) =>
             <ListItem
                 key={teacherDay.id}
                 primaryText={moment().isoWeekday(teacherDay.day.day).format("dddd")}
@@ -158,7 +198,7 @@ class DisplayDivisionClass extends Component {
                     primaryText={teacher.person.firstName+" "+teacher.person.lastName}
                     leftIcon={
                       <ActionGrade
-                      onTouchTap={((...args)=>this.confirmTeacher(divisionClass, teacherDay, teacher, ...args))}
+                      onClick={((...args)=>this.confirmTeacher(divisionClass, teacherDay, teacher, ...args))}
                       color={(teacher.divClassTeacher.confirmed) ? Colors.deepOrange500 : Colors.grey400} />
                     } />,
                 )}

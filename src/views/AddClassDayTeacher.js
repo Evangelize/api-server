@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
-import _ from 'lodash';
 import async from 'async';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
@@ -240,14 +239,14 @@ class AddClassDayTeacher extends Component {
                       primaryText={teacher.person.lastName+", "+teacher.person.firstName}
                       leftIcon={
                         <ActionGrade
-                          onTouchTap={((...args)=>this.confirmTeacher(divClass, teacherDay, teacher, ...args))}
+                          onClick={((...args)=>this.confirmTeacher(divClass, teacherDay, teacher, ...args))}
                           style={{ fill: (teacher.divClassTeacher.confirmed) ? Colors.deepOrange500 : Colors.grey400}} />
                       }
                       rightIconButton={
                         <IconMenu iconButtonElement={iconButtonElement}>
-                          <MenuItem style={(teacher.divClassTeacher.confirmed) ? null : {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'unconfirm', ...args))}>Unconfirm</MenuItem>
-                          <MenuItem style={(!teacher.divClassTeacher.confirmed) ? null : {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'confirm', ...args))}>Confirm</MenuItem>
-                          <MenuItem style={(teacher.divClassTeacher.id) ? null: {display: 'none'}} onTouchTap={((...args)=>this.menuItemTap(teacher, 'delete', ...args))}>Delete</MenuItem>
+                          <MenuItem style={(teacher.divClassTeacher.confirmed) ? null : {display: 'none'}} onClick={((...args)=>this.menuItemTap(teacher, 'unconfirm', ...args))}>Unconfirm</MenuItem>
+                          <MenuItem style={(!teacher.divClassTeacher.confirmed) ? null : {display: 'none'}} onClick={((...args)=>this.menuItemTap(teacher, 'confirm', ...args))}>Confirm</MenuItem>
+                          <MenuItem style={(teacher.divClassTeacher.id) ? null: {display: 'none'}} onClick={((...args)=>this.menuItemTap(teacher, 'delete', ...args))}>Delete</MenuItem>
                         </IconMenu>
                       }
                       primaryText={teacher.person.lastName+', '+teacher.person.firstName} >
@@ -263,7 +262,7 @@ class AddClassDayTeacher extends Component {
                       key={index}
                       rightIconButton={
                         <IconMenu iconButtonElement={iconButtonElement}>
-                          <MenuItem onTouchTap={((...args)=>this.menuItemTap(person, 'add', ...args))}>Add</MenuItem>
+                          <MenuItem onClick={((...args)=>this.menuItemTap(person, 'add', ...args))}>Add</MenuItem>
                         </IconMenu>
                       }
                       primaryText={person.lastName+', '+person.firstName} >

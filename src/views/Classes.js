@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
-import _ from 'lodash';
 import async from 'async';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
@@ -98,7 +97,7 @@ class Classes extends Component {
                   <RaisedButton
                     label="Add Class"
                     secondary={true}
-                    onTouchTap={::this.handleNewClass}
+                    onClick={::this.handleNewClass}
                   />
                 </ToolbarGroup>
               </NavToolBar>

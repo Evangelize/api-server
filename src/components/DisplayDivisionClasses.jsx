@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react';
-import _ from 'lodash';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
 import { connect } from 'mobx-connect';
@@ -31,8 +30,45 @@ class DisplayDivisionClasses extends Component {
  
   componentWillMount() {
     this.setState({
-      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
+      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf(),
+      meetingDays: [],
+      classes: []
     });
+  }
+
+  componentDidMount() {
+    console.log("DisplayDivisionClasses:componentDidMount", moment().format("X"));
+    this.fetchData();
+  }
+
+  componentWillReact() {
+    console.log("DisplayDivisionClasses:componentWillReact", moment().format("X"));
+  }
+
+  componentDidUpdate() {
+    console.log("DisplayDivisionClasses:componentDidUpdate", moment().format("X"));
+    //this.fetchData();
+  }
+
+  componentWillReceiveProps(props) {
+    console.log("DisplayDivisionClasses:componentWillReceiveProps", moment().format("X"));
+    this.fetchData(props);
+  }
+
+  fetchData(props) {
+    props = props || this.props;
+    const { classes } = this.context.state;
+    let self = this;
+    classes.getDivisionMeetingDays(props.division.divisionConfigId).then(
+      (data) => {
+        self.setState({meetingDays: data})
+        return classes.getCurrentDivisionClasses(props.division.id)
+      }
+    ).then(
+      (data) => {
+        self.setState({classes: data})
+      }
+    );
   }
 
   render() {
@@ -52,7 +88,7 @@ class DisplayDivisionClasses extends Component {
             enableSelectAll={this.props.tableStyle.enableSelectAll}>
             <TableRow>
               <TableHeaderColumn>Class</TableHeaderColumn>
-              {::classes.getDivisionMeetingDays(this.props.division.divisionConfigId).map((day, index) =>
+              {this.state.meetingDays.map((day, index) =>
                 <TableHeaderColumn key={day.id}>{moment().isoWeekday(day.day).format("dddd")}</TableHeaderColumn>
               )}
             </TableRow>
@@ -62,8 +98,8 @@ class DisplayDivisionClasses extends Component {
             deselectOnClickaway={this.props.tableStyle.deselectOnClickaway}
             showRowHover={this.props.tableStyle.showRowHover}
             stripedRows={this.props.tableStyle.stripedRows}>
-            {this.props.classes.map((divisionClass, index) =>
-              <DisplayDivisionClass class={divisionClass} type={this.props.type} />
+            {this.state.classes.map((divisionClass, index) =>
+              <DisplayDivisionClass key={divisionClass.id} class={divisionClass} type={this.props.type} />
             )}
           </TableBody>
         </Table>
@@ -71,8 +107,8 @@ class DisplayDivisionClasses extends Component {
     } else {
       return (
         <List>
-          {this.props.classes.map((divisionClass, index) =>
-            <DisplayDivisionClass class={divisionClass} type={this.props.type} />
+          {this.state.classes.map((divisionClass, index) =>
+            <DisplayDivisionClass key={divisionClass.id} class={divisionClass} type={this.props.type} />
           )}
         </List>
       );
