@@ -128,7 +128,7 @@ class Attendance extends Component {
                         <ListItem
                           key={index}
                           rightAvatar={<Avatar>{day.count}</Avatar>}
-                          onTouchTap={((...args)=>this.handleEditAttendance(day, index, ...args))}
+                          onClick={((...args)=>this.handleEditAttendance(day, index, ...args))}
                           primaryText={moment(day.date, "x").format("dddd")}
                           secondaryText={moment(day.date, "x").format("MMMM Do YYYY")} />
                       </div>

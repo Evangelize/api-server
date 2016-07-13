@@ -32,7 +32,7 @@ module.exports = [
                 issuer: 'evangelizeIo',
                 algorithm: 'RS256'
               },
-              function(token) {
+              function(err, token) {
                 let payload = {
                   user: results,
                   jwt: token
