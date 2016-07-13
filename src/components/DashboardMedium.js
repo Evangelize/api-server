@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react';
-import _ from 'lodash';
 import { observer } from "mobx-react";
 import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
@@ -23,15 +22,6 @@ class DashboardMedium extends Component {
   }
 
   resize() {
-    _.throttle(() => {
-      /**
-      const graphDiv = this.refs.graphDiv;
-      console.log(graphDiv.clientWidth);
-      this.setState({
-          sparklineWidth: graphDiv.offsetWidth - 40
-      });
-      **/
-    }, 30)
   }
 
   componentDidMount() {

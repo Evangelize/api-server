@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
-import _ from 'lodash';
 import waterfall from 'async/waterfall';
 import momentFquarter from 'moment-fquarter';
 import moment from 'moment-timezone';

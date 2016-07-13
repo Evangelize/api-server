@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react';
 import { findDOMNode } from 'react-dom';
-import _ from 'lodash';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
 import { connect } from 'mobx-connect';
@@ -41,7 +40,7 @@ class Class extends Component {
         key={item.id} >
         <Divider />
         <ListItem
-            onTouchTap={((...args)=>this.navigate("/classes/"+item.id, ...args))}
+            onClick={((...args)=>this.navigate("/classes/"+item.id, ...args))}
             primaryText={item.title}
         />
       </div>

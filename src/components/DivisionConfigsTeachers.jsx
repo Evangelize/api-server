@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react';
-import _ from 'lodash';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
 import { connect } from 'mobx-connect';
@@ -40,23 +39,6 @@ class DivisionConfigsTeachers extends Component {
     console.log("divisionConfigsTeachers:componentWillReact", moment().unix());
   }
   
-  display(divisionConfig) {
-    const { classes } = this.context.state,
-          { now } = this.state;
-    //console.log("displayAttendance", classes);
-    let today = moment().weekday(),
-        division = classes.getCurrentDivision(now),
-        classDay = classes.getCurrentDivisionMeetingDays(divisionConfig, today),
-        divClasses = classes.getCurrentDivisionClasses(division.id);
-    if (!Array.isArray(classDay) && classDay !== null) {
-      classDay = [classDay];
-    } else if (classDay === null) {
-      classDay = [];
-    }
-    //console.log("classDay", classDay);
-    return classDay;
-  }
-  
   render() {
     const { divisionConfigs } = this.props;
     console.log("divisionConfigsTeachers:render", moment().unix());
@@ -64,7 +46,7 @@ class DivisionConfigsTeachers extends Component {
       <Col xs={12} sm={12} md={6} lg={6}>
         {divisionConfigs.map((divisionConfig, index) =>
           
-            <DisplayTeachers divisionConfig={divisionConfig} />
+            <DisplayTeachers divisionConfig={divisionConfig} key={divisionConfig.id} />
           
         )}
       </Col>

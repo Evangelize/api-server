@@ -5,10 +5,8 @@ import waterfall from 'async/waterfall';
 import Promise from 'bluebird';
 import io from 'socket.io-client';
 import moment from 'moment';
-import loki from 'lokijs';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import reactCookie from 'react-cookie';
-import jwt from 'jsonwebtoken';
 import Provider from './components/Provider';
 import Db from './stores/db';
 import Classes from './stores/classes';
@@ -67,11 +65,16 @@ waterfall(
           }
         );
       } else {
-        db = new Db(window.dbJson);
-        settings = new Settings();
-        settings.authenticated = false;
-        classes = new Classes(db);
-        callback(null);
+        db = new Db();
+        db.init(window.dbJson).then(
+          function(data) {
+            settings = new Settings();
+            settings.authenticated = false;
+            classes = new Classes(db);
+            callback(null);
+          }
+        );
+        
       }
       
     },

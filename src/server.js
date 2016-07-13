@@ -6,8 +6,10 @@ import path from 'path';
 import async from 'async';
 import nconf from 'nconf';
 import etag from 'etag';
-import loki from 'lokijs';
 import Cron from 'cron';
+import { toJSON } from 'mobx';
+import mobxstore from 'mobx-store';
+import { filter, map, pick, sortBy, take } from 'lodash/fp';
 
 
 // Hapi server imports
@@ -221,9 +223,10 @@ export default function( HOST, PORT, callback ) {
       const location = createLocation( request.path );
       let authenticated = false,
           retFunc = function(data, person) {
-            console.log(authenticated);
             const _data = Object.assign({}, data);
             const finalDb = JSON.stringify(_data);
+            const store = mobxstore(_data);
+            const finalMobx = JSON.stringify(store.object);
             const db = new Db();
             let classes, appSettings, routes, context;
             async.waterfall(
@@ -278,6 +281,7 @@ export default function( HOST, PORT, callback ) {
                           <script>
                             var wsUri = '${websocketUri}',
                                 dbJson = ${finalDb},
+                                mobxStore = ${finalMobx},
                                 user = '${JSON.stringify({person: person})}';
                           </script>
                           <meta charset="utf-8">

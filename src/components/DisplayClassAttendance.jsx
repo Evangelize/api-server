@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react';
-import _ from 'lodash';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
 import { connect } from 'mobx-connect';

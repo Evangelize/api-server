@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react';
-import _ from 'lodash';
 import { observer } from "mobx-react";
 import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
@@ -115,7 +114,7 @@ class Login extends Component {
                 onChange={((...args)=>this.handleChange("password", ...args))}
               /><br/>
               <br/>
-              <RaisedButton label="Login" primary={true} onTouchTap={((...args)=>this.login(...args))} />
+              <RaisedButton label="Login" primary={true} onClick={((...args)=>this.login(...args))} />
             </div>
           </div>
         </div>

@@ -1,13 +1,11 @@
 import { extendObservable, observable, computed, autorun, isObservable, isObservableMap, map } from "mobx";
-import _ from 'lodash';
-import loki from 'lokijs';
 import moment from 'moment-timezone';
 import api from '../api';
 import * as types from '../constants';
 import conv from 'binstring';
 import iouuid from 'innodb-optimized-uuid';
 import reactCookie from 'react-cookie';
-import jwt from 'jsonwebtoken';
+import jwtDecode from 'jwt-decode';
 
 export default class Settings {
   @observable authenticated = false;
@@ -52,7 +50,7 @@ export default class Settings {
     api.auth.login(email, password)
     .then(
       function(result) {
-        let token = jwt.decode(result.jwt);
+        let token = jwtDecode(result.jwt);
         reactCookie.save(
           'accessToken',
           result.jwt,

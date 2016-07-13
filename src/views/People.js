@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react';
-import _ from 'lodash';
 import { observer } from "mobx-react";
 import { connect } from 'mobx-connect';
 import { browserHistory } from 'react-router';
@@ -102,7 +101,7 @@ class People extends Component {
             <nav className={"grey darken-1"}>
               <div className={"nav-wrapper"}>
                 <div style={{margin: "0 0.5em"}}>
-                  <a href="#!" onTouchTap={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
+                  <a href="#!" onClick={((...args)=>this.navigate("/dashboard", ...args))} className={"breadcrumb"}>Dashboard</a>
                   <a className={"breadcrumb"}>Members</a>
                 </div>
               </div>

@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
-import _ from 'lodash';
 import async from 'async';
 import moment from 'moment-timezone';
 import { observer } from "mobx-react";
@@ -52,7 +51,6 @@ class Attendance extends Component {
 
   handleEditAttendance(day, index, e) {
     const { configs } = this.props;
-    //let db = spahql.db(configs.data);
     let path = "/attendance/" + day.date;
     this.navigate(path);
   }

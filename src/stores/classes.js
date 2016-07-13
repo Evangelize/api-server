@@ -1,6 +1,5 @@
-import { extendObservable, observable, autorun, isObservable, isObservableMap, map, computed } from "mobx";
-import _ from 'lodash';
-import loki from 'lokijs';
+import { extendObservable, observable, autorun, isObservable, isObservableMap, computed, toJS } from "mobx";
+import { filter, pick, sortBy, take, first, map, reverse, find } from 'lodash/fp';
 import moment from 'moment-timezone';
 import waterfall from 'async/waterfall';
 import api from '../api';
@@ -50,11 +49,12 @@ export default class Classes {
   getDivisionConfigs() {
     let self = this;
     return new Promise(function(resolve, reject){
-      //console.log( this.db.collections.divisionConfigs.data);
-      let records = self.db.collections.divisionConfigs.chain()
-          .find({deletedAt: null})
-          .data();
-      //console.log("years", years);
+      let records = self.db.store(
+            'divisionConfigs', 
+            [
+              filter((x) => x.deletedAt === null)
+            ]
+          );
       resolve(records);
     });
   }
@@ -62,66 +62,94 @@ export default class Classes {
   getDivisionConfig(id) {
     let self = this;
     return new Promise(function(resolve, reject){
-      //console.log( this.db.collections.divisionConfigs.data);
-      let record = self.db.collections.divisionConfigs
-          .findOne(
-            {
-              id: id,
-              deletedAt: null
-            }
+      let record = self.db.store(
+            'divisionConfigs', 
+            [
+              filter((x) => x.deletedAt === null && x.id === id),
+              first
+            ]
           );
-      //console.log("years", years);
       resolve(record);
     });
   }
   
   async getClasses() {
-    let classes = await this.db.collections.classes.chain()
-        .find({deletedAt: null})
-        .simplesort("order")
-        .data();
+    let records = await this.db.store(
+            'classes', 
+            [
+              sortBy('order')
+            ]
+          );
     //console.log("years", years);
-    return classes;
+    return records;
   }
 
   async getDivisionYears(divisionConfigId) {
-    let years = await this.db.collections.divisionYears.chain()
-        .find({$and:[{divisionConfigId: divisionConfigId}, {deletedAt: null}]})
-        .simplesort("endDate")
-        .data();
+    let records = await this.db.store(
+            'divisionYears', 
+            [
+              filter((x) => x.deletedAt === null && x.divisionConfigId=== divisionConfigId),
+              sortBy('endDate')
+            ]
+          );
     //console.log("years", years);
-    return years;
+    return records;
   }
 
-  async getDivision(divisionId) {
-    let division = await this.db.collections.divisions
-        .findOne({$and:[{id: divisionId}, {deletedAt: null}]});
-    //console.log("years", years);
-    return division;
+  getDivision(id) {
+    let self = this;
+    return new Promise(function(resolve, reject){
+      let record = self.db.store(
+              'divisions', 
+              [
+                filter((x) => x.deletedAt === null && x.id === id),
+                first
+              ]
+            );
+      resolve(record);
+    });
   }
 
-  async getCurrentDivisionYear(divisionConfigId) {
-    let now = moment().valueOf(),
-        year = await this.db.collections.divisionYears.chain()
-                .find({$and: [{endDate: {$gte: now}}, {startDate: {$lte: now}}, {divisionConfigId: divisionConfigId}, {deletedAt: null}]})
-                .data();
-    //console.log("year", year);
-    return year[0];
+  getCurrentDivisionYear(divisionConfigId) {
+    let self = this;
+    return new Promise(function(resolve, reject){
+      let now = moment().valueOf(),
+          record = self.db.store(
+            'divisionYears', 
+            [
+              filter((x) => x.deletedAt === null && x.endDate >= now && x.startDate <= now && x.divisionConfigId === divisionConfigId),
+              first
+            ]
+          );
+      //console.log("year", year);
+      resolve(record);
+    });
   }
 
   async getDivisionScheduleOrdered(configId, yearId) {
-    configId = configId || this.db.collections.divisionConfig.data[0];
+    configId = configId || this.db.store(
+        'divisionConfigs', 
+        [
+          first
+        ]
+      );
     let now = moment().valueOf(),
         schedule, future = [], past = [];
     if (!yearId) {
-      yearId = await this.db.collections.divisionYears.chain()
-                .find({$and: [{endDate: {$gte: now}}, {startDate: {$lte: now}}, {divisionConfigId: configId}, {deletedAt: null}]})
-                .data()[0].id;
+      yearId = await this.db.store(
+        'divisionYears', 
+        [
+          filter((x) => x.deletedAt === null && x.endDate >= now && x.startDate <= now && x.divisionConfigId === configId),
+          first
+        ]
+      ).id;
     }
-    schedule = await this.db.collections.divisions.chain()
-                .find({$and: [{divisionYear: yearId}, {divisionConfigId: configId}, {deletedAt: null}]})
-                .data();
-
+    schedule = await this.db.store(
+      'divisions', 
+      [
+        filter((x) => x.deletedAt === null && x.divisionYear >= yearId && x.divisionConfigId === configId),
+      ]
+    );
     schedule.forEach(function(div){
       if (moment(div.end).isSameOrAfter()) {
         future.push(div);
@@ -129,55 +157,68 @@ export default class Classes {
         past.push(div);
       }
     });
-    future = await _.sortBy(future, 'end');
-    past = await _.sortBy(past, 'end');
+    future = await sortBy(future)('end');
+    past = await sortBy(past)('end');
     schedule = await future.concat(past)
     //console.log("schedule", schedule);
     return schedule;
   }
 
   async getDivisionSchedules(configId, yearId) {
-    let schedules;
-    schedules = await this.db.collections.divisions.chain()
-                .find({$and: [{divisionYear: yearId}, {divisionConfigId: configId}, {deletedAt: null}]})
-                .simplesort("end")
-                .data();
-    return schedules;
+    let records = await this.db.store(
+            'divisions', 
+            [
+              filter((x) => x.deletedAt === null && x.divisionYear === yearId && x.divisionConfigId === configId),
+              sortBy('end')
+            ]
+          );
+    return records;
   }
 
   async getCurrentDivisionSchedule(configId, yearId) {
-    let now = moment().valueOf(),
-        schedule;
-    schedule = await this.db.collections.divisions.chain()
-                .find({$and: [{end: {$gte: now}}, {start: {$lte: now}}, {divisionYear: yearId}, {divisionConfigId: configId}, {deletedAt: null}]})
-                .data();
-    return schedule;
+    let now = moment().valueOf();
+    let records = await this.db.store(
+          'divisions', 
+          [
+            filter((x) => x.deletedAt === null && x.end >= now && x.start <= now && x.divisionYear === yearId && x.divisionConfigId === configId),
+            sortBy('end'),
+            first
+          ]
+        );
+    return records;
   }
 
   async getDivisionSchedule(id) {
     let now = moment().valueOf(),
         schedule;
-    schedule = await this.db.collections.divisions.chain()
-                .find({$and: [{id: id}, {deletedAt: null}]})
-                .data();
-    return schedule;
+    let record = await this.db.store(
+          'divisions', 
+          [
+            filter((x) => x.deletedAt === null && x.id === id),
+            sortBy('end'),
+            first
+          ]
+        );
+    return record;
   }
 
   latestAttendance(day, length) {
     //console.log(day, length);
     let now = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(length, "week").valueOf(),
-        latest = this.db.collections.divisionClassAttendance.chain()
-          .find({$and:[{attendanceDate: {$gte: now}}, {day: day}, {deletedAt: null}]})
-          .simplesort("attendanceDate")
-          .data()
-          .reduce(
-            function(map, d){
-              map[d.attendanceDate] = (map[d.attendanceDate] || 0) + d.count;
-              return map;
-            },
-            Object.create(null)
-          ),
-      result = Object.keys(latest).map(function(k) { return {attendance: latest[k], attendanceDate: parseInt(k, 10)}; });
+        latest = this.db.store(
+          'divisionClassAttendance', 
+          [
+            filter((x) => x.deletedAt === null && x.attendanceDate >= now && x.day === day),
+            sortBy('attendanceDate')
+          ]
+        ).reduce(
+          function(map, d){
+            map[d.attendanceDate] = (map[d.attendanceDate] || 0) + d.count;
+            return map;
+          },
+          Object.create(null)
+        ),
+        result = Object.keys(latest).map(function(k) { return {attendance: latest[k], attendanceDate: parseInt(k, 10)}; });
     return result;
   }
 
@@ -186,14 +227,15 @@ export default class Classes {
     begin = begin || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(4, "week").valueOf();
     end = end || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD HH:mm:ss')).valueOf();
 
-    let divClass = this.db.collections.divisionClassAttendance;
-    let latest = this.db.collections.divisionClassAttendance.chain()
-        .find({$and: [{attendanceDate: {$gte: begin}}, {attendanceDate: {$lte: end}}, {day: day}, {deletedAt: null}]})
-        .simplesort("attendanceDate")
-        .data()
-        .reduce(
-          function(map, day){
-            map[day.attendanceDate] = (map[day.attendanceDate] || 0) + day.count;
+    let latest = this.db.store(
+          'divisionClassAttendance', 
+          [
+            filter((x) => x.deletedAt === null && x.attendanceDate >= begin && x.attendanceDate <= end && x.day === day),
+            sortBy('attendanceDate')
+          ]
+        ).reduce(
+          function(map, d){
+            map[d.attendanceDate] = (map[d.attendanceDate] || 0) + d.count;
             return map;
           },
           Object.create(null)
@@ -218,23 +260,12 @@ export default class Classes {
     date = date || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
     let self = this;
     return computed(() => {
-      let attendance = self.db.collections.divisionClassAttendance.chain()
-          .find(
-            {
-              $and: [
-                {
-                  attendanceDate: {$gte: date}
-                },
-                {
-                  divisionClassId: {$eq: classId}
-                },
-                {
-                  deletedAt: null
-                }
-              ]
-            }
-          )
-          .data();
+      let attendance = self.db.store(
+        'divisionClassAttendance', 
+        [
+          filter((x) => x.deletedAt === null && x.attendanceDate >= date && x.divisionClassId === classId)
+        ]
+      );
       if (attendance.length && attendance[0].count) {
         return attendance[0].count.toString();
       } else {
@@ -244,38 +275,30 @@ export default class Classes {
   }
 
   async getClassAttendanceToday(classId) {
-    let today = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')),
-        attendance = await this.db.collections.divisionClassAttendance.chain()
-        .find(
-          {
-            $and: [
-              {
-                attendanceDate: {$gte: today}
-              },
-              {
-                divisionClassId: {$eq: classId}
-              },
-              {
-                deletedAt: null
-              }
-            ]
-          }
-        )
-        .data();
-    return attendance;
+    let today = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD'));
+    let records = await this.db.store(
+          'divisionClassAttendance', 
+          [
+            filter((x) => x.deletedAt === null && x.divisionClassId === classId && x.attendanceDate >= today)
+          ]
+        );
+    return records;
   }
 
   getDailyAttendance(startMonth, endMonth) {
     startMonth = startMonth || moment(moment().format("MM/01/YYYY")+" 00:00:00").subtract(3, "month")
     endMonth = endMonth || moment(moment().format("MM/01/YYYY")+" 00:00:00").valueOf();
     let dailyAttendance = [],
-        latest = this.db.collections.divisionClassAttendance.chain()
-        .find({$and: [{attendanceDate: {$gte: startMonth}}, {attendanceDate: {$lte: endMonth}}, {deletedAt: null}]})
-        .simplesort("attendanceDate", true)
-        .data()
-        .reduce(
-          function(map, day){
-            map[day.attendanceDate] = (map[day.attendanceDate] || 0) + day.count;
+        latest = this.db.store(
+          'divisionClassAttendance', 
+          [
+            filter((x) => x.deletedAt === null && x.attendanceDate >= startMonth && x.attendanceDate <= endMonth),
+            sortBy('attendanceDate'),
+            reverse
+          ]
+        ).reduce(
+          function(map, d){
+            map[d.attendanceDate] = (map[d.attendanceDate] || 0) + d.count;
             return map;
           },
           Object.create(null)
@@ -299,124 +322,131 @@ export default class Classes {
   getClassAttendanceByDay(classId, day, begin, end) {
     begin = begin || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(8, "week").valueOf();
     end = end || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
-    let divisionClasses = this.db.collections.divisionClasses.chain()
-        .find(
-          {
-            $and: [
-              {classId: classId},
-              {deletedAt: null}
-             ]
-           }
-        )
-        .data().map(function(cls, index){
-          return cls.id;
-        }),
-        dailyAttendance = this.db.collections.divisionClassAttendance.chain()
-        .find(
-          {
-            $and: [
-              {divisionClassId: {$in: divisionClasses}},
-              {day: day},
-              {attendanceDate: {$gte: begin}}, 
-              {attendanceDate: {$lte: end}}, 
-              {deletedAt: null}
-             ]
-           }
-        )
-        .simplesort("attendanceDate")
-        .data();
-    return dailyAttendance;
+    let divisionClasses = this.db.store(
+          'divisionClasses', 
+          [
+            filter((x) => x.deletedAt === null && x.classId === classId),
+            map((x) => x.id)
+          ]
+        ),
+        records = self.db.store(
+          'divisionClassAttendance', 
+          [
+            filter((x) => x.deletedAt === null && x.day === day && x.attendanceDate >= begin && x.attendanceDate <= end && (divisionClasses.indexOf(x.divisionClassId) > -1)),
+            sortBy('attendanceDate')
+          ]
+        );
+    return records;
   }
 
-  async getDayAttendance(date) {
-    let self = this,
-        dailyAttendance = [],
-        attendance = await this.db.collections.divisionClassAttendance.chain()
-          .find({$and: [{attendanceDate: parseInt(date)}, {deletedAt: null}]})
-          .data(),
-        division = await this.db.collections.divisions.find({$and: [{start: {$lte: date}}, {end: {$gte: date}}, {deletedAt: null}]}),
-        classes = await this.db.collections.divisionClasses.chain()
-          .find({$and: [{divisionId: division[0].id}, {deletedAt: null}]})
-          .eqJoin(self.db.collections.classes.data.toJS(), 'classId', 'id', function (left, right) {
-            return {
-              divisionClassId: left.id,
-              classId: left.classId,
-              divisionClasses: left,
-              class: right
-            }
-          })
-          .simplesort("divisionClassId")
-          .data();
-    classes.forEach(function(cls, index) {
-      let classAttendance = _.find(attendance, { 'divisionClassId': cls.divisionClassId }),
-          divisionClassAttendance = (classAttendance) ? classAttendance : {count: 0, updatedAt: null};
-      cls.divisionClassAttendance = divisionClassAttendance;
+  getDayAttendance(date) {
+    let self = this;
+    return new Promise(function(resolve, reject){
+      let dailyAttendance = [],
+          attendance = self.db.store(
+            'divisionClassAttendance', 
+            [
+              filter((x) => x.deletedAt === null && x.attendanceDate >= parseInt(date)),
+              first
+            ]
+          ),
+          division = self.db.store(
+            'divisions', 
+            [
+              filter((x) => x.deletedAt === null && x.start <= parseInt(date) && x.end >= parseInt(date)),
+              first
+            ]
+          ),
+          divisionClasses = self.db.store(
+            'divisionClasses', 
+            [
+              filter((x) => x.deletedAt === null && x.divisionId === division.id),
+              first
+            ]
+          ),
+          classes = self.db.store(
+            'classes', 
+            [
+              sortBy('id')
+            ]
+          );
+
+      self.db.eqJoin(
+        divisionClasses, 
+        classes, 
+        'classId', 
+        'id', 
+        function (left, right) {
+          return {
+            divisionClassId: left.id,
+            classId: left.classId,
+            divisionClasses: left,
+            class: right
+          }
+        }
+      ).then(
+        function(data) {
+          data = sortBy(data)('divisionClassId');
+          data.forEach(function(cls, index) {
+            let classAttendance = find(attendance)({ 'divisionClassId': cls.divisionClassId }),
+                divisionClassAttendance = (classAttendance) ? classAttendance : {count: 0, updatedAt: null};
+            cls.divisionClassAttendance = divisionClassAttendance;
+          });
+          resolve(data);
+        }
+      );
     });
-    
-    return classes;
   }
 
   getCurrentDivision(now) {
     let self = this;
     return new Promise(function(resolve, reject){
       now = now || moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
-      let div = self.db.collections.divisions.chain().find({$and:[{end: {$gte: now}}, {deletedAt: null}]}).simplesort('end').limit(1).data()[0];
-      resolve(div);
+      let record = self.db.store(
+            'divisions', 
+            [
+              filter((x) => x.deletedAt === null && x.end >= now),
+              sortBy('end'),
+              first
+            ]
+          );
+      resolve(record);
     });
   }
   
   getMeetingDay(day) {
-    return this.db.collections.classMeetingDays.find({
-      $and: [
-        {
-          day: {
-            $eq: day
-          }
-        },
-        {
-          deletedAt: null
-        }
-      ]
-    });
+    return this.db.store(
+            'classMeetingDays', 
+            [
+              filter((x) => x.deletedAt === null && x.day === day),
+            ]
+          );
   }
 
   getCurrentDivisionMeetingDays(divisionConfig, today) {
     let self = this;
     return new Promise(function(resolve, reject){
       resolve(
-        self.db.collections.classMeetingDays.find({
-          $and: [
-            {
-              day: {
-                $eq: today
-              }
-            },
-            {
-              divisionConfigId: {
-                $eq: divisionConfig.id
-              }
-            },
-            {
-              deletedAt: null
-            }
+        self.db.store(
+          'classMeetingDays', 
+          [
+            filter((x) => x.deletedAt === null && x.day === today && x.divisionConfigId === divisionConfig.id)
           ]
-        })
+        )
       );
     });
   }
 
-  async getDivisionMeetingDays(divisionConfigId) {
-    return await this.db.collections.classMeetingDays.find({
-      $and: [
-        {
-          divisionConfigId: {
-            $eq: divisionConfigId
-          }
-        },
-        {
-          deletedAt: null
-        }
-      ]
+  getDivisionMeetingDays(divisionConfigId) {
+    let self = this;
+    return new Promise(function(resolve, reject){
+      let records = self.db.store(
+          'classMeetingDays', 
+          [
+            filter((x) => x.deletedAt === null && x.divisionConfigId === divisionConfigId)
+          ]
+        );
+      resolve(records);
     });
   }
 
@@ -439,23 +469,37 @@ export default class Classes {
           }
         ],
         function(err, results) {
-
-          resolve(
-            self.db.collections.divisionClasses
-            .chain()
-            .find({$and:[{divisionId: results}, {deletedAt: null}]})
-            .eqJoin(self.db.collections.classes.data.toJS(), 'classId', 'id', function (left, right) {
+          let divisionClasses = self.db.store(
+                'divisionClasses', 
+                [
+                  sortBy('classId')
+                ]
+              ),
+              classes = self.db.store(
+                'classes', 
+                [
+                  sortBy('id')
+                ]
+              );
+          self.db.eqJoin(
+            divisionClasses, 
+            classes, 
+            'classId', 
+            'id', 
+            function (left, right) {
               return {
                 class: right,
                 order: right.order,
                 id: left.id,
                 divisionClass: left
               }
-            })
-            .simplesort("order")
-            .data()
+            }
+          ).then(
+            function(data) {
+              data = sortBy(x=>x.order)(data);
+              resolve(data);
+            }
           );
-
         }
       );
       
@@ -520,251 +564,325 @@ export default class Classes {
   getDivisionClass(divisionClassId) {
     let self = this;
     return new Promise(function(resolve, reject){
-      let divClass = self.db.collections.divisionClasses
-            .chain()
-            .find(
-              {
-                $and:[
-                  {
-                    id: divisionClassId
-                  },
-                  {
-                    deletedAt: null
-                  }
+      let divisionClasses = self.db.store(
+                'divisionClasses', 
+                [
+                  filter((x) => x.deletedAt === null && x.id === divisionClassId),
+                  sortBy('classId')
                 ]
-              }
-            )
-            .eqJoin(self.db.collections.classes.data.toJS(), 'classId', 'id', function (left, right) {
-              return {
-                class: right,
-                divisionClass: left
-              }
-            }).data();
-      //console.log(divClass);
-      resolve(divClass[0]);
+              ),
+              classes = self.db.store(
+                'classes', 
+                [
+                  sortBy('id')
+                ]
+              );
+      self.db.eqJoin(
+        divisionClasses, 
+        classes, 
+        'classId', 
+        'id', 
+        function (left, right) {
+          return {
+            order: right.order,
+            class: right,
+            divisionClass: left
+          }
+        }
+      ).then(
+        function(data) {
+          data = sortBy(data)('order');
+          resolve(data);
+        }
+      );
     });
   }
 
-  async getDivisionClassByDivAndClass(divisionId, classId) {
-    //console.log("getCurrentDivisionClasses", divisionClassId);
-    let self = this,
-        divClass = await this.db.collections.divisionClasses
-          .chain()
-          .find(
-            {
-              $and:[
-                {
-                  divisionId: divisionId
-                },
-                {
-                  classId: classId
-                },
-                {
-                  deletedAt: null
-                }
-              ]
-            }
-          )
-          .eqJoin(self.db.collections.classes.data.toJS(), 'classId', 'id', function (left, right) {
-            return {
-              class: right,
-              divisionClass: left
-            }
-          }).data();
-    //console.log(divClass);
-    return divClass[0];
+  getDivisionClassByDivAndClass(divisionId, classId) {
+    let self = this;
+    return new Promise(function(resolve, reject){
+      let divisionClasses = self.db.store(
+            'divisionClasses', 
+            [
+              filter((x) => x.deletedAt === null && x.divisionId === divisionId && x.classId === classId),
+              sortBy('classId')
+            ]
+          ),
+          classes = self.db.store(
+            'classes', 
+            [
+              sortBy('id')
+            ]
+          );
+      self.db.eqJoin(
+        divisionClasses, 
+        classes, 
+        'classId', 
+        'id', 
+        function (left, right) {
+          return {
+            order: right.order,
+            class: right,
+            divisionClass: left
+          }
+        }
+      ).then(
+        function(data) {
+          resolve(data[0]);
+        }
+      );
+    });
   }
 
   getCurrentClassTeachers(divisionClassId) {
     let self = this;
     return new Promise(function(resolve, reject){
-      let day = moment().weekday(),
-          teachers = self.db.collections.divisionClassTeachers
-            .chain()
-            .find(
-              {
-                $and: [
-                  {divisionClassId: divisionClassId},
-                  {day: day},
-                  {deletedAt: null}
-                ]
-              }
-            )
-            .eqJoin(self.db.collections.people.data.toJS(), 'peopleId', 'id', function (left, right) {
-              return {
-                person: right,
-                divClassTeacher: left
-              }
-            }).data();
-      //console.log(getCurrentClassTeachers, teachers);
-      resolve(teachers);
+      let day = moment().weekday();
+      let divisionClassTeachers = self.db.store(
+            'divisionClassTeachers', 
+            [
+              filter((x) => x.deletedAt === null && x.day === day && x.divisionClassId === divisionClassId),
+              sortBy('classId')
+            ]
+          ),
+          people = self.db.store(
+            'people', 
+            []
+          );
+      self.db.eqJoin(
+        divisionClassTeachers, 
+        people, 
+        'peopleId', 
+        'id', 
+        function (left, right) {
+          return {
+            person: right,
+            divClassTeacher: left
+          }
+        }
+      ).then(
+        function(data) {
+          resolve(data);
+        }
+      );
     });
   }
 
-  async getDivisionClassTeachers(divisionClassId, day) {
-    let teachers = await this.db.collections.divisionClassTeachers
-          .chain()
-          .find(
-            {
-              $and: [
-                {divisionClassId: divisionClassId},
-                {day: day},
-                {deletedAt: null}
-              ]
-            }
-          )
-          .eqJoin(this.db.collections.people.data.toJS(), 'peopleId', 'id', function (left, right) {
-            return {
-              person: right,
-              divClassTeacher: left
-            }
-          }).data();
-    //console.log(getCurrentClassTeachers, teachers);
-    return teachers;
+  getDivisionClassTeachers(divisionClassId, day) {
+    let self = this;
+    return new Promise(function(resolve, reject){
+      let divisionClassTeachers = self.db.store(
+            'divisionClassTeachers', 
+            [
+              filter((x) => x.deletedAt === null && x.day === day && x.divisionClassId === divisionClassId),
+              sortBy('classId')
+            ]
+          ),
+          people = self.db.store(
+            'people', 
+            []
+          );
+      self.db.eqJoin(
+        divisionClassTeachers, 
+        people, 
+        'peopleId', 
+        'id', 
+        function (left, right) {
+          return {
+            id: left.id,
+            person: right,
+            divClassTeacher: left
+          }
+        }
+      ).then(
+        function(data) {
+          resolve(data);
+        }
+      );
+    });
   }
 
   async getClassMeetingDays() {
-    return await this.db.collections.classMeetingDays.chain().find({deletedAt: null}).simplesort("day").data();
+    return await this.db.store(
+          'classMeetingDays', 
+          [
+            filter((x) => x.deletedAt === null),
+            sortBy('day')
+          ]
+        );
   }
 
   async getClass(classId) {
-    let cls = await this.db.collections.classes
-          .findOne(
-            {
-              $and: [
-                {id: classId},
-                {deletedAt: null}
-              ]
-            }
-          );
+    let cls = await this.db.store(
+          'classes', 
+          [
+            filter((x) => x.deletedAt === null && x.id === classId),
+            first
+          ]
+        );
     //console.log(getCurrentClassTeachers, teachers);
     return cls;
   }
   
-  async getClassTeachers(classId) {
-    let divisionClasses = await this.db.collections.divisionClasses.chain()
-        .find(
-          {
-            $and: [
-              {classId: classId},
-              {deletedAt: null}
-             ]
-           }
-        )
-        .data().map(function(cls, index){
-          return cls.id;
-        });
-       
-    let teachers = await this.db.collections.divisionClassTeachers
-          .chain()
-          .find(
-            {
-              $and: [
-                {divisionClassId: {$in: divisionClasses}},
-                {deletedAt: null}
-              ]
+  getClassTeachers(classId) {
+    let self = this;
+    return new Promise(function(resolve, reject){
+      let divisionClasses = self.db.store(
+            'divisionClasses', 
+            [
+              sortBy('id')
+            ]
+          ),
+          people = self.db.store(
+            'people', 
+            [
+              sortBy('id')
+            ]
+          ),
+          divisions = self.db.store(
+            'divisions', 
+            [
+              sortBy('id')
+            ]
+          ),
+          teachers = self.db.store(
+            'teachers', 
+            [
+              filter((x) => x.deletedAt === null && x.divisionClassId === divisionClassId),
+              sortBy('id')
+            ]
+          );
+      waterfall(
+          [
+            function(callback) {
+              self.db.eqJoin(
+                divisionClassTeachers, 
+                people, 
+                'peopleId', 
+                'id', 
+                function (left, right) {
+                  return {
+                    person: right,
+                    divisionClassId: left.divisionClassId,
+                    divClassTeacher: left
+                  }
+                }
+              ).then(
+                function(data) {
+                  callback(data);
+                }
+              );
+            },
+            function(result, callback) {
+              self.db.eqJoin(
+                result, 
+                divisionClasses, 
+                'divisionClassId', 
+                'id', 
+                function (left, right) {
+                  return {
+                    person: left.person,
+                    divisionClassId: left.divisionClassId,
+                    divClassTeacher: left.divClassTeacher,
+                    divisionId: right.divisionId,
+                    divClass: right
+                  }
+                }
+              ).then(
+                function(data) {
+                  callback(data);
+                }
+              );
+            },
+            function(result, callback) {
+              self.db.eqJoin(
+                result, 
+                divisions, 
+                'divisionId', 
+                'id', 
+                function (left, right) {
+                  return {
+                    person: left.person,
+                    personId: left.person.id,
+                    divisionClassId: left.divisionClassId,
+                    divClassTeacher: left.divClassTeacher,
+                    divClass: left.divClass,
+                    divisionId: left.divisionId,
+                    division: right
+                  }
+                }
+              ).then(
+                function(data) {
+                  callback(data);
+                }
+              );
             }
-          )
-          .simplesort("createdAt", true)
-          .eqJoin(this.db.collections.people.data.toJS(), 'peopleId', 'id', function (left, right) {
-            return {
-              person: right,
-              divisionClassId: left.divisionClassId,
-              divClassTeacher: left
-            }
-          })
-          .eqJoin(this.db.collections.divisionClasses.data.toJS(), 'divisionClassId', 'id', function (left, right) {
-            return { 
-              person: left.person,
-              divisionClassId: left.divisionClassId,
-              divClassTeacher: left.divClassTeacher,
-              divisionId: right.divisionId,
-              divClass: right
-            };
-          })
-          .eqJoin(this.db.collections.divisions.data.toJS(), 'divisionId', 'id', function (left, right) {
-            return { 
-              person: left.person,
-              personId: left.person.id,
-              divisionClassId: left.divisionClassId,
-              divClassTeacher: left.divClassTeacher,
-              divClass: left.divClass,
-              divisionId: left.divisionId,
-              division: right
-            };
-          })
-          .data();
-    let uniq = await teachers.reduce(function(a,b){
-          //console.log(a, b);
-          if (Array.isArray(a) && a.length === 0) {
-            a.push(b);
-          } else if (a.personId !== b.personId  ) {
-            a.push(b);
+          ],
+          function(err, results) {
+            let uniq = results.reduce(function(a,b){
+                  //console.log(a, b);
+                  if (Array.isArray(a) && a.length === 0) {
+                    a.push(b);
+                  } else if (a.personId !== b.personId  ) {
+                    a.push(b);
+                  }
+                  return a;
+                },[]);
+            //console.log("getClassTeachers", uniq);
+            resolve(uniq);
           }
-          return a;
-        },[]);
-    //console.log("getClassTeachers", uniq);
-    return uniq;
+        );
+    });
   }
 
-  getNotes() {
-    let results = this.db.collections.notes.chain().find({deletedAt: null}).simplesort('createdAt').data();
-    return results;
+  async getNotes() {
+    let records = await this.db.store(
+          'notes', 
+          [
+            filter((x) => x.deletedAt === null),
+            sortBy('createdAt')
+          ]
+        );
+    return records;
   }
 
   async findPeople(search, type) {
     let srch = {},
         regex = new RegExp('^'+search, "i");
-    srch[type] = {$regex: regex};
-    let people = await this.db.collections.people
-          .chain()
-          .find(
-            {
-              $and: [
-                srch,
-                {deletedAt: null}
-              ]
-            }
-          ).data();
-    return people;
+    let records = await this.db.store(
+          'people', 
+          [
+            filter((x) => x.deletedAt === null && x[type].search(regex)),
+            sortBy(['lastName', 'firstName'])
+          ]
+        );
+    return records;
   }
 
   async confirmTeacher(confirm, divClassId, teacherId) {
-    let record = await this.db.collections.divisionClassTeachers
-                .findOne(
-                  {
-                    $and: [
-                      {
-                        id: teacherId
-                      },
-                      {
-                        deletedAt: null
-                      }
-                    ]
-                  }
-                );
+    let record = await this.db.store(
+          'divisionClassTeachers', 
+          [
+            filter((x) => x.deletedAt === null && x.id === teacherId),
+            first
+          ]
+        );
     if (record) {
       record = record.valueOf();
       record.confirmed = confirm;
-      this.db.updateCollection("divisionClassTeachers", record, false);
+      this.db.updateStore("divisionClassTeachers", record, false);
     }
 
   }
 
   async updateClassOrder(classId, currentPos, newPos) {
-    let record = await this.db.collections.classes
-                .findOne(
-                  {
-                    $and: [
-                      {
-                        id: classId
-                      },
-                      {
-                        deletedAt: null
-                      }
-                    ]
-                  }
-                );
+    let record = await this.db.store(
+          'classes', 
+          [
+            filter((x) => x.deletedAt === null && x.id === classId),
+            first
+          ]
+        );
     if (record) {
       record = record.valueOf();
       record.order = newPos;
@@ -773,24 +891,16 @@ export default class Classes {
 
   }
 
-  async updateClassAttendance(divisionClassId, now, count) {
+  updateClassAttendance(divisionClassId, now, count) {
     console.log("updateClassAttendance", moment().unix());
-    let record = await this.db.collections.divisionClassAttendance
-                .findOne(
-                  {
-                    $and: [
-                      {
-                        attendanceDate: now
-                      },
-                      {
-                        divisionClassId: divisionClassId
-                      },
-                      {
-                        deletedAt: null
-                      }
-                    ]
-                  }
-                );
+
+    let record = this.db.store(
+          'divisionClassAttendance', 
+          [
+            filter((x) => x.deletedAt === null && x.attendanceDate === now && x.divisionClassId === divisionClassId),
+            first
+          ]
+        );
     if (!record) {
       record = {
         attendanceDate: now,
@@ -804,33 +914,21 @@ export default class Classes {
         updatedAt: null
       };
     } else {
-      record = await record.valueOf();
+      record = toJS(record);
       record.count = count;
     }
     console.log("updateClassAttendance:dispatch", moment().unix());
-    return await this.db.updateCollection("divisionClassAttendance", record, false);
+    return this.db.updateStore("divisionClassAttendance", record, false);
   }
 
   async updateClassDayTeacher(divisionClassId, day, peopleId) {
-    let record = await this.db.collections.divisionClassTeachers
-                .findOne(
-                  {
-                    $and: [
-                      {
-                        peopleId: peopleId
-                      },
-                      {
-                        day: day
-                      },
-                      {
-                        divisionClassId: divisionClassId
-                      },
-                      {
-                        deletedAt: null
-                      }
-                    ]
-                  }
-                );
+    let record = await this.db.store(
+          'divisionClassTeachers', 
+          [
+            filter((x) => x.deletedAt === null && x.peopleId === peopleId && x.day === day && X.divisionClassId === divisionClassId),
+            first
+          ]
+        );
     if (!record) {
       record = {
         peopleId: peopleId,
@@ -844,12 +942,12 @@ export default class Classes {
         deletedAt: null
       };
     } else {
-      record = record.valueOf();
+      record = toJS(record);
       record.peopleId = peopleId;
       record.day = day;
       record.divisionClassId = divisionClassId;
     }
-    return await this.db.updateCollection("divisionClassTeachers", record, false);
+    return await this.db.updateStore("divisionClassTeachers", record, false);
   }
 
   updateCollectionFields(collection, id, updates) {
