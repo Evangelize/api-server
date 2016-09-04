@@ -233,6 +233,7 @@ export default function (HOST, PORT, callback) {
                 context = {
                   db,
                   classes,
+                  sockets: null,
                   settings: appSettings,
                   store: {},
                 };
