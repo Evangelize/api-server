@@ -1,48 +1,84 @@
-import { extendObservable, observable, autorun, isObservable, isObservableMap, map, action, runInAction } from "mobx";
+import { extendObservable, observable, autorun, isObservable, isObservableMap, map, action, runInAction } from 'mobx';
 import { filter, pick, sortBy, first, take, remove } from 'lodash/fp';
 import each from 'async/each';
 import waterfall from 'async/waterfall';
 import mobxstore from 'mobx-store';
 import moment from 'moment-timezone';
-import api from '../api';
-import * as types from '../constants';
-import conv from 'binstring';
 import iouuid from 'innodb-optimized-uuid';
 import Promise from 'bluebird';
+import task from 'task.js';
+import 'setimmediate';
+let numThreads;
+
+if (process.browser) {
+  numThreads = (navigator.hardwareConcurrency > 4) ? 4 : navigator.hardwareConcurrency; 
+} 
+
+const eqJoin = function (leftData, rightData, leftJoinKey, rightJoinKey, func) {
+  // console.log(leftData, rightData);
+  const leftKeyisFunction = (typeof leftJoinKey) === 'function';
+  const rightKeyisFunction = (typeof rightJoinKey) === 'function';
+  const toFunc = function (value) {
+    const startBody = value.indexOf('{') + 1;
+    const endBody = value.lastIndexOf('}');
+    const startArgs = value.indexOf('(') + 1;
+    const endArgs = value.indexOf(')');
+
+    return new Function(
+      value.substring(startArgs, endArgs),
+      value.substring(startBody, endBody)
+    );
+  };
+  const mapFun = (typeof func === "string") ? toFunc(func) : function (left, right) {
+    return {
+      left,
+      right,
+    };
+  };
+  const leftDataLength = leftData.length;
+  const rightDataLength = rightData.length;
+  let key;
+  let result = [];
+  let joinMap = {};
+  // construct a lookup table
+
+  for (let i = 0; i < rightDataLength; i++) {
+    key = rightKeyisFunction ? rightJoinKey(rightData[i]) : rightData[i][rightJoinKey];
+    joinMap[key] = rightData[i];
+  }
+
+  // Run map function over each object in the resultset
+  for (let j = 0; j < leftDataLength; j++) {
+    key = leftKeyisFunction ? leftJoinKey(leftData[j]) : leftData[j][leftJoinKey];
+    if (joinMap[key]) {
+      result.push(mapFun(leftData[j], joinMap[key] || {}));
+    }
+  }
+  return { resultset: result, leftData, rightData };
+};
+
+const dbThreads = task.wrap(eqJoin);
 
 export default class Db {
-  store;
-  ws;
-  collections = {};
-  @observable isUpdating = false;
-  
-  constructor() {
-    this.isUpdating = true;
-    let self = this;
+  @observable store;
+  @observable events;
+
+  init(data, events) {
+    const self = this;
+    if (events) {
+      self.setupEvents(events);
+    }
+    if (data) {
+      self.store = mobxstore(data);
+    }
   }
 
-  init(data, websocket) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      if (websocket) {
-        self.setupWs(websocket);
-      }
-      if (data) {
-        self.store = mobxstore(data);
-      }
-      resolve(true);
-    });
-  }
-  
-  async setupWs(websocket) {
-    let self = this;
-    this.ws = websocket;
+  setupEvents(events) {
+    const self = this;
+    this.events = events;
 
-    this.ws.on('changes', data => {
-      //console.log('changes', data);
-      self.wsHandler(self.ws, data);
-    });
-    this.ws.emitAsync = Promise.promisify(this.ws.emit);
+    this.events.on('db', self.eventHandler.bind(this));
+    //this.ws.emitAsync = bPromise.promisify(this.ws.emit);
     return true;
   }
 
@@ -50,272 +86,206 @@ export default class Db {
     console.log(moment().unix(), collection, type, target);
   }
 
-  async wsHandler(ws, update) {
-    let data = update.payload.data,
-        record, storeRecord;
-    //console.log("websocket:", ws);
-    //console.log("websocket update:", update);
-    console.log("wsHandler", moment().unix());
+  eventHandler(update) {
+    const data = update.payload.data;
+    let record;
+    let deleted = false;
+    let retValue = true;
+    console.log('eventHandler', moment().unix());
     if (data.error) {
       if (data.error.name === 'SequelizeUniqueConstraintError') {
-        record = await this.store(
-          data.collection, 
+        record = this.store(
+          data.collection,
           [
-            filter((x) => x.id === data.prior.id),
-            first
+            filter((rec) => rec.id === data.prior.id),
+            first,
           ]
         );
         this.updateStore(data.collection, record, true, deleted);
-        record = await this.store(
-          data.collection, 
+        record = this.store(
+          data.collection,
           [
-            filter((x) => x.id === data.record.id),
-            first
+            filter((rec) => rec.id === data.record.id),
+            first,
           ]
         );
-        
+
         if (record) {
-          let deleted = (data.type === "delete") ? true : false;
+          deleted = (data.type === 'delete') ? true : false;
           record = Object.assign({}, record, data.record);
-          return await this.updateStore(data.collection, record, true, deleted);
-        } else if (data.type !== "delete") {
-          return await this.insertDocument(data.collection, data.record);
+          retValue = this.updateStore(data.collection, record, true, deleted);
+        } else if (data.type !== 'delete') {
+          retValue = this.insertDocument(data.collection, data.record);
         }
       }
-    } else if (data.type === "insert" || data.type === "update" || data.type === "delete") {
+    } else if (data.type === 'insert' || data.type === 'update' || data.type === 'delete') {
       record = this.store(
-        data.collection, 
+        data.collection,
         [
-          filter((x) => x.id === data.record.id),
-          first
+          filter((rec) => rec.id === data.record.id),
+          first,
         ]
       );
       if (record) {
-        let deleted = (data.type === "delete") ? true : false;
+        deleted = (data.type === 'delete') ? true : false;
         record = Object.assign({}, record, data.record);
-        return await this.updateStore(data.collection, record, true, deleted);
-      } else if (data.type !== "delete") {
-        return await this.insertDocument(data.collection, data.record);
+        retValue = this.updateStore(data.collection, record, true, deleted);
+      } else if (data.type !== 'delete') {
+        retValue = this.insertDocument(data.collection, data.record);
       }
-
     } else {
-      return false;
+      retValue = false;
     }
+    return retValue;
   }
 
   updateCollectionFields(collection, id, updates) {
+    let retValue = true;
     let record = this.store(
-          collection, 
-          [
-            filter((x) => x.id === data.record.id),
-            first
-          ]
-        );
+      collection,
+      [
+        filter((rec) => rec.id === id),
+        first,
+      ]
+    );
     if (record) {
       record = Object.assign({}, record, updates);
-      return this.updateCollection(collection, record, false);
+      retValue = this.updateStore(collection, record, false);
     }
+
+    return retValue;
   }
 
-  eqJoin(primary, foreign, primaryKey, foreignKey, select) {
+  eqJoin(left, right, leftKey, rightKey, select) {
+    return dbThreads(
+      left,
+      right,
+      leftKey,
+      rightKey,
+      select.toString(),
+    );
+    /*
     return new Promise(function(resolve, reject){
-      let m = primary.length, 
-          n = foreign.length, 
-          index = [], 
+      let m = primary.length,
+          n = foreign.length,
+          index = [],
           c = [];
       waterfall(
         [
-          function(callback) {
-            each(
+          function (callback) {
+            Promise.each(
               primary,
-              function(item, cback) {  // loop through m items
-                index[item[primaryKey]] = item; // create an index for primary table
-                cback();
-              },
-              function(err) {
+              function (item) {  // loop through m items
+                index[item[primaryKey]] = item;
+                return item; // create an index for primary table
+              }
+            ).then(
+              function () {
                 callback();
               }
             );
           },
-          function(callback) {
-            each(
+          function (callback) {
+            Promise.each(
               foreign,
-              function(item, cback) {  // loop through n items
-                // get corresponding row from primary
-                // select only the columns you need
+              function (item) {  // loop through m items
                 if (index[item[foreignKey]]) {
-                  c.push(select(index[item[foreignKey]], item));    
+                  c.push(select(index[item[foreignKey]], item));
                 }
-                cback();
-              },
-              function(err) {
+                return item; // create an index for primary table
+              }
+            ).then(
+              function () {
                 callback();
               }
             );
-          }
+          },
         ],
-        function(error, results) {
-          console.log("eqJoin", c);
+        function (error, results) {
+          console.log('eqJoin', c);
           resolve(c);
         }
       );
-      
     });
+    */
   }
 
-  @action async deleteRecord(collection, id) {
-    const ts = moment.utc().format("YYYY-MM-DDTHH:mm:ss.sssZ");
-    let record = await this.store(
-          collection, 
+  @action deleteRecord(collection, id) {
+    const ts = moment.utc().format('YYYY-MM-DDTHH:mm:ss.sssZ');
+    let record = this.store(
+          collection,
           [
             filter((x) => x.id === id),
-            first
+            first,
           ]
         );
     if (record) {
-      record = Object.assign({}, record, {deletedAt: ts});
-      return await this.updateStore(collection, record, false, true);
+      record.deletedAt = ts;
+      return this.updateStore(collection, record, false, true);
     } else {
       return null;
     }
   }
 
-  @action async updateCollection(collection, record, remote, deleted) {
-    console.log("updateCollection", moment().unix());
-    deleted = deleted || false;
-    remote = remote || false;
-    const ts = moment.utc().format("YYYY-MM-DDTHH:mm:ss.sssZ");
-    let results, type = 'insert',
-        self = this;
-    const sendRemote = function(record) {
-      return new Promise(function(resolve, reject){
-        if (!remote) {
-          console.log("updateCollection:emit", moment().unix());
-          self.ws.emitAsync(
-            type,
-            {
-              type: type,
-              collection: collection,
-              target: record
-            }
-          ).then(
-            function(data) {
-              resolve(data);
-            }
-          );
-        } else {
-          resolve(true);
-        }
-      });
-    };
-    if (record) {
-      if (record.id) {
-        console.log("updateCollection:pre-update", moment().unix());
-        type = (deleted) ? 'delete' : 'update';
-        record.updatedAt = ts;
-        if (deleted) {
-          this.collections[collection].remove(record);
-          console.log("updateCollection:removed", moment().unix());
-          results = record;
-        } else {
-          results = await this.collections[collection].update(record);
-          console.log("updateCollection:updated", moment().unix());
-        }
-        sendRemote(record);
-      } else {
-        
-        record.createdAt = ts;
-        record.updatedAt = ts;
-        console.log("updateCollection:pre-guid", moment().unix());
-        record.id = iouuid.generate().toLowerCase();
-        console.log("updateCollection:guid", moment().unix());
-        console.log("updateCollection:pre-insert", moment().unix());
-        results = this.insertDocument(collection, record).then(
-          function(data) {
-            console.log("updateCollection:inserted", moment().unix());
-            sendRemote(record);
-          }
-        );
-        
-      }
-    }
-  }
-
   @action updateStore(collection, record, remote, deleted) {
-    console.log("updateCollection", moment().unix());
+    console.log('updateStore', moment().unix());
     deleted = deleted || false;
     remote = remote || false;
-    const ts = moment.utc().format("YYYY-MM-DDTHH:mm:ss.sssZ");
-    let results, type = 'insert',
-        self = this;
-    const sendRemote = function(record) {
-      return new Promise(function(resolve, reject){
-        if (!remote) {
-          console.log("updateCollection:emit", moment().unix());
-          self.ws.emitAsync(
-            type,
-            {
-              type: type,
-              collection: collection,
-              target: record
-            }
-          ).then(
-            function(data) {
-              resolve(data);
-            }
-          );
-        } else {
-          resolve(true);
-        }
-      });
-    };
+    const ts = moment.utc().format('YYYY-MM-DDTHH:mm:ss.sssZ');
+    const self = this;
+    let results, type = 'insert';
     if (record) {
       if (record.id) {
-        console.log("updateCollection:pre-update", moment().unix());
+        console.log('updateStore:pre-update', moment().unix());
         type = (deleted) ? 'delete' : 'update';
         record.updatedAt = ts;
         if (deleted) {
-          this.store(
-            collection, 
-            [
-              remove((n) => n.id === record.id)
-            ]
-          );
-          console.log("updateCollection:removed", moment().unix());
           results = record;
         } else {
           results = this.store(
-            collection, 
+            collection,
             [
-              filter((n) => n.id === record.id)
+              filter((rec) => rec.id === record.id),
             ]
           );
           Object.assign(results[0], record);
-          console.log("updateCollection:updated", moment().unix());
+          console.log('updateStore:updated', moment().unix());
         }
-        sendRemote(record);
+        if (!remote) this.sendRemote(record, type, collection);
       } else {
-        
         record.createdAt = ts;
         record.updatedAt = ts;
-        console.log("updateCollection:pre-guid", moment().unix());
+        record.deletedAt = null;
+        console.log('updateStore:pre-guid', moment().unix());
         record.id = iouuid.generate().toLowerCase();
-        console.log("updateCollection:guid", moment().unix());
-        console.log("updateCollection:pre-insert", moment().unix());
+        console.log('updateStore:guid', moment().unix());
+        console.log('updateStore:pre-insert', moment().unix());
 
         this.store(collection).push(record);
-        console.log("updateCollection:inserted", moment().unix());
-        sendRemote(record);
+        console.log('updateStore:inserted', moment().unix());
+        if (!remote) this.sendRemote(record, type, collection);
       }
     }
   }
 
   @action insertDocument(collection, record) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      let result = self.store(collection).push(record);
-      resolve(result);
-    });
+    const self = this;
+    return self.store(collection).push(record);
   }
+
+  @action sendRemote(record, type, collection) {
+    type = type || 'insert';
+    const self = this;
+    console.log('sendRemote:emit', moment().unix());
+    self.events.emit(
+      'socket',
+      {
+        type,
+        collection,
+        record,
+      }
+    );
+    
+  };
 
 }

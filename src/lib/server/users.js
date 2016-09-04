@@ -3,20 +3,20 @@ import Promise from 'bluebird';
 
 export default {
   get(peopleId) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) =>{
       peopleId = new Buffer(peopleId, 'hex');
       models.Users.findOne(
         {
           where: {
-            peopleId: peopleId
-          }
+            peopleId: peopleId,
+          },
         }
       ).then(
-        function(result) {
+        (result) => {
           resolve(result);
           return null;
         },
-        function(err){
+        (err) => {
           console.log(err);
           reject(err);
           return null;
@@ -25,18 +25,18 @@ export default {
     });
   },
   insert(record) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       models.Users.create(
         record
       ).then(
-        function(result) {
+        (result) => {
           resolve(result);
           return null;
         },
-        function(err){
+        (err) => {
           let result = {
             error: err,
-            record: null
+            record: null,
           };
           reject(result);
           return null;
@@ -46,31 +46,31 @@ export default {
   },
   update(record) {
     console.log(record);
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       record.id = new Buffer(record.id, 'hex');
       models.Users.update(
         record,
         {
           where: {
-            id: record.id
-          }
+            id: record.id,
+          },
         }
       ).then(
-        function(rows) {
+        (rows) => {
           models.Users.findOne({
             where: {
-              id: record.id
-            }
+              id: record.id,
+            },
           }).then(
-            function(result) {
+            (result) => {
               resolve(result);
             }
           );
         },
-        function(err){
+        (err) => {
           let result = {
             error: err,
-            record: null
+            record: null,
           };
           reject(result);
         }
@@ -78,23 +78,23 @@ export default {
     });
   },
   delete(record) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       models.Users.destroy({
         where: {
-          id: new Buffer(record.id, 'hex')
-        }
+          id: new Buffer(record.id, 'hex'),
+        },
       }).then(
-        function(results) {
+        (results) => {
           resolve(record);
         },
-        function(err){
+        (err) => {
           let result = {
             error: err,
-            record: null
+            record: null,
           };
           reject(result);
         }
       );
     });
-  }
+  },
 };

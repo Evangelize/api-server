@@ -26,19 +26,6 @@ export default class Settings {
   
   setupWs(websocket) {
     this.ws = websocket;
-
-    this.ws.on('global', data => {
-      //console.log('settings', 'global', data);
-      //self.wsHandler(self.ws, data);
-    });
-
-    this.ws.on('connect', () => {
-      //console.log('settings', "websocket: connected");
-    });
-
-    this.ws.on('settings', 'error', err => {
-      //self.wsError(err);
-    });
   }
 
   setupEvents(events) {

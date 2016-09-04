@@ -1,74 +1,78 @@
 const webpack = require('webpack');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const StatsPlugin = require('stats-webpack-plugin');
-const path = require("path");
+const path = require('path');
 
 module.exports = {
   devtool: 'source-map',
   entry: [
-    './src/index.js'
+    './src/index.js',
   ],
   output: {
-    path:     path.join(__dirname, '../static/dist'),
+    path: path.join(__dirname, '../static/dist'),
     filename: 'client.min.js',
-    publicPath: '/'
+    publicPath: '/',
   },
   plugins: [
-    new webpack.DefinePlugin({
-      'process.env':{
-        'NODE_ENV': JSON.stringify('production')
-      }
-    }),
     new webpack.optimize.OccurenceOrderPlugin(),
     new ExtractTextPlugin('bundle.css'),
     new webpack.optimize.UglifyJsPlugin({
       compressor: {
         warnings: true,
-        screw_ie8: true
-      }
+        screw_ie8: true,
+      },
     }),
     new StatsPlugin('webpack.stats.json', {
       source: false,
-      modules: false
+      modules: false,
     }),
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+      'process.env': {
+        NODE_ENV: JSON.stringify('production'),
+        BROWSER: JSON.stringify(true),
+      },
     }),
-    new webpack.optimize.DedupePlugin()
+    new webpack.optimize.DedupePlugin(),
   ],
-  module:  {
+  module: {
     loaders: [
       {
         test: /\.js[x]?$/,
-        exclude: /node_modules/,
+        exclude: [
+          /node_modules/,
+        ],
         loader: 'babel',
         query: {
-            presets: [ 'react', 'es2015', 'stage-0' ],
-            plugins: [ 
-              ['transform-runtime'],
-              ['transform-decorators-legacy']
-            ],
-          }
+          presets: ['es2015', 'stage-0', 'react'],
+          plugins: [
+            ['fast-async'],
+            ['transform-decorators-legacy'],
+          ],
+        },
       },
       {
         test: /\.json?$/,
-        loader: 'json-loader'
-      }
-    ]
+        loader: 'json-loader',
+      },
+      { 
+        test: /worker\.js$/,
+        loader: 'worker-loader?inline=true',
+      },
+    ],
   },
   resolve: {
     alias: {
-      react: path.join(__dirname, "../node_modules/react")
+      react: path.join(__dirname, '../node_modules/react'),
     },
     modulesDirectories: [
-      "src",
-      "node_modules",
-      "web_modules"
+      'src',
+      'node_modules',
+      'web_modules',
     ],
-    extensions: ["", ".json", ".js", ".jsx"]
+    extensions: ['', '.json', '.js', '.jsx'],
   },
-  node:    {
+  node: {
     __dirname: true,
-    fs:        'empty'
-  }
+    fs: 'empty',
+  },
 };

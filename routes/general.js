@@ -34,6 +34,21 @@ module.exports = [
   },
   {
     method: 'GET',
+    path: '/fonts/{param*}',
+    handler: {
+      directory: {
+        path: __dirname+'/../static/fonts'
+      }
+    },
+    config: {
+      cache: {
+        expiresIn: expiresIn,
+        privacy: privacy
+      }
+    }
+  },
+  {
+    method: 'GET',
     path: '/material/css/{param*}',
     handler: {
       directory: {

@@ -1,7 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import moment from 'moment-timezone';
-import { observer } from "mobx-react";
-import { connect } from 'mobx-connect';
+import { inject, observer } from 'mobx-react';
 import { browserHistory } from 'react-router';
 import ReactGridLayout from 'react-grid-layout';
 import Card from 'material-ui/Card/Card';
@@ -20,7 +19,8 @@ import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
 
 
-@connect
+@inject("classes")
+@observer
 class DisplayNotes extends Component {
 
   constructor(props, context) {
@@ -30,7 +30,7 @@ class DisplayNotes extends Component {
 
  
   componentWillMount() {
-    const { classes } = this.context.state;
+    const { classes } = this.props;
     this.setState({
       now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf(),
       notes: [],
@@ -44,8 +44,7 @@ class DisplayNotes extends Component {
   }
 
   componentDidMount() {
-    const { classes } = this.context.state;
-    this.getNotes();
+
   }
 
   componentWillReact() {
@@ -54,7 +53,7 @@ class DisplayNotes extends Component {
   
   handleNoteDelete(note, e) {
     e.stopPropagation();
-    const { classes } = this.context.state;
+    const { classes } = this.props;
     classes.deleteRecord("notes", note.id);
   }
   
@@ -117,19 +116,8 @@ class DisplayNotes extends Component {
     }
   }
 
-  getNotes() {
-    const { classes } = this.context.state;
-    let self = this;
-    classes.getNotes().then(
-      function(data) {
-        self.setState({
-          notes: data
-        });
-      }
-    );
-  }
-  
   render() {
+    const { classes } = this.props;
     const { divisionConfigs } = this.state,
           customActions = [
             <FlatButton
@@ -142,7 +130,7 @@ class DisplayNotes extends Component {
     return (
       <div>
         <Masonry>
-          {this.state.notes.map((note, index) =>
+          {classes.getNotes().map((note, index) =>
             <Col key={note.id} xs={12} sm={6} md={6} lg={6}>
               <Card>
                 <CardTitle title={note.title} style={(note.title) ? null : {display: 'none'}} />

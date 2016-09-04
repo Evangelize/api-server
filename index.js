@@ -1,7 +1,14 @@
 /* eslint-disable no-console */
 
 // Register babel to have ES6 support on the server
-require('babel-core/register');
+require('babel-register')({
+    presets: ['es2015', 'stage-0', 'react'],
+    plugins: [
+      ['transform-decorators-legacy'],
+      ['add-module-exports'],
+    ],
+});
+
 const chalk = require( 'chalk' );
 
 // Prevent issues with libraries using this var (see http://tinyurl.com/pcockwk)

@@ -1,156 +1,176 @@
-import { extendObservable, observable, autorun, isObservable, isObservableMap, computed, toJS } from "mobx";
-import { filter, pick, sortBy, take, first, map, reverse, find } from 'lodash/fp';
+import { observable, autorun, computed, toJS, action } from 'mobx';
+import { filter, sortBy, orderBy, first, map, reverse, find, uniqueId, pick } from 'lodash/fp';
 import moment from 'moment-timezone';
 import waterfall from 'async/waterfall';
-import api from '../api';
-import * as types from '../constants';
-import conv from 'binstring';
-import iouuid from 'innodb-optimized-uuid';
 import change from 'percent-change';
 import Promise from 'bluebird';
 
 export default class Classes {
-  db;
-  ws;
+  @observable db;
+  @observable events;
   @observable peopleFilter;
   @observable isUpdating = false;
-  
-  constructor(db, websocket) {
-    let self = this;
+  @observable peopleSearchResults;
+  @observable divisionClassTeachersByDay;
+
+  constructor(db, events) {
     if (db) {
       this.setupDb(db);
     }
-    if (websocket) {
-      this.setupWs(websocket);
+    if (events) {
+      this.setupEvents(events);
     }
-    
   }
-  
+
   setupDb(db) {
     this.db = db;
   }
 
-  setupWs(websocket) {
-    let self = this;
-    this.ws = websocket;
+  setupEvents(events) {
+    this.events = events;
   }
 
-  isNumeric(n) {
-    return !isNaN(parseFloat(n)) && isFinite(n);
+  isNumeric(num) {
+    return !isNaN(parseFloat(num)) && isFinite(num);
   }
 
   isClassDay(day) {
-     day = this.isNumeric(day) ? day : moment().weekday();
-     let classDay = this.getMeetingDay(day);
-        
-     return (classDay.length) ? true : false;
+    day = this.isNumeric(day) ? day : moment().weekday();
+    const classDay = this.getMeetingDay(day);
+
+    return (classDay.length) ? true : false;
   }
 
   getDivisionConfigs() {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      let records = self.db.store(
-            'divisionConfigs', 
-            [
-              filter((x) => x.deletedAt === null)
-            ]
-          );
-      resolve(records);
-    });
+    return this.db.store(
+      'divisionConfigs',
+      [
+        filter((rec) => rec.deletedAt === null),
+        sortBy('order'),
+      ]
+    );
+  }
+
+  getFirstDivisionConfig() {
+    const record = this.db.store(
+      'divisionConfigs',
+      [
+        filter((rec) => rec.deletedAt === null),
+        sortBy('order'),
+        first
+      ]
+    );
+
+    return (record) ? record : null;
   }
 
   getDivisionConfig(id) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      let record = self.db.store(
-            'divisionConfigs', 
-            [
-              filter((x) => x.deletedAt === null && x.id === id),
-              first
-            ]
-          );
-      resolve(record);
-    });
+    return this.db.store(
+      'divisionConfigs',
+      [
+        filter((rec) => rec.deletedAt === null && rec.id === id),
+        first,
+      ]
+    );
   }
-  
-  async getClasses() {
-    let records = await this.db.store(
-            'classes', 
-            [
-              sortBy('order')
-            ]
-          );
-    //console.log("years", years);
+
+  getClasses(excludes) {
+    let records;
+    if (excludes) {
+      records = this.db.store(
+        'classes',
+        [
+          filter((rec) => rec.deletedAt === null
+                          && excludes.indexOf(rec.id) === -1
+          ),
+          sortBy('order'),
+        ]
+      );
+    } else {
+      records = this.db.store(
+        'classes',
+        [
+          sortBy('order'),
+        ]
+      );
+    }
+    // console.log("years", years);
     return records;
   }
 
-  async getDivisionYears(divisionConfigId) {
-    let records = await this.db.store(
-            'divisionYears', 
-            [
-              filter((x) => x.deletedAt === null && x.divisionConfigId=== divisionConfigId),
-              sortBy('endDate')
-            ]
-          );
-    //console.log("years", years);
+  getClassGroupingYears(divisionConfigId) {
+    const records = this.db.store(
+      'divisionYears',
+      [
+        filter((rec) => rec.deletedAt === null && rec.divisionConfigId === divisionConfigId),
+        orderBy(['endDate'], ['desc']),
+      ]
+    );
+    // console.log("years", years);
     return records;
+  }
+
+  getClassGroupingYear(id) {
+    return this.db.store(
+      'divisionYears',
+      [
+        filter((rec) => rec.deletedAt === null && rec.id === id),
+        first,
+      ]
+    );
   }
 
   getDivision(id) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      let record = self.db.store(
-              'divisions', 
-              [
-                filter((x) => x.deletedAt === null && x.id === id),
-                first
-              ]
-            );
-      resolve(record);
-    });
+    return this.db.store(
+      'divisions',
+      [
+        filter((rec) => rec.deletedAt === null && rec.id === id),
+        first,
+      ]
+    );
   }
 
   getCurrentDivisionYear(divisionConfigId) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      let now = moment().valueOf(),
-          record = self.db.store(
-            'divisionYears', 
-            [
-              filter((x) => x.deletedAt === null && x.endDate >= now && x.startDate <= now && x.divisionConfigId === divisionConfigId),
-              first
-            ]
-          );
-      //console.log("year", year);
-      resolve(record);
-    });
+    const now = moment().valueOf();
+    return this.db.store(
+      'divisionYears',
+      [
+        filter((rec) => rec.deletedAt === null
+              && rec.endDate >= now
+              && rec.startDate <= now
+              && rec.divisionConfigId === divisionConfigId),
+        first,
+      ]
+    );
   }
 
   async getDivisionScheduleOrdered(configId, yearId) {
     configId = configId || this.db.store(
-        'divisionConfigs', 
-        [
-          first
-        ]
+        'divisionConfigs',
+      [
+        first,
+      ]
       );
     let now = moment().valueOf(),
-        schedule, future = [], past = [];
+      schedule, future = [], past = [];
     if (!yearId) {
-      yearId = await this.db.store(
-        'divisionYears', 
+      yearId = this.db.store(
+        'divisionYears',
         [
-          filter((x) => x.deletedAt === null && x.endDate >= now && x.startDate <= now && x.divisionConfigId === configId),
-          first
+          filter((rec) => rec.deletedAt === null && rec.endDate >= now
+            && rec.startDate <= now && rec.divisionConfigId === configId),
+          first,
         ]
       ).id;
     }
-    schedule = await this.db.store(
-      'divisions', 
+    schedule = this.db.store(
+      'divisions',
       [
-        filter((x) => x.deletedAt === null && x.divisionYear >= yearId && x.divisionConfigId === configId),
+        filter((rec) => rec.deletedAt === null && rec.divisionYear >= yearId
+          && rec.divisionConfigId === configId),
       ]
     );
-    schedule.forEach(function(div){
+    schedule.forEach((div) => {
       if (moment(div.end).isSameOrAfter()) {
         future.push(div);
       } else {
@@ -159,156 +179,191 @@ export default class Classes {
     });
     future = await sortBy(future)('end');
     past = await sortBy(past)('end');
-    schedule = await future.concat(past)
+    schedule = await future.concat(past);
     //console.log("schedule", schedule);
     return schedule;
   }
 
-  async getDivisionSchedules(configId, yearId) {
-    let records = await this.db.store(
-            'divisions', 
-            [
-              filter((x) => x.deletedAt === null && x.divisionYear === yearId && x.divisionConfigId === configId),
-              sortBy('end')
-            ]
-          );
+  getDivisionSchedulesByPosition(yearId) {
+    const records = this.db.store(
+      'divisions',
+      [
+        filter((rec) => rec.deletedAt === null
+                        && rec.divisionYear === yearId
+        ),
+        sortBy('position'),
+      ]
+    );
     return records;
   }
 
-  async getCurrentDivisionSchedule(configId, yearId) {
-    let now = moment().valueOf();
-    let records = await this.db.store(
-          'divisions', 
-          [
-            filter((x) => x.deletedAt === null && x.end >= now && x.start <= now && x.divisionYear === yearId && x.divisionConfigId === configId),
-            sortBy('end'),
-            first
-          ]
-        );
+  getDivisionSchedules(yearId) {
+    const records = this.db.store(
+      'divisions',
+      [
+        filter((rec) => rec.deletedAt === null
+                        && rec.divisionYear === yearId
+        ),
+        sortBy('end'),
+      ]
+    );
     return records;
+  }
+
+  getCurrentDivisionSchedule(yearId) {
+    const now = moment().valueOf();
+    return this.db.store(
+      'divisions',
+      [
+        filter((rec) => rec.deletedAt === null
+                        && rec.end >= now
+                        && rec.start <= now
+                        && rec.divisionYear === yearId
+        ),
+        sortBy('end'),
+        first,
+      ]
+    );
   }
 
   async getDivisionSchedule(id) {
-    let now = moment().valueOf(),
-        schedule;
-    let record = await this.db.store(
-          'divisions', 
-          [
-            filter((x) => x.deletedAt === null && x.id === id),
-            sortBy('end'),
-            first
-          ]
-        );
+    const record = this.db.store(
+      'divisions',
+      [
+        filter((rec) => rec.deletedAt === null && rec.id === id),
+        sortBy('end'),
+        first,
+      ]
+    );
     return record;
   }
 
   latestAttendance(day, length) {
-    //console.log(day, length);
-    let now = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(length, "week").valueOf(),
-        latest = this.db.store(
-          'divisionClassAttendance', 
-          [
-            filter((x) => x.deletedAt === null && x.attendanceDate >= now && x.day === day),
-            sortBy('attendanceDate')
-          ]
-        ).reduce(
-          function(map, d){
-            map[d.attendanceDate] = (map[d.attendanceDate] || 0) + d.count;
-            return map;
-          },
-          Object.create(null)
-        ),
-        result = Object.keys(latest).map(function(k) { return {attendance: latest[k], attendanceDate: parseInt(k, 10)}; });
+    // console.log(day, length);
+    const now = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(length, 'week').valueOf();
+    const latest = toJS(this.db.store(
+      'divisionClassAttendance',
+      [
+        filter((rec) => rec.deletedAt === null && rec.attendanceDate >= now && rec.day === day),
+        sortBy('attendanceDate'),
+      ]
+    ));
+    const latestR = latest.reduce(
+      (mapping, d1) => {
+        mapping[d1.attendanceDate] = (mapping[d1.attendanceDate] || 0) + d1.count;
+        return mapping;
+      },
+      {}
+    );
+
+    const result = Object.keys(latestR).map(function (k1) { 
+      return { attendance: latestR[k1], attendanceDate: parseInt(k1, 10) };
+    });
     return result;
   }
 
   avgAttendance(day, begin, end) {
     day = day || 0;
-    begin = begin || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(4, "week").valueOf();
+    begin = begin || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(4, 'week').valueOf();
     end = end || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD HH:mm:ss')).valueOf();
 
-    let latest = this.db.store(
-          'divisionClassAttendance', 
-          [
-            filter((x) => x.deletedAt === null && x.attendanceDate >= begin && x.attendanceDate <= end && x.day === day),
-            sortBy('attendanceDate')
-          ]
-        ).reduce(
-          function(map, d){
-            map[d.attendanceDate] = (map[d.attendanceDate] || 0) + d.count;
-            return map;
-          },
-          Object.create(null)
-        ),
-        avg = 0;
-    Object.keys(latest).forEach(function(day, index) { avg += latest[day]; });
+    const latest = toJS(this.db.store(
+      'divisionClassAttendance',
+      [
+        filter((rec) => rec.deletedAt === null && rec.attendanceDate >= begin
+          && rec.attendanceDate <= end && rec.day === day),
+        sortBy('attendanceDate'),
+      ]
+    )).reduce(
+      (mapping, d1) => {
+        mapping[d1.attendanceDate] = (mapping[d1.attendanceDate] || 0) + d1.count;
+        return mapping;
+      },
+      Object.create(null)
+    );
+    let avg = 0;
+    Object.keys(latest).forEach((date) => avg += latest[date]);
     avg = avg / Object.keys(latest).length;
     return avg.toFixed(0);
   }
 
   attendancePercentChange(day) {
     day = day || 0;
-    let priorBegin = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(8, "week").valueOf(),
-        priorEnd = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD HH:mm:ss')).subtract(4, "week").valueOf(),
-        priorAvg =  this.avgAttendance(day, priorBegin, priorEnd),
-        currAvg =  this.avgAttendance(day),
-        percChange = change(priorAvg, currAvg, true);
+    const priorBegin = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(8, 'week').valueOf();
+    const priorEnd = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD HH:mm:ss')).subtract(4, 'week').valueOf();
+    const priorAvg = this.avgAttendance(day, priorBegin, priorEnd);
+    const currAvg = this.avgAttendance(day);
+    const percChange = change(priorAvg, currAvg, true);
     return percChange;
+  }
+
+  getGraphAttendance(day, length) {
+    const attendance = this.latestAttendance(day, length);
+    const labels = attendance.map((date) =>
+      moment.utc(date.attendanceDate).tz('America/Chicago').format('MM/DD'));
+    const series = attendance.map((date) => parseInt(date.attendance, 10));
+    // console.log("graphAttendance", labels, series);
+    return {
+      labels,
+      series: [series],
+    };
   }
 
   getClassAttendance(classId, date) {
     date = date || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
-    let self = this;
-    return computed(() => {
-      let attendance = self.db.store(
-        'divisionClassAttendance', 
-        [
-          filter((x) => x.deletedAt === null && x.attendanceDate >= date && x.divisionClassId === classId)
-        ]
-      );
-      if (attendance.length && attendance[0].count) {
-        return attendance[0].count.toString();
-      } else {
-        return "0";
-      }
-    }).get();
+    const self = this;
+
+    let retVal;
+    const attendance = self.db.store(
+      'divisionClassAttendance',
+      [
+        filter((rec) => rec.deletedAt === null && rec.attendanceDate >= date && rec.divisionClassId === classId),
+      ]
+    );
+    if (attendance.length && attendance[0].count) {
+      retVal = attendance[0].count.toString();
+    } else {
+      retVal = '0';
+    }
+    return retVal;
+
   }
 
   async getClassAttendanceToday(classId) {
     let today = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD'));
-    let records = await this.db.store(
-          'divisionClassAttendance', 
-          [
-            filter((x) => x.deletedAt === null && x.divisionClassId === classId && x.attendanceDate >= today)
-          ]
+    const records = this.db.store(
+          'divisionClassAttendance',
+      [
+        filter((rec) => rec.deletedAt === null && rec.divisionClassId === classId && rec.attendanceDate >= today),
+      ]
         );
     return records;
   }
 
   getDailyAttendance(startMonth, endMonth) {
-    startMonth = startMonth || moment(moment().format("MM/01/YYYY")+" 00:00:00").subtract(3, "month")
-    endMonth = endMonth || moment(moment().format("MM/01/YYYY")+" 00:00:00").valueOf();
-    let dailyAttendance = [],
-        latest = this.db.store(
-          'divisionClassAttendance', 
-          [
-            filter((x) => x.deletedAt === null && x.attendanceDate >= startMonth && x.attendanceDate <= endMonth),
-            sortBy('attendanceDate'),
-            reverse
-          ]
-        ).reduce(
-          function(map, d){
-            map[d.attendanceDate] = (map[d.attendanceDate] || 0) + d.count;
-            return map;
-          },
-          Object.create(null)
-        ),
-        avg = 0;
-    Object.keys(latest).forEach(function(day, index) {
+    startMonth = startMonth || moment(moment().format('MM/01/YYYY') + ' 00:00:00').subtract(3, 'month');
+    endMonth = endMonth || moment(moment().format('MM/01/YYYY') + ' 00:00:00').valueOf();
+    let dailyAttendance = [];
+    let latest = this.db.store(
+      'divisionClassAttendance',
+      [
+        filter((rec) => rec.deletedAt === null && rec.attendanceDate >= startMonth && rec.attendanceDate <= endMonth),
+        sortBy('attendanceDate'),
+        reverse,
+      ]
+    );
+    latest = latest.reduce(
+      (map, d) => {
+        map[d.attendanceDate] = (map[d.attendanceDate] || 0) + d.count;
+        return map;
+      },
+      Object.create(null)
+    );
+    Object.keys(latest).forEach((day) => {
       dailyAttendance.push({
         date: parseInt(day, 10),
-        count: latest[day]
-      })
+        count: latest[day],
+      });
     });
     /*
     dailyAttendance = _.sortBy(dailyAttendance, function(day){
@@ -318,78 +373,138 @@ export default class Classes {
     //console.log(dailyAttendance);
     return dailyAttendance;
   }
-  
-  getClassAttendanceByDay(classId, day, begin, end) {
-    begin = begin || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(8, "week").valueOf();
-    end = end || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
-    let divisionClasses = this.db.store(
-          'divisionClasses', 
-          [
-            filter((x) => x.deletedAt === null && x.classId === classId),
-            map((x) => x.id)
-          ]
+
+  getDailyAttendanceByDivision(divisionConfigId, startMonth, endMonth) {
+    startMonth = startMonth || moment(moment().format('MM/01/YYYY') + ' 00:00:00').subtract(3, 'month');
+    endMonth = endMonth || moment(moment().format('MM/01/YYYY') + ' 00:00:00').valueOf();
+    const divisions = this.db.store(
+      'divisions',
+      [
+        filter((rec) => rec.deletedAt === null 
+                        && rec.divisionConfigId === divisionConfigId
+                        && rec.end >= startMonth
+                        && rec.end <= endMonth
         ),
-        records = self.db.store(
-          'divisionClassAttendance', 
-          [
-            filter((x) => x.deletedAt === null && x.day === day && x.attendanceDate >= begin && x.attendanceDate <= end && (divisionClasses.indexOf(x.divisionClassId) > -1)),
-            sortBy('attendanceDate')
-          ]
-        );
+        map(rec => rec.id),
+      ]
+    );
+    const divisionClasses = this.db.store(
+      'divisionClasses',
+      [
+        filter((rec) => rec.deletedAt === null 
+                        && (divisions.indexOf(rec.divisionId) > -1)
+        ),
+        map(rec => rec.id),
+      ]
+    );
+    let dailyAttendance = [];
+    let latest = this.db.store(
+      'divisionClassAttendance',
+      [
+        filter((rec) => rec.deletedAt === null
+                && rec.attendanceDate >= startMonth
+                && rec.attendanceDate <= endMonth
+                && (divisionClasses.indexOf(rec.divisionClassId) > -1)
+        ),
+        sortBy('attendanceDate'),
+        reverse,
+      ]
+    );
+    latest = latest.reduce(
+      (map, d) => {
+        map[d.attendanceDate] = (map[d.attendanceDate] || 0) + d.count;
+        return map;
+      },
+      Object.create(null)
+    );
+    Object.keys(latest).forEach((day) => {
+      dailyAttendance.push({
+        date: parseInt(day, 10),
+        count: latest[day],
+      });
+    });
+    /*
+    dailyAttendance = _.sortBy(dailyAttendance, function(day){
+        return day.date * -1;
+    });
+    */
+    //console.log(dailyAttendance);
+    return dailyAttendance;
+  }
+
+  getClassAttendanceByDay(classId, day, begin, end) {
+    begin = begin || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(8, 'week').valueOf();
+    end = end || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
+    const divisionClasses = this.db.store(
+      'divisionClasses',
+      [
+        filter((rec) => rec.deletedAt === null && rec.classId === classId),
+        map((rec) => rec.id),
+      ]
+    );
+    const records = this.db.store(
+      'divisionClassAttendance',
+      [
+        filter((rec) => rec.deletedAt === null
+                        && rec.day === day
+                        && rec.attendanceDate >= begin
+                        && rec.attendanceDate <= end
+                        && (divisionClasses.indexOf(rec.divisionClassId) > -1)),
+        sortBy('attendanceDate'),
+      ]
+    );
     return records;
   }
 
   getDayAttendance(date) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      let dailyAttendance = [],
-          attendance = self.db.store(
-            'divisionClassAttendance', 
-            [
-              filter((x) => x.deletedAt === null && x.attendanceDate >= parseInt(date)),
-              first
-            ]
-          ),
-          division = self.db.store(
-            'divisions', 
-            [
-              filter((x) => x.deletedAt === null && x.start <= parseInt(date) && x.end >= parseInt(date)),
-              first
-            ]
-          ),
-          divisionClasses = self.db.store(
-            'divisionClasses', 
-            [
-              filter((x) => x.deletedAt === null && x.divisionId === division.id),
-              first
-            ]
-          ),
-          classes = self.db.store(
-            'classes', 
-            [
-              sortBy('id')
-            ]
-          );
+    const self = this;
+    return new Promise((resolve, reject) => {
+      const attendance = self.db.store(
+        'divisionClassAttendance',
+        [
+          filter((rec) => rec.deletedAt === null && rec.attendanceDate >= parseInt(date, 10)),
+          first,
+        ]
+      );
+      const division = self.db.store(
+        'divisions',
+        [
+          filter((rec) => rec.deletedAt === null && rec.start <= parseInt(date, 10) && rec.end >= parseInt(date, 10)),
+          first,
+        ]
+      );
+      const divisionClasses = self.db.store(
+        'divisionClasses',
+        [
+          filter((rec) => rec.deletedAt === null && rec.divisionId === division.id),
+          first,
+        ]
+      );
+      const classes = self.db.store(
+        'classes',
+        [
+          sortBy('id'),
+        ]
+      );
 
       self.db.eqJoin(
-        divisionClasses, 
-        classes, 
-        'classId', 
-        'id', 
-        function (left, right) {
-          return {
-            divisionClassId: left.id,
-            classId: left.classId,
-            divisionClasses: left,
-            class: right
-          }
-        }
+        classes,
+        divisionClasses,
+        'id',
+        'classId',
+        (left, right) => 
+          ({
+            divisionClassId: right.id,
+            classId: right.classId,
+            divisionClasses: right,
+            class: left,
+          })
       ).then(
-        function(data) {
+        (data) => {
           data = sortBy(data)('divisionClassId');
-          data.forEach(function(cls, index) {
-            let classAttendance = find(attendance)({ 'divisionClassId': cls.divisionClassId }),
-                divisionClassAttendance = (classAttendance) ? classAttendance : {count: 0, updatedAt: null};
+          data.forEach((cls) => {
+            const classAttendance = find(attendance)({ 'divisionClassId': cls.divisionClassId });
+            const divisionClassAttendance = (classAttendance) ? classAttendance : { count: 0, updatedAt: null };
             cls.divisionClassAttendance = divisionClassAttendance;
           });
           resolve(data);
@@ -398,559 +513,828 @@ export default class Classes {
     });
   }
 
-  getCurrentDivision(now) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      now = now || moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
-      let record = self.db.store(
-            'divisions', 
-            [
-              filter((x) => x.deletedAt === null && x.end >= now),
-              sortBy('end'),
-              first
-            ]
-          );
-      resolve(record);
-    });
+  getAllCurrentYears(now) {
+    const self = this;
+    now = now || moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
+    return computed(() => {
+      const record = self.db.store(
+        'divisionYears',
+        [
+          filter((rec) => rec.deletedAt === null
+                          && rec.endDate >= now
+                          && rec.startDate <= now
+          ),
+          sortBy('end'),
+        ]
+      );
+      return record;
+    }).get();
   }
-  
+
+  getCurrentDivision(divisionConfigId, now) {
+    const self = this;
+    now = now || moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
+    return computed(() => {
+      const record = self.db.store(
+        'divisions',
+        [
+          filter((rec) => rec.deletedAt === null
+                          && rec.end >= now
+                          && rec.start <= now
+                          && rec.divisionConfigId === divisionConfigId
+          ),
+          sortBy('end'),
+          first,
+        ]
+      );
+      console.log('getCurrentDivision', divisionConfigId, record);
+      return record;
+    }).get();
+  }
+
+  getAllCurrentDivisions(now) {
+    const self = this;
+    now = now || moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
+    return computed(() => {
+      const record = self.db.store(
+        'divisions',
+        [
+          filter((rec) => rec.deletedAt === null
+                          && rec.end >= now
+                          && rec.start <= now
+          ),
+          sortBy('end'),
+        ]
+      );
+      return record;
+    }).get();
+  }
+
+  getClassCurrentDivision(classId, now) {
+    const self = this;
+    now = now || moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
+    const allCurrentDivs = this.getAllCurrentDivisions(now);
+    const ids = (allCurrentDivs.length) ? allCurrentDivs.map(obj => obj.id) : [];
+    return computed(() => {
+      const record = self.db.store(
+        'divisionClasses',
+        [
+          filter((rec) => rec.deletedAt === null
+                          && ids.indexOf(rec.divisionId) > -1
+                          && rec.classId === classId
+          ),
+          sortBy('end'),
+          first,
+        ]
+      );
+      return record;
+    }).get();
+  }
+
   getMeetingDay(day) {
+    const now = moment().valueOf();
+    const years = this.getAllCurrentYears(now).map(obj => obj.id);
     return this.db.store(
-            'classMeetingDays', 
-            [
-              filter((x) => x.deletedAt === null && x.day === day),
-            ]
-          );
+      'yearMeetingDays',
+      [
+        filter((rec) => rec.deletedAt === null
+                        && rec.dow === day
+                        && years.indexOf(rec.yearId) > -1
+        ),
+      ]
+    );
   }
 
   getCurrentDivisionMeetingDays(divisionConfig, today) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      resolve(
-        self.db.store(
-          'classMeetingDays', 
-          [
-            filter((x) => x.deletedAt === null && x.day === today && x.divisionConfigId === divisionConfig.id)
-          ]
-        )
-      );
-    });
+    return this.db.store(
+      'classMeetingDays',
+      [
+        filter((rec) => rec.deletedAt === null && rec.day === today && rec.divisionConfigId === divisionConfig.id),
+      ]
+    );
+  }
+
+  getYearMeetingDays(yearId) {
+    return this.db.store(
+      'yearMeetingDays',
+      [
+        filter((rec) => rec.deletedAt === null && rec.yearId === yearId),
+      ]
+    );
   }
 
   getDivisionMeetingDays(divisionConfigId) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      let records = self.db.store(
-          'classMeetingDays', 
-          [
-            filter((x) => x.deletedAt === null && x.divisionConfigId === divisionConfigId)
-          ]
-        );
-      resolve(records);
-    });
+    const self = this;
+    const records = self.db.store(
+      'classMeetingDays',
+      [
+        filter((rec) => rec.deletedAt === null && rec.divisionConfigId === divisionConfigId),
+      ]
+    );
+    return records;
   }
 
   getCurrentDivisionClasses(divisionId) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      waterfall(
-        [
-          function(callback) {
-            if (!divisionId) {
-              let now = moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
-              self.getCurrentDivision(now).then(
-                function(data) {
-                  callback(null, data.id);
-                }
-              );
-            } else {
-              callback(null, divisionId);
-            }
-          }
-        ],
-        function(err, results) {
-          let divisionClasses = self.db.store(
-                'divisionClasses', 
-                [
-                  sortBy('classId')
-                ]
-              ),
-              classes = self.db.store(
-                'classes', 
-                [
-                  sortBy('id')
-                ]
-              );
-          self.db.eqJoin(
-            divisionClasses, 
-            classes, 
-            'classId', 
-            'id', 
-            function (left, right) {
-              return {
-                class: right,
-                order: right.order,
-                id: left.id,
-                divisionClass: left
-              }
-            }
-          ).then(
-            function(data) {
-              data = sortBy(x=>x.order)(data);
-              resolve(data);
-            }
-          );
-        }
-      );
-      
-    });
+    const self = this;
+    const divisionClasses = this.db.store(
+      'divisionClasses',
+      [
+        filter((rec) => rec.deletedAt === null && rec.divisionId === divisionId),
+        sortBy('classId'),
+      ]
+    );
+    return sortBy(rec => rec.order)(divisionClasses.map((cls) => {
+      cls.class = self.getClass(cls.classId);
+      cls.order = cls.class.order;
+      return cls;
+    }));
   }
 
   getDivisionConfigClasses(divisionConfigId, date, dow) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      date = date || moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
-      dow = self.isNumeric(dow) ? dow : moment().weekday();
-      waterfall(
-        [
-          function(callback) {
-            self.getDivisionConfig(divisionConfigId).then(
-              function(data) {
-                callback(null, {divisionConfig: data});
-              }
-            );
-          },
-          function(store, callback) {
-            self.getCurrentDivision(date).then(
-              function(data) {
-                store.division = data;
-                callback(null, store);
-              }
-            );
-          },
-          function(store, callback) {
-            self.getCurrentDivisionMeetingDays(store.divisionConfig, dow).then(
-              function(data) {
-                store.classDay = data;
-                callback(null, store);
-              }
-            );
-          },
-          function(store, callback) {
-            self.getCurrentDivisionClasses(store.division.id).then(
-              function(data) {
-                store.divClasses = data;
-                callback(null, store);
-              }
-            );
-          },
-        ],
-        function(err, store) {
-          if (!Array.isArray(store.classDay) && store.classDay !== null) {
-            store.classDay = [store.classDay];
-          } else if (store.classDay === null) {
-            store.classDay = [];
-          }
-          let results = store.classDay.map(function(day, index){
-            day.classes = store.divClasses;
-            day.config = store.divisionConfig;
-          });
-          resolve(store.classDay);
-        }
-      );
-    });
+    const self = this;
+    date = date || moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
+    dow = this.isNumeric(dow) ? dow : moment().weekday();
+    const division = this.getCurrentDivision(divisionConfigId, date);
+    return (division) ? this.getCurrentDivisionClasses(division.id) : [];
   }
 
   getDivisionClass(divisionClassId) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      let divisionClasses = self.db.store(
-                'divisionClasses', 
-                [
-                  filter((x) => x.deletedAt === null && x.id === divisionClassId),
-                  sortBy('classId')
-                ]
-              ),
-              classes = self.db.store(
-                'classes', 
-                [
-                  sortBy('id')
-                ]
-              );
-      self.db.eqJoin(
-        divisionClasses, 
-        classes, 
-        'classId', 
-        'id', 
-        function (left, right) {
-          return {
-            order: right.order,
-            class: right,
-            divisionClass: left
-          }
-        }
-      ).then(
-        function(data) {
-          data = sortBy(data)('order');
-          resolve(data);
-        }
+    const self = this;
+    return computed(() => {
+      const divisionClass = self.db.store(
+        'divisionClasses',
+        [
+          filter((rec) => rec.deletedAt === null && rec.id === divisionClassId),
+          first,
+        ]
       );
-    });
+      const division = self.db.store(
+        'divisions',
+        [
+          filter((rec) => rec.deletedAt === null && rec.id === divisionClass.divisionId),
+          first,
+        ]
+      );
+      const cls = self.db.store(
+        'classes',
+        [
+          filter((rec) => rec.deletedAt === null && rec.id === divisionClass.classId),
+          first,
+        ]
+      );
+      return observable(Object.assign(
+        {},
+        divisionClass,
+        {
+          order: cls.order,
+          class: cls,
+          classId: cls.id,
+          divisionId: division.id,
+          id: divisionClass.id,
+          divisionClass,
+          division,
+        }
+      ));
+    }).get();
   }
 
-  getDivisionClassByDivAndClass(divisionId, classId) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      let divisionClasses = self.db.store(
-            'divisionClasses', 
-            [
-              filter((x) => x.deletedAt === null && x.divisionId === divisionId && x.classId === classId),
-              sortBy('classId')
-            ]
-          ),
-          classes = self.db.store(
-            'classes', 
-            [
-              sortBy('id')
-            ]
-          );
-      self.db.eqJoin(
-        divisionClasses, 
-        classes, 
-        'classId', 
-        'id', 
-        function (left, right) {
-          return {
-            order: right.order,
-            class: right,
-            divisionClass: left
-          }
-        }
-      ).then(
-        function(data) {
-          resolve(data[0]);
-        }
-      );
+  getDivisionClassByDivisionAndClass(divisionId, classId) {
+    const divisionClass = this.db.store(
+      'divisionClasses',
+      [
+        filter((rec) => rec.deletedAt === null && rec.divisionId === divisionId && rec.classId === classId),
+        first,
+      ]
+    );
+
+    return this.getDivisionClass(divisionClass.id);
+  }
+
+  getTeachers(teachers) {
+    const ids = teachers.map((rec)=> rec.peopleId);
+    const people = this.db.store(
+      'people',
+      [
+        filter((rec) => rec.deletedAt === null && ids.indexOf(rec.id) > -1),
+        sortBy(['lastName', 'firstName']),
+      ]
+    );
+    return people.map((person) => {
+      person.divClassTeacher = teachers.find(item => item.peopleId === person.id);
+      return person;
     });
   }
 
   getCurrentClassTeachers(divisionClassId) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      let day = moment().weekday();
-      let divisionClassTeachers = self.db.store(
-            'divisionClassTeachers', 
-            [
-              filter((x) => x.deletedAt === null && x.day === day && x.divisionClassId === divisionClassId),
-              sortBy('classId')
-            ]
-          ),
-          people = self.db.store(
-            'people', 
-            []
-          );
+    const self = this;
+    return new Promise((resolve, reject) => {
+      const day = moment().weekday();
+      const divisionClassTeachers = self.db.store(
+        'divisionClassTeachers',
+        [
+          filter((rec) => rec.deletedAt === null && rec.day === day && rec.divisionClassId === divisionClassId),
+          sortBy('classId'),
+        ]
+      );
+      const people = self.db.store(
+        'people',
+        []
+      );
       self.db.eqJoin(
-        divisionClassTeachers, 
-        people, 
-        'peopleId', 
-        'id', 
+        people,
+        divisionClassTeachers,
+        'id',
+        'peopleId',
         function (left, right) {
           return {
-            person: right,
-            divClassTeacher: left
-          }
+            person: left,
+            divClassTeacher: right,
+          };
         }
       ).then(
-        function(data) {
+        function (data) {
           resolve(data);
+        }
+      ).catch(
+        function (err) {
+          reject(err);
         }
       );
     });
   }
 
-  getDivisionClassTeachers(divisionClassId, day) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      let divisionClassTeachers = self.db.store(
-            'divisionClassTeachers', 
-            [
-              filter((x) => x.deletedAt === null && x.day === day && x.divisionClassId === divisionClassId),
-              sortBy('classId')
-            ]
-          ),
-          people = self.db.store(
-            'people', 
-            []
-          );
-      self.db.eqJoin(
-        divisionClassTeachers, 
-        people, 
-        'peopleId', 
-        'id', 
-        function (left, right) {
-          return {
-            id: left.id,
-            person: right,
-            divClassTeacher: left
-          }
-        }
-      ).then(
-        function(data) {
-          resolve(data);
-        }
-      );
-    });
+  getDivisionClassTeacher(divisionClassId, peopleId) {
+    const self = this;
+    console.log('getDivisionClassTeacher:', divisionClassId, peopleId);
+    const divisionClassTeacher = this.db.store(
+      'divisionClassTeachers',
+      [
+        filter((rec) => rec.deletedAt === null
+                        && rec.divisionClassId === divisionClassId
+                        && rec.peopleId === peopleId
+        ),
+        first,
+      ]
+    );
+    const person = self.db.store(
+      'people',
+      [
+        filter((rec) => rec.deletedAt === null
+                        && rec.id === peopleId
+        ),
+        first,
+      ]
+    );
+    divisionClassTeacher.person = person;
+    return divisionClassTeacher;
   }
 
-  async getClassMeetingDays() {
-    return await this.db.store(
-          'classMeetingDays', 
-          [
-            filter((x) => x.deletedAt === null),
-            sortBy('day')
-          ]
-        );
-  }
-
-  async getClass(classId) {
-    let cls = await this.db.store(
-          'classes', 
-          [
-            filter((x) => x.deletedAt === null && x.id === classId),
-            first
-          ]
-        );
-    //console.log(getCurrentClassTeachers, teachers);
-    return cls;
-  }
-  
   getClassTeachers(classId) {
-    let self = this;
-    return new Promise(function(resolve, reject){
-      let divisionClasses = self.db.store(
-            'divisionClasses', 
-            [
-              sortBy('id')
-            ]
-          ),
-          people = self.db.store(
-            'people', 
-            [
-              sortBy('id')
-            ]
-          ),
-          divisions = self.db.store(
-            'divisions', 
-            [
-              sortBy('id')
-            ]
-          ),
-          teachers = self.db.store(
-            'teachers', 
-            [
-              filter((x) => x.deletedAt === null && x.divisionClassId === divisionClassId),
-              sortBy('id')
-            ]
-          );
-      waterfall(
-          [
-            function(callback) {
-              self.db.eqJoin(
-                divisionClassTeachers, 
-                people, 
-                'peopleId', 
-                'id', 
-                function (left, right) {
-                  return {
-                    person: right,
-                    divisionClassId: left.divisionClassId,
-                    divClassTeacher: left
-                  }
-                }
-              ).then(
-                function(data) {
-                  callback(data);
-                }
-              );
-            },
-            function(result, callback) {
-              self.db.eqJoin(
-                result, 
-                divisionClasses, 
-                'divisionClassId', 
-                'id', 
-                function (left, right) {
-                  return {
-                    person: left.person,
-                    divisionClassId: left.divisionClassId,
-                    divClassTeacher: left.divClassTeacher,
-                    divisionId: right.divisionId,
-                    divClass: right
-                  }
-                }
-              ).then(
-                function(data) {
-                  callback(data);
-                }
-              );
-            },
-            function(result, callback) {
-              self.db.eqJoin(
-                result, 
-                divisions, 
-                'divisionId', 
-                'id', 
-                function (left, right) {
-                  return {
-                    person: left.person,
-                    personId: left.person.id,
-                    divisionClassId: left.divisionClassId,
-                    divClassTeacher: left.divClassTeacher,
-                    divClass: left.divClass,
-                    divisionId: left.divisionId,
-                    division: right
-                  }
-                }
-              ).then(
-                function(data) {
-                  callback(data);
-                }
-              );
-            }
-          ],
-          function(err, results) {
-            let uniq = results.reduce(function(a,b){
-                  //console.log(a, b);
-                  if (Array.isArray(a) && a.length === 0) {
-                    a.push(b);
-                  } else if (a.personId !== b.personId  ) {
-                    a.push(b);
-                  }
-                  return a;
-                },[]);
-            //console.log("getClassTeachers", uniq);
-            resolve(uniq);
-          }
-        );
+    const self = this;
+    console.log('getClassTeachers:', classId);
+    const divisionClasses = toJS(this.db.store(
+      'divisionClasses',
+      [
+        filter((rec) => rec.deletedAt === null && rec.classId === classId),
+        map((rec) => rec.id),
+      ]
+    ));
+    const classTeachers = toJS(self.db.store(
+      'divisionClassTeachers',
+      [
+        filter((rec) => rec.deletedAt === null && divisionClasses.indexOf(rec.divisionClassId) > -1),
+        sortBy('createdAt'),
+      ]
+    ));
+    const people = toJS(self.db.store(
+      'people',
+      []
+    ));
+    return self.db.eqJoin(
+      people,
+      classTeachers,
+      'id',
+      'peopleId',
+      (left, right) => ({
+        id: right.id,
+        person: left,
+        divisionClassId: right.divisionClassId,
+        divClassTeacher: right,
+      })
+    );
+  }
+
+  getDivisionClassTeachersByDayRaw(divisionClassId, day) {
+    const self = this;
+    console.log('getDivisionClassTeachersByDayRaw:', divisionClassId, day);
+    return computed(() => {
+      return self.db.store(
+        'divisionClassTeachers',
+        [
+          filter((rec) => rec.deletedAt === null && rec.day === day && rec.divisionClassId === divisionClassId),
+        ]
+      );
+    }).get();
+  }
+
+  getDivisionClassTeachersByDay(divisionClassId, day) {
+    const self = this;
+    console.log('getDivisionClassTeachersByDay:', divisionClassId, day);
+    return computed(() => {
+      const divisionClassTeachers = self.db.store(
+        'divisionClassTeachers',
+        [
+          filter((rec) => rec.deletedAt === null && rec.day === day && rec.divisionClassId === divisionClassId),
+          sortBy('classId'),
+        ]
+      );
+      const people = self.db.store(
+        'people',
+        []
+      );
+      return self.db.eqJoin(
+        people,
+        divisionClassTeachers,
+        'id',
+        'peopleId',
+        (left, right) => ({
+          id: right.id,
+          person: left,
+          divClassTeacher: right,
+        })
+      ).then(
+        (data) => observable(data)
+      );
+    }).get();
+  }
+
+  getDivisionClassTeachersByDay2(divisionClassId, day) {
+    const self = this;
+    console.log('getDivisionClassTeachersByDay:', divisionClassId, day);
+    return computed(() => {
+      const divisionClassTeachers = self.db.store(
+        'divisionClassTeachers',
+        [
+          filter((rec) => rec.deletedAt === null && rec.day === day && rec.divisionClassId === divisionClassId),
+          sortBy('classId'),
+        ]
+      );
+      const people = self.db.store(
+        'people',
+        []
+      );
+      return self.db.eqJoin(
+        people,
+        divisionClassTeachers,
+        'id',
+        'peopleId',
+        (left, right) => ({
+          id: right.id,
+          person: left,
+          divClassTeacher: right,
+        })
+      ).then(
+        (data) => observable(data)
+      );
+    }).get();
+  }
+
+  getDivisionClassTeachersGroupDay(divisionClassId) {
+    const self = this;
+    const meetingDays = this.getClassMeetingDays();
+    return new Promise((resolve, reject) => {
+      let retVal = {
+        divisionClass: self.getDivisionClass(divisionClassId),
+      };
+      const fetchDay = function (day) {
+        return self.getClassDayTeachers(retVal.divisionClass, day);
+      };
+      return Promise.map(
+        meetingDays,
+        fetchDay
+      ).then(
+        (result) => {
+          retVal.days = result.resultset;
+          resolve(retVal);
+        }
+      );
     });
   }
 
-  async getNotes() {
-    let records = await this.db.store(
-          'notes', 
-          [
-            filter((x) => x.deletedAt === null),
-            sortBy('createdAt')
-          ]
-        );
+  getClassDayTeachers(divClass, day){
+    const self = this;
+    return new Promise((resolve, reject) => {
+      self.getDivisionClassTeachersByDay(divClass.id, day.day).then(
+        (result) => {
+          let retVal = {};
+          console.log('teachers', day.day, result);
+          if (result.resultset.length) {
+            retVal = {
+              viewing: false,
+              day,
+              id: divClass.id,
+              teachers: result.resultset,
+            };
+          } else {
+            retVal = {
+              day,
+              viewing: false,
+              id: divClass.id,
+              teachers: [{
+                id: uniqueId(),
+                day: day.day,
+                divisionClassId: divClass.id,
+                peopleId: 0,
+                person: {
+                  lastName: 'Assigned',
+                  firstName: 'Not',
+                },
+                divClassTeacher: {
+                  confirmed: false,
+                },
+              }],
+            };
+          }
+          resolve(retVal);
+        }
+      );
+    });
+  }
+
+  getClassYearStudents(classId, yearId) {
+    const classStudents = this.db.store(
+      'yearClassStudents',
+      [
+        filter((rec) => rec.deletedAt === null
+                        && rec.classId === classId
+                        && rec.yearId === yearId
+        ),
+        map(rec => rec.peopleId),
+      ]
+    );
+    const records = this.db.store(
+      'people',
+      [
+        filter((rec) => rec.deletedAt === null
+                        && classStudents.indexOf(rec.id) > -1
+        ),
+        orderBy(['lastName', 'firstName'], ['desc']),
+      ]
+    );
+
     return records;
   }
 
-  async findPeople(search, type) {
-    let srch = {},
-        regex = new RegExp('^'+search, "i");
-    let records = await this.db.store(
-          'people', 
-          [
-            filter((x) => x.deletedAt === null && x[type].search(regex)),
-            sortBy(['lastName', 'firstName'])
-          ]
-        );
+  getAcademicYearMeetingDays(yearId) {
+    return this.db.store(
+      'yearMeetingDays',
+      [
+        filter((rec) => rec.deletedAt === null
+                        && rec.yearId === yearId
+        ),
+        sortBy('dow'),
+      ]
+    );
+  }
+
+  getClassMeetingDays() {
+    return this.db.store(
+      'classMeetingDays',
+      [
+        filter((rec) => rec.deletedAt === null),
+        sortBy('day'),
+      ]
+    );
+  }
+
+  getClass(classId) {
+    return this.db.store(
+      'classes',
+      [
+        filter((rec) => rec.deletedAt === null && rec.id === classId),
+        first,
+      ]
+    );
+  }
+
+  getNotes() {
+    const records = this.db.store(
+      'notes',
+      [
+        filter((rec) => rec.deletedAt === null),
+        sortBy('createdAt'),
+      ]
+    );
     return records;
+  }
+
+  findPeople(search, type) {
+    const self = this;
+    const regex = new RegExp('^' + search, 'i');
+    return new Promise((resolve, reject) => {
+      const records = self.db.store(
+        'people',
+        [
+          filter((rec) => rec.deletedAt === null && regex.test(rec[type])),
+          sortBy(['lastName', 'firstName']),
+        ]
+      );
+      resolve(records);
+    });
+  }
+
+  getPerson(id) {
+    return this.db.store(
+      'people',
+      [
+        filter((rec) => rec.deletedAt === null && rec.id === id),
+        first,
+      ]
+    );
   }
 
   async confirmTeacher(confirm, divClassId, teacherId) {
-    let record = await this.db.store(
-          'divisionClassTeachers', 
-          [
-            filter((x) => x.deletedAt === null && x.id === teacherId),
-            first
-          ]
-        );
+    let record = this.db.store(
+      'divisionClassTeachers',
+      [
+        filter((rec) => rec.deletedAt === null && rec.id === teacherId),
+        first,
+      ]
+    );
     if (record) {
       record = record.valueOf();
       record.confirmed = confirm;
-      this.db.updateStore("divisionClassTeachers", record, false);
+      this.db.updateStore('divisionClassTeachers', record, false);
     }
 
   }
 
   async updateClassOrder(classId, currentPos, newPos) {
-    let record = await this.db.store(
-          'classes', 
-          [
-            filter((x) => x.deletedAt === null && x.id === classId),
-            first
-          ]
-        );
+    let record = this.db.store(
+      'classes',
+      [
+        filter((rec) => rec.deletedAt === null && rec.id === classId),
+        first,
+      ]
+    );
     if (record) {
       record = record.valueOf();
       record.order = newPos;
-      this.db.updateCollection("classes", record, false);
+      this.db.updateStore('classes', record, false);
     }
 
   }
 
   updateClassAttendance(divisionClassId, now, count) {
-    console.log("updateClassAttendance", moment().unix());
+    console.log('updateClassAttendance', moment().unix());
 
     let record = this.db.store(
-          'divisionClassAttendance', 
-          [
-            filter((x) => x.deletedAt === null && x.attendanceDate === now && x.divisionClassId === divisionClassId),
-            first
-          ]
-        );
+      'divisionClassAttendance',
+      [
+        filter((rec) => rec.deletedAt === null && rec.attendanceDate === now
+          && rec.divisionClassId === divisionClassId),
+        first,
+      ]
+    );
     if (!record) {
       record = {
         attendanceDate: now,
         count: parseInt(count, 10),
         createdAt: null,
-        day: moment(now, "x").weekday(),
+        day: moment(now, 'x').weekday(),
         deletedAt: null,
-        divisionClassId: divisionClassId,
+        divisionClassId,
         id: null,
         revision: null,
-        updatedAt: null
+        updatedAt: null,
       };
     } else {
       record = toJS(record);
       record.count = count;
     }
-    console.log("updateClassAttendance:dispatch", moment().unix());
-    return this.db.updateStore("divisionClassAttendance", record, false);
+    console.log('updateClassAttendance:dispatch', moment().unix());
+    return this.db.updateStore('divisionClassAttendance', record, false);
   }
 
-  async updateClassDayTeacher(divisionClassId, day, peopleId) {
-    let record = await this.db.store(
-          'divisionClassTeachers', 
-          [
-            filter((x) => x.deletedAt === null && x.peopleId === peopleId && x.day === day && X.divisionClassId === divisionClassId),
-            first
-          ]
-        );
+  @action updateClassDayTeacher(divisionClassId, day, peopleId) {
+    let newRecord;
+    const record = this.db.store(
+      'divisionClassTeachers',
+      [
+        filter((rec) => rec.deletedAt === null && rec.peopleId === peopleId
+          && rec.day === day && rec.divisionClassId === divisionClassId),
+        first,
+      ]
+    );
     if (!record) {
-      record = {
-        peopleId: peopleId,
-        day: day,
-        divisionClassId: divisionClassId,
-        confirmed: false,
-        id: null,
-        revision: null,
-        updatedAt: null,
-        createdAt: null,
-        deletedAt: null
-      };
+      newRecord = Object.assign(
+        {},
+        toJS(record),
+        {
+          peopleId,
+          day,
+          divisionClassId,
+          confirmed: false,
+          id: null,
+          revision: null,
+          updatedAt: null,
+          createdAt: null,
+          deletedAt: null,
+        }
+      );
     } else {
-      record = toJS(record);
-      record.peopleId = peopleId;
-      record.day = day;
-      record.divisionClassId = divisionClassId;
+      newRecord = Object.assign({}, toJS(record));
+      newRecord.peopleId = peopleId;
+      newRecord.day = day;
+      newRecord.divisionClassId = divisionClassId;
     }
-    return await this.db.updateStore("divisionClassTeachers", record, false);
+    return this.db.updateStore('divisionClassTeachers', newRecord, false);
+  }
+
+  @action updateClassGrouping(id, title, order) {
+    let newRecord;
+    const record = (id) ? this.getDivisionConfig(id) : id;
+    if (!record) {
+      newRecord = Object.assign(
+        {},
+        {
+          title,
+          id: null,
+          order,
+          revision: null,
+          updatedAt: null,
+          createdAt: null,
+          deletedAt: null,
+        }
+      );
+    } else {
+      newRecord = Object.assign(
+        {},
+        toJS(record),
+        {
+          title,
+          order,
+        }
+      );
+    }
+    return this.db.updateStore('divisionConfigs', newRecord, false);
+  }
+
+  @action updateClassGroupingOrder(id, currentPos, newPos) {
+    let retVal = null;
+    let record = this.db.store(
+      'divisionConfigs',
+      [
+        filter((rec) => rec.deletedAt === null && rec.id === id),
+        first,
+      ]
+    );
+    if (record) {
+      record = record.valueOf();
+      record.order = newPos;
+      retVal = this.db.updateStore('divisionConfigs', record, false);
+    }
+    return retVal;
+  }
+
+  @action updateClassGroupingYear(id, classGroupingId, startDate, endDate) {
+    let newRecord;
+    const record = (id) ? this.getClassGroupingYear(id) : id;
+    if (!record) {
+      newRecord = Object.assign(
+        {},
+        {
+          id: null,
+          divisionConfigId: classGroupingId,
+          startDate,
+          endDate,
+          revision: null,
+          updatedAt: null,
+          createdAt: null,
+          deletedAt: null,
+        }
+      );
+    } else {
+      newRecord = Object.assign(
+        {},
+        toJS(record),
+        {
+          startDate,
+          endDate
+        }
+      );
+    }
+    return this.db.updateStore('divisionYears', newRecord, false);
+  }
+
+  @action updateDivision(rec) {
+    let newRecord;
+    const record = ('id' in rec && rec.id) ? this.getClassGroupingYear(id) : null;
+    if (!record) {
+      newRecord = Object.assign(
+        {},
+        rec
+      );
+    } else {
+      newRecord = Object.assign(
+        {},
+        toJS(record),
+        rec
+      );
+    }
+    return this.db.updateStore('divisions', newRecord, false);
+  }
+
+  @action updateDivisionOrder(divisionId, currentPos, newPos) {
+    let retVal = null;
+    let record = this.db.store(
+      'divisions',
+      [
+        filter((rec) => rec.deletedAt === null && rec.id === divisionId),
+        first,
+      ]
+    );
+    if (record) {
+      record = record.valueOf();
+      record.position = newPos;
+      retVal = this.db.updateStore('divisions', record, false);
+    }
+    return retVal;
+  }
+
+  @action updateDivisionClass(classId, divisionId, add) {
+    let retVal = null;
+    if (add) {
+      const newRecord = Object.assign(
+        {},
+        {
+          id: null,
+          divisionId,
+          classId,
+          revision: null,
+          updatedAt: null,
+          createdAt: null,
+          deletedAt: null,
+        }
+      );
+      retVal = this.db.updateStore('divisionClasses', newRecord, false);
+    } else {
+      const record = this.db.store(
+        'divisionClasses',
+        [
+          filter((rec) => rec.deletedAt === null
+                          && rec.classId === classId
+                          && rec.divisionId === divisionId
+          ),
+          first,
+        ]
+      );
+      if (record) {
+        retVal = this.deleteRecord('divisionClasses', record.id);
+      }
+    }
+    return retVal;
+  }
+
+  @action updateAcademicYearMeetingDay(yearId, dow, add) {
+    let retVal = null;
+    if (add) {
+      const newRecord = Object.assign(
+        {},
+        {
+          id: null,
+          yearId,
+          dow,
+          revision: null,
+          updatedAt: null,
+          createdAt: null,
+          deletedAt: null,
+        }
+      );
+      retVal = this.db.updateStore('yearMeetingDays', newRecord, false);
+    } else {
+      const record = this.db.store(
+        'yearMeetingDays',
+        [
+          filter((rec) => rec.deletedAt === null
+                          && rec.yearId === yearId
+                          && rec.dow === dow
+          ),
+          first,
+        ]
+      );
+      if (record) {
+        retVal = this.deleteRecord('yearMeetingDays', record.id);
+      }
+    }
+    return retVal;
   }
 
   updateCollectionFields(collection, id, updates) {
-    this.db.updateCollectionFields(collection, id, updates);
+    return this.db.updateCollectionFields(collection, id, updates);
+  }
+
+  @action deleteRecord(collection, id) {
+    return this.db.deleteRecord(collection, id);
   }
 }

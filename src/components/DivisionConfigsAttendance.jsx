@@ -1,26 +1,11 @@
 import React, { Component, PropTypes } from 'react';
+import { inject, observer } from 'mobx-react';
+import { Row, Col } from 'react-bootstrap';
 import moment from 'moment-timezone';
-import { observer } from "mobx-react";
-import { connect } from 'mobx-connect';
-import { browserHistory } from 'react-router';
-import ReactGridLayout from 'react-grid-layout';
-import Card from 'material-ui/Card/Card';
-import CardActions from 'material-ui/Card/CardActions';
-import CardHeader from 'material-ui/Card/CardHeader';
-import CardMedia from 'material-ui/Card/CardMedia';
-import CardText from 'material-ui/Card/CardText';
-import * as Colors from 'material-ui/styles/colors';
-import Transitions from 'material-ui/styles/transitions';
-import {List, ListItem} from 'material-ui/List';
-import Subheader from 'material-ui/Subheader/Subheader';
-import Divider from 'material-ui/Divider';
-import ActionGrade from 'material-ui/svg-icons/action/grade';
-import Avatar from 'material-ui/Avatar';
-import { Grid, Row, Col } from 'react-bootstrap';
-import { context, resolve } from "react-resolver";
 import DisplayClassAttendance from './DisplayClassAttendance';
 
-@connect
+@inject('classes')
+@observer
 class DivisionConfigsAttendance extends Component {
 
   constructor(props, context) {
@@ -28,7 +13,6 @@ class DivisionConfigsAttendance extends Component {
 
   }
 
- 
   componentWillMount() {
     this.setState({
       now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
@@ -36,15 +20,15 @@ class DivisionConfigsAttendance extends Component {
   }
 
   componentWillReact() {
-    console.log("divisionConfigsAttendance:componentWillReact", moment().unix());
+    console.log('divisionConfigsAttendance:componentWillReact', moment().unix());
   }
-  
+
   render() {
     const { divisionConfigs, date } = this.props;
-    console.log("divisionConfigsAttendance:render", moment().unix());
+    console.log('divisionConfigsAttendance:render', moment().unix());
     return (
       <Row>
-        {divisionConfigs.map((divisionConfig, index) =>
+        {divisionConfigs.map((divisionConfig, index) =>     
           <Col xs={12} sm={12} md={12} lg={12} key={divisionConfig.id}>
             <DisplayClassAttendance date={date} divisionConfig={divisionConfig} />
           </Col>

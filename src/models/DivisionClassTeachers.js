@@ -2,7 +2,7 @@ module.exports = function (sequelize, DataTypes) {
   var DivisionClassTeachers = sequelize.define(
     'divisionClassTeachers',
     {
-      "id": {
+      id: {
         type: DataTypes.BLOB,
         primaryKey: true,
         get: function()  {
@@ -12,7 +12,7 @@ module.exports = function (sequelize, DataTypes) {
           this.setDataValue('id', new Buffer(val, "hex"));
         }
       },
-      "divisionClassId":  {
+      divisionClassId:  {
         type: DataTypes.BLOB,
         get: function()  {
           return this.getDataValue('divisionClassId').toString('hex');
@@ -21,7 +21,7 @@ module.exports = function (sequelize, DataTypes) {
           this.setDataValue('divisionClassId', new Buffer(val, "hex"));
         }
       },
-      "peopleId":  {
+      peopleId:  {
         type: DataTypes.BLOB,
         get: function()  {
           return this.getDataValue('peopleId').toString('hex');
@@ -30,24 +30,42 @@ module.exports = function (sequelize, DataTypes) {
           this.setDataValue('peopleId', new Buffer(val, "hex"));
         }
       },
-      "day": DataTypes.INTEGER,
-      "confirmed": DataTypes.BOOLEAN,
-      "createdAt": {
+      day: DataTypes.INTEGER,
+      confirmed: DataTypes.BOOLEAN,
+      createdAt: {
         type: DataTypes.DATE,
-        get: function()  {
+        get() {
           if (this.getDataValue('createdAt')) {
             return this.getDataValue('createdAt').getTime();
           } else {
             return null;
           }
-        }
+        },
       },
-      "updatedAt": DataTypes.DATE,
-      "deletedAt": DataTypes.DATE,
-      "revision": {
+      updatedAt: {
+        type: DataTypes.DATE,
+        get() {
+          if (this.getDataValue('updatedAt')) {
+            return this.getDataValue('updatedAt').getTime();
+          } else {
+            return null;
+          }
+        },
+      },
+      deletedAt: {
+        type: DataTypes.DATE,
+        get() {
+          if (this.getDataValue('deletedAt')) {
+            return this.getDataValue('deletedAt').getTime();
+          } else {
+            return null;
+          }
+        },
+      },
+      revision: {
         type: DataTypes.INTEGER,
-        defaultValue: 0
-      }
+        defaultValue: 0,
+      },
     },
     {
       paranoid: true,

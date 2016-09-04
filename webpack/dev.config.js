@@ -1,43 +1,48 @@
-const webpack = require("webpack");
-const path = require("path");
+const webpack = require('webpack');
+const path = require('path');
 
 module.exports = {
-	target:  "web",
-	cache:   false,
-	context: __dirname,
-    debug: true,
-    devtool: '#inline-source-map',
-	entry:  [
+  target:  'web',
+  cache:   false,
+  context: __dirname,
+  debug: true,
+  devtool: '#inline-source-map',
+	entry: [
       'webpack-hot-middleware/client?path=/__webpack_hmr&reload=true',
-      path.join(__dirname, '../src/index.js')
+      path.join(__dirname, '../src/index.js'),
     ],
 	output:  {
 		path:          path.join(__dirname, '../static/dist'),
-		filename:      "client.js",
-		publicPath:    "/hot"
+		filename:      'client.js',
+		publicPath:    '/hot',
 	},
 	plugins: [
-		new webpack.DefinePlugin({__CLIENT__: true, __SERVER__: false}),
-    new webpack.DefinePlugin({__DEV__: JSON.stringify(JSON.parse(process.env.BUILD_DEV || 'true'))}),
-		new webpack.DefinePlugin({
-          'process.env.NODE_ENV': JSON.stringify( 'development' ),
-          '__DEV__': JSON.stringify( process.env.NODE_ENV )
-        }),
+    new webpack.DefinePlugin({
+      'process.env': {
+        NODE_ENV: JSON.stringify(process.env.NODE_ENV),
+        BROWSER: '"true"',
+      },
+    }),
+    new webpack.DefinePlugin({
+      '__DEV__': JSON.stringify('development'),
+    }),
 		new webpack.optimize.DedupePlugin(),
 		new webpack.optimize.OccurenceOrderPlugin(),
     new webpack.HotModuleReplacementPlugin(),
-    new webpack.NoErrorsPlugin()
+    new webpack.NoErrorsPlugin(),
 	],
 	module:  {
       loaders: [
         {
-          test: /\.js[x]?$/,
-          exclude: /node_modules/,
+          test: /\.jsx?$/,
+          exclude: [
+            /node_modules/,
+          ],
           loader: 'babel',
           query: {
-            presets: [ 'react', 'es2015', 'stage-0' ],
-            plugins: [ 
-              ['transform-runtime'],
+            presets: ['es2015', 'stage-0', 'react'],
+            plugins: [
+              ['fast-async'],
               ['transform-decorators-legacy'],
               ['react-transform', {
                 transforms: [
@@ -52,30 +57,41 @@ module.exports = {
                 ],
               }],
             ],
-          }
-        }, {
+          },
+        },
+        {
           test: /\.json?$/,
-          loader: 'json-loader'
+          loader: 'json-loader',
         },
         {
           test: /\.css$/, // Only .css files
-          loader: 'style-loader!css-loader' // Run both loaders
-        }
-      ]
+          loader: 'style-loader!css-loader', // Run both loaders
+        },
+        { 
+          test: /worker\.js$/,
+          loader: 'worker-loader?inline=true',
+        },
+      ],
 	},
 	resolve: {
-      alias: {
-        react: path.join(__dirname, "../node_modules/react")
-      },
-      modulesDirectories: [
-        "src",
-        "node_modules",
-        "web_modules"
-      ],
-      extensions: ["", ".json", ".js", ".jsx"]
+    alias: {
+      react: path.join(__dirname, '../node_modules/react'),
+    },
+    modulesDirectories: [
+      'src',
+      'node_modules',
+      'web_modules',
+    ],
+    extensions: ['', '.json', '.js', '.jsx'],
 	},
-	node:    {
-      __dirname: true,
-      fs:        'empty'
-	}
+	node: {
+    __dirname: true,
+    fs: 'empty',
+	},
+  worker: {
+		output: {
+			filename: "hash.worker.js",
+			chunkFilename: "[id].hash.worker.js"
+		}
+	},
 };

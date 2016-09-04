@@ -237,6 +237,50 @@ export default {
               }
             );
           },
+          yearMeetingDays: (callback) => {
+            api
+            .yearMeetingDays
+            .all()
+            .then(
+              (results) => {
+                async.map(
+                  results,
+                  (item, cb) => {
+                    cb(null, item.get({ plain: true }))
+                  },
+                  (err, result) => {
+                    callback(null, result);
+                  }
+                );
+              },
+              (err) => {
+                console.log(err);
+                callback(err);
+              }
+            );
+          },
+          yearClassStudents: (callback) => {
+            api
+            .yearClassStudents
+            .all()
+            .then(
+              (results) => {
+                async.map(
+                  results,
+                  (item, cb) => {
+                    cb(null, item.get({ plain: true }))
+                  },
+                  (err, result) => {
+                    callback(null, result);
+                  }
+                );
+              },
+              (err) => {
+                console.log(err);
+                callback(err);
+              }
+            );
+          },
           classMeetingDays: function(callback){
             api
             .classes
