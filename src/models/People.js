@@ -71,22 +71,40 @@ module.exports = function (sequelize, DataTypes) {
       "collegeStudent": { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
       "individualPhotoUrl": DataTypes.STRING,
       "familyPhotoUrl": DataTypes.STRING,
-      "createdAt": {
+      createdAt: {
         type: DataTypes.DATE,
-        get: function()  {
+        get() {
           if (this.getDataValue('createdAt')) {
             return this.getDataValue('createdAt').getTime();
           } else {
             return null;
           }
-        }
+        },
       },
-      "updatedAt": DataTypes.DATE,
-      "deletedAt": DataTypes.DATE,
-      "revision": {
+      updatedAt: {
+        type: DataTypes.DATE,
+        get() {
+          if (this.getDataValue('updatedAt')) {
+            return this.getDataValue('updatedAt').getTime();
+          } else {
+            return null;
+          }
+        },
+      },
+      deletedAt: {
+        type: DataTypes.DATE,
+        get() {
+          if (this.getDataValue('deletedAt')) {
+            return this.getDataValue('deletedAt').getTime();
+          } else {
+            return null;
+          }
+        },
+      },
+      revision: {
         type: DataTypes.INTEGER,
-        defaultValue: 0
-      }
+        defaultValue: 0,
+      },
     },
     {
       paranoid: true,

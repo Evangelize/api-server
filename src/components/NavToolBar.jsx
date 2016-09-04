@@ -1,7 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import moment from 'moment-timezone';
-import { observer } from "mobx-react";
-import { connect } from 'mobx-connect';
+import { inject, observer } from 'mobx-react';
 import { browserHistory } from 'react-router';
 import ReactGridLayout from 'react-grid-layout';
 import * as Colors from 'material-ui/styles/colors';
@@ -12,7 +11,8 @@ import ToolbarGroup from 'material-ui/Toolbar/ToolbarGroup';
 import ToolbarSeparator from 'material-ui/Toolbar/ToolbarSeparator';
 import ToolbarTitle from 'material-ui/Toolbar/ToolbarTitle';
 
-@connect
+@inject("classes")
+@observer
 class NavToolBar extends Component {
 
   constructor(props, context) {

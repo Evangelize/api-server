@@ -1,7 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import moment from 'moment-timezone';
-import { observer } from "mobx-react";
-import { connect } from 'mobx-connect';
+import { inject, observer } from 'mobx-react';
 import { browserHistory } from 'react-router';
 import ReactGridLayout from 'react-grid-layout';
 import Card from 'material-ui/Card/Card';
@@ -16,31 +15,14 @@ import Menu from 'material-ui/Menu';
 import MenuItem from 'material-ui/MenuItem';
 import ChartistGraph from 'react-chartist';
 
-@connect
+@observer
 class DashboardMediumGraph extends Component {
   constructor(props, context) {
     super(props, context);
   }
 
-  resize() {
-  }
-
-  componentWillReact() {
-    console.log("dashboardMediumGraph:componentWillReact", moment().unix());
-  }
-
-  componentWillReceiveProps(nextProps) {
-    console.log("dashboardMediumGraph:componentWillReceiveProps", moment().unix());
-    //console.log("componentWillReceiveProps:mediumGraph", nextProps);
-  }
-
-  componentDidMount() {
-    let self = this;
-    window.addEventListener('resize', this.resize);
-  }
-
   render() {
-    console.log("dashboardMediumGraph:render", moment().unix());
+    console.log('dashboardMediumGraph:render', moment().unix());
     return (
       <Card>
         <CardHeader

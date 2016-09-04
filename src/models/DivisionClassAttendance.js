@@ -2,7 +2,7 @@ module.exports = function (sequelize, DataTypes) {
   var DivisionClassAttendance = sequelize.define(
     'divisionClassAttendance',
     {
-      "id": {
+      id: {
         type: DataTypes.BLOB,
         primaryKey: true,
         get: function()  {
@@ -12,7 +12,7 @@ module.exports = function (sequelize, DataTypes) {
           this.setDataValue('id', new Buffer(val, "hex"));
         }
       },
-      "divisionClassId": {
+      divisionClassId: {
         type: DataTypes.BLOB,
         get: function()  {
           return this.getDataValue('divisionClassId').toString('hex');
@@ -21,8 +21,8 @@ module.exports = function (sequelize, DataTypes) {
           this.setDataValue('divisionClassId', new Buffer(val, "hex"));
         }
       },
-      "day": DataTypes.INTEGER,
-      "attendanceDate": {
+      day: DataTypes.INTEGER,
+      attendanceDate: {
         type: DataTypes.DATE,
         get: function()  {
           if (this.getDataValue('attendanceDate')) {
@@ -32,23 +32,41 @@ module.exports = function (sequelize, DataTypes) {
           }
         }
       },
-      "count": DataTypes.INTEGER,
-      "createdAt": {
+      count: DataTypes.INTEGER,
+      createdAt: {
         type: DataTypes.DATE,
-        get: function()  {
+        get() {
           if (this.getDataValue('createdAt')) {
             return this.getDataValue('createdAt').getTime();
           } else {
             return null;
           }
-        }
+        },
       },
-      "updatedAt": DataTypes.DATE,
-      "deletedAt": DataTypes.DATE,
-      "revision": {
+      updatedAt: {
+        type: DataTypes.DATE,
+        get() {
+          if (this.getDataValue('updatedAt')) {
+            return this.getDataValue('updatedAt').getTime();
+          } else {
+            return null;
+          }
+        },
+      },
+      deletedAt: {
+        type: DataTypes.DATE,
+        get() {
+          if (this.getDataValue('deletedAt')) {
+            return this.getDataValue('deletedAt').getTime();
+          } else {
+            return null;
+          }
+        },
+      },
+      revision: {
         type: DataTypes.INTEGER,
-        defaultValue: 0
-      }
+        defaultValue: 0,
+      },
     },
     {
       freezeTableName: true,

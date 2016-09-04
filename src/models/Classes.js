@@ -1,39 +1,57 @@
 module.exports = function (sequelize, DataTypes) {
-  var Classes = sequelize.define(
+  const Classes = sequelize.define(
     'classes',
     {
-      "id": {
+      id: {
         type: DataTypes.BLOB,
         primaryKey: true,
-        get: function()  {
+        get: function () {
           return this.getDataValue('id').toString('hex');
         },
-        set: function(val) {
-          this.setDataValue('id', new Buffer(val, "hex"));
-        }
+        set: function (val) {
+          this.setDataValue('id', new Buffer(val, 'hex'));
+        },
       },
-      "title": DataTypes.STRING,
-      "description": DataTypes.STRING,
-      "createdAt": {
+      title: DataTypes.STRING,
+      description: DataTypes.STRING,
+      order: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      createdAt: {
         type: DataTypes.DATE,
-        get: function()  {
+        get() {
           if (this.getDataValue('createdAt')) {
             return this.getDataValue('createdAt').getTime();
           } else {
             return null;
           }
-        }
+        },
       },
-      "updatedAt": DataTypes.DATE,
-      "deletedAt": DataTypes.DATE,
-      "revision": {
-        type: DataTypes.INTEGER,
-        defaultValue: 0
+      updatedAt: {
+        type: DataTypes.DATE,
+        get() {
+          if (this.getDataValue('updatedAt')) {
+            return this.getDataValue('updatedAt').getTime();
+          } else {
+            return null;
+          }
+        },
       },
-      "order": {
+      deletedAt: {
+        type: DataTypes.DATE,
+        get() {
+          if (this.getDataValue('deletedAt')) {
+            return this.getDataValue('deletedAt').getTime();
+          } else {
+            return null;
+          }
+        },
+      },
+      revision: {
         type: DataTypes.INTEGER,
-        defaultValue: 0
-      }
+        defaultValue: 0,
+      },
     }
   );
 

@@ -1,7 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import moment from 'moment-timezone';
-import { observer } from "mobx-react";
-import { connect } from 'mobx-connect';
+import { inject, observer } from 'mobx-react';
 import { browserHistory } from 'react-router';
 import ReactGridLayout from 'react-grid-layout';
 import Card from 'material-ui/Card/Card';
@@ -19,7 +18,8 @@ import Avatar from 'material-ui/Avatar';
 import waterfall from 'async/waterfall';
 import { Grid, Row, Col } from 'react-bootstrap';
 
-@connect
+@inject('classes')
+@observer
 class DisplayTeacher extends Component {
 
   constructor(props, context) {
@@ -42,7 +42,7 @@ class DisplayTeacher extends Component {
     return (
       <ListItem
           key={teacher.divClassTeacher.id}
-          primaryText={teacher.person.firstName+" "+teacher.person.lastName}
+          primaryText={teacher.person.firstName+' '+teacher.person.lastName}
           leftAvatar={
           <Avatar 
               src={

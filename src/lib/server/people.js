@@ -3,20 +3,20 @@ import Promise from 'bluebird';
 
 export default {
   get(id) {
-    return new Promise(function(resolve, reject){
+    return new Promise(function (resolve, reject) {
       id = new Buffer(id, 'hex');
       models.People.findOne(
         {
           where: {
-            id: id
-          }
+            id,
+          },
         }
       ).then(
-        function(result) {
+        function (result) {
           resolve(result);
           return null;
         },
-        function(err){
+        function (err) {
           console.log(err);
           reject(err);
           return null;
@@ -25,46 +25,46 @@ export default {
     });
   },
   find(field, term) {
-    return new Promise(function(resolve, reject){
+    return new Promise(function (resolve, reject) {
       models.People.findAll({
-        where: models.sequelize.where(models.sequelize.col(field), 'LIKE', term+'%'),
+        where: models.sequelize.where(models.sequelize.col(field), 'LIKE', term + '%'),
         include: [
           {
-            model: models.Teachers
+            model: models.Teachers,
           },
           {
-            model: models.Students
-          }
-        ]
+            model: models.Students,
+          },
+        ],
       }).then(
-        function(people) {
-          resolve( people );
+        function (people) {
+          resolve(people);
           return null;
         },
-        function(err){
-          reject( err );
+        function (err) {
+          reject(err);
           return null;
         }
-      )
+      );
     });
   },
   people() {
-    return new Promise(function(resolve, reject){
+    return new Promise(function (resolve, reject) {
       models.People.findAll(
         {
-          order: "id ASC"
+          order: 'id ASC',
         }
       ).then(
-        function(result) {
+        function (result) {
           resolve(result);
           return null;
         },
-        function(err){
+        function (err) {
           console.log(err);
           reject(err);
           return null;
         }
       );
     });
-  }
+  },
 };

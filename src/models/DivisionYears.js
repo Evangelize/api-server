@@ -1,70 +1,88 @@
 module.exports = function (sequelize, DataTypes) {
-  var DivisionYears = sequelize.define(
+  const DivisionYears = sequelize.define(
     'divisionYears',
     {
-      "id": {
+      id: {
         type: DataTypes.BLOB,
         primaryKey: true,
-        get: function()  {
+        get() {
           return this.getDataValue('id').toString('hex');
         },
-        set: function(val) {
-          this.setDataValue('id', new Buffer(val, "hex"));
-        }
+        set(val) {
+          this.setDataValue('id', new Buffer(val, 'hex'));
+        },
       },
-      "divisionConfigId":  {
+      divisionConfigId: {
         type: DataTypes.BLOB,
-        get: function()  {
+        get() {
           return this.getDataValue('divisionConfigId').toString('hex');
         },
-        set: function(val) {
-          this.setDataValue('divisionConfigId', new Buffer(val, "hex"));
-        }
+        set(val) {
+          this.setDataValue('divisionConfigId', new Buffer(val, 'hex'));
+        },
       },
-      "startDate": {
+      startDate: {
         type: DataTypes.DATE,
-        get: function()  {
+        get() {
           if (this.getDataValue('startDate')) {
             return this.getDataValue('startDate').getTime();
           } else {
             return null;
           }
-        }
+        },
       },
-      "endDate": {
+      endDate: {
         type: DataTypes.DATE,
-        get: function()  {
+        get() {
           if (this.getDataValue('endDate')) {
             return this.getDataValue('endDate').getTime();
           } else {
             return null;
           }
-        }
+        },
       },
-      "createdAt": {
+      createdAt: {
         type: DataTypes.DATE,
-        get: function()  {
+        get() {
           if (this.getDataValue('createdAt')) {
             return this.getDataValue('createdAt').getTime();
           } else {
             return null;
           }
-        }
+        },
       },
-      "updatedAt": DataTypes.DATE,
-      "deletedAt": DataTypes.DATE,
-      "revision": {
+      updatedAt: {
+        type: DataTypes.DATE,
+        get() {
+          if (this.getDataValue('updatedAt')) {
+            return this.getDataValue('updatedAt').getTime();
+          } else {
+            return null;
+          }
+        },
+      },
+      deletedAt: {
+        type: DataTypes.DATE,
+        get() {
+          if (this.getDataValue('deletedAt')) {
+            return this.getDataValue('deletedAt').getTime();
+          } else {
+            return null;
+          }
+        },
+      },
+      revision: {
         type: DataTypes.INTEGER,
-        defaultValue: 0
-      }
+        defaultValue: 0,
+      },
     },
     {
       paranoid: true,
       classMethods: {
-        associate: function(models) {
-          DivisionYears.hasMany(models.Divisions, {foreignKey: 'divisionYear'});
-        }
-      }
+        associate(models) {
+          DivisionYears.hasMany(models.Divisions, { foreignKey: 'divisionYear' });
+        },
+      },
     }
   );
 

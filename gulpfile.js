@@ -8,7 +8,6 @@ gulp.task(
   'dev',
   function(callback) {
     runSequence(
-      'build-dev',
       'nodemon',
       callback
     );
@@ -33,12 +32,15 @@ gulp.task(
       {
         script: 'index.js',
         ext: 'html js',
-        watch : [
+        watch: [
           'src/containers',
           'src/models',
           'routes',
-          'src/server.js'
-        ]
+          'src/server.js',
+          'src/views',
+          'src/stores',
+          'config/settings.json',
+        ],
       }
     )
     .on(
