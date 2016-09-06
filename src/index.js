@@ -14,7 +14,6 @@ import Sockets from './stores/sockets';
 import routes from './routes';
 import { browserHistory, Router } from 'react-router';
 import EventEmitter from 'eventemitter3';
-console.log(process, __DEV__);
 
 class Root extends Component {
   render() {
