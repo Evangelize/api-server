@@ -3,6 +3,12 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const StatsPlugin = require('stats-webpack-plugin');
 const path = require('path');
 
+const featureFlagsPlugin = new webpack.DefinePlugin({
+  __DEV__: false,
+  __RELEASE__: true,
+});
+
+
 module.exports = {
   devtool: 'source-map',
   entry: [
@@ -28,10 +34,11 @@ module.exports = {
     }),
     new webpack.DefinePlugin({
       'process.env': {
-        NODE_ENV: JSON.stringify(process.env.NODE_ENV),
+        NODE_ENV: JSON.stringify('production'),
         BROWSER: '"true"',
       },
     }),
+    featureFlagsPlugin,
     new webpack.optimize.DedupePlugin(),
   ],
   module: {

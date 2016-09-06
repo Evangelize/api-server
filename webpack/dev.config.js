@@ -1,5 +1,9 @@
 const webpack = require('webpack');
 const path = require('path');
+const featureFlagsPlugin = new webpack.DefinePlugin({
+  __DEV__: true,
+  __RELEASE__: false,
+});
 
 module.exports = {
   target:  'web',
@@ -23,9 +27,7 @@ module.exports = {
         BROWSER: '"true"',
       },
     }),
-    new webpack.DefinePlugin({
-      '__DEV__': JSON.stringify('development'),
-    }),
+    featureFlagsPlugin,
 		new webpack.optimize.DedupePlugin(),
 		new webpack.optimize.OccurenceOrderPlugin(),
     new webpack.HotModuleReplacementPlugin(),
