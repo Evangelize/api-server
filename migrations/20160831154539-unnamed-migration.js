@@ -4,18 +4,11 @@ module.exports = {
   up: function (queryInterface, Sequelize) {
     return Promise.all([
       queryInterface.renameTable('divisionClassStudents', 'yearClassStudents'),
-      queryInterface.addColumn(
-        'yearClassStudents',
-        'yearId',
-        {
-          type: Sequelize.STRING,
-        }
-      ),
       queryInterface.createTable(
         'yearMeetingDays',
         {
-          id: { type: Sequelize.STRING, primaryKey: true },
-          yearId: { type: Sequelize.STRING },
+          id: { type: Sequelize.BLOB, primaryKey: true },
+          yearId: { type: Sequelize.BLOB },
           dow: Sequelize.INTEGER,
           createdAt: Sequelize.DATE,
           updatedAt: Sequelize.DATE,
@@ -39,41 +32,16 @@ module.exports = {
         'divisionClassTeachers',
         'dayId',
         {
-          type: Sequelize.STRING,
+          type: Sequelize.BLOB,
         }
       ),
       queryInterface.addColumn(
         'divisionClassAttendance',
         'dayId',
         {
-          type: Sequelize.STRING,
+          type: Sequelize.BLOB,
         }
       ),
-      queryInterface.sequelize.query(
-        'ALTER TABLE `yearMeetingDays` CHANGE `id` `id` BINARY(16) NOT NULL'
-      ),
-      queryInterface.sequelize.query(
-        'ALTER TABLE `yearMeetingDays` CHANGE `yearId` `yearId` BINARY(16) NOT NULL'
-      ),
-      queryInterface.sequelize.query(
-        'ALTER TABLE `divisionClassTeachers` CHANGE `dayId` `dayId` BINARY(16) NOT NULL'
-      ),
-      queryInterface.sequelize.query(
-        'ALTER TABLE `divisionClassAttendance` CHANGE `dayId` `dayId` BINARY(16) NOT NULL'
-      ),
-      queryInterface.sequelize.query(
-        'ALTER TABLE `yearClassStudents` CHANGE `yearId` `yearId` BINARY(16) NOT NULL'
-      ),
-      queryInterface.sequelize.query(
-        'ALTER TABLE `yearClassStudents` CHANGE `divisionClassId` `classId` BINARY(16) NOT NULL'
-      ),
-      queryInterface.sequelize.query(
-        'ALTER TABLE `yearClassStudents` CHANGE `peopleId` `peopleId` BINARY(16) NOT NULL'
-      ),
-      queryInterface.addIndex('yearMeetingDays', ['yearId']),
-      queryInterface.addIndex('divisionClassTeachers', ['dayId']),
-      queryInterface.addIndex('divisionClassAttendance', ['dayId']),
-      queryInterface.addIndex('yearClassStudents', ['yearId'])
     ]);
   },
 
@@ -93,11 +61,7 @@ module.exports = {
         'dayId'
       ),
       queryInterface.renameTable('yearClassStudents', 'divisionClassStudents'),
-      queryInterface.renameColumn('divisionClassStudents', 'classId', 'divisionClassId'),
-      queryInterface.removeColumn(
-        'divisionClassStudents',
-        'yearId'
-      ),
+      
     ]);
   }
 };
