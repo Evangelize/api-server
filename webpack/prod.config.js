@@ -10,7 +10,7 @@ const featureFlagsPlugin = new webpack.DefinePlugin({
 
 
 module.exports = {
-  devtool: 'source-map',
+  devtool: 'cheap-module-source-map',
   entry: [
     './src/index.js',
   ],
