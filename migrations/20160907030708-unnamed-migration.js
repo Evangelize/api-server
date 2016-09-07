@@ -10,13 +10,6 @@ module.exports = {
       return queryInterface.createTable('users', { id: Sequelize.INTEGER });
     */
     return Promise.all([
-      queryInterface.addColumn(
-        'yearClassStudents',
-        'yearId',
-        {
-          type: Sequelize.BLOB,
-        }
-      ),
       queryInterface.sequelize.query(
         'ALTER TABLE `yearMeetingDays` CHANGE `id` `id` BINARY(16) NOT NULL'
       ),
@@ -24,13 +17,13 @@ module.exports = {
         'ALTER TABLE `yearMeetingDays` CHANGE `yearId` `yearId` BINARY(16) NOT NULL'
       ),
       queryInterface.sequelize.query(
-        'ALTER TABLE `divisionClassTeachers` CHANGE `dayId` `dayId` BINARY(16) NOT NULL'
+        'ALTER TABLE `divisionClassTeachers` ADD `dayId` BINARY(16) NOT NULL'
       ),
       queryInterface.sequelize.query(
-        'ALTER TABLE `divisionClassAttendance` CHANGE `dayId` `dayId` BINARY(16) NOT NULL'
+        'ALTER TABLE `divisionClassAttendance` ADD `dayId` BINARY(16) NOT NULL'
       ),
       queryInterface.sequelize.query(
-        'ALTER TABLE `yearClassStudents` CHANGE `yearId` `yearId` BINARY(16) NOT NULL'
+        'ALTER TABLE `yearClassStudents` ADD `yearId` BINARY(16) NOT NULL'
       ),
       queryInterface.sequelize.query(
         'ALTER TABLE `yearClassStudents` CHANGE `divisionClassId` `classId` BINARY(16) NOT NULL'
@@ -54,6 +47,14 @@ module.exports = {
       return queryInterface.dropTable('users');
     */
     return Promise.all([
+      queryInterface.removeColumn(
+        'divisionClassAttendance',
+        'dayId'
+      ),
+      queryInterface.removeColumn(
+        'divisionClassTeachers',
+        'dayId'
+      ),
       queryInterface.renameColumn('yearClassStudents', 'classId', 'divisionClassId'),
       queryInterface.removeColumn(
         'yearClassStudents',

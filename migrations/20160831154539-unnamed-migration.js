@@ -28,20 +28,6 @@ module.exports = {
           defaultValue: 1,
         }
       ),
-      queryInterface.addColumn(
-        'divisionClassTeachers',
-        'dayId',
-        {
-          type: Sequelize.STRING.BINARY,
-        }
-      ),
-      queryInterface.addColumn(
-        'divisionClassAttendance',
-        'dayId',
-        {
-          type: Sequelize.STRING.BINARY,
-        }
-      ),
     ]);
   },
 
@@ -51,14 +37,6 @@ module.exports = {
       queryInterface.removeColumn(
         'divisionConfigs',
         'order'
-      ),
-      queryInterface.removeColumn(
-        'divisionClassTeachers',
-        'dayId'
-      ),
-      queryInterface.removeColumn(
-        'divisionClassAttendance',
-        'dayId'
       ),
       queryInterface.renameTable('yearClassStudents', 'divisionClassStudents'),
       
