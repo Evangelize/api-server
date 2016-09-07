@@ -116,7 +116,7 @@ class Class extends Component {
                       onChange={this.selectedYear}
                       style={{ marginRight: '12px' }}
                     >
-                      {classes.getClassGroupingYears(this.currentDivision.divisionConfigId).map((year) =>
+                      {this.currentDivision && classes.getClassGroupingYears(this.currentDivision.divisionConfigId).map((year) =>
                         <MenuItem key={year.id} value={year.id} label={moment(year.endDate).format('YYYY')} primaryText={moment(year.endDate).format('YYYY')} />
                       )}
                     </DropDownMenu>
@@ -138,8 +138,11 @@ class Class extends Component {
                   <Row>
                     <Col xs={12} sm={12} md={12} lg={12}>
                       <div>
-                        <span className="button">{this.currentDivision.title}</span> <br />
-                        <span className="caption">{moment(this.currentDivision.start).tz('America/Chicago').format('dddd, MMM DD YYYY')} - {moment(this.currentDivision.end).tz('America/Chicago').format('dddd, MMM DD YYYY')}</span>
+                        <span className="button">{(this.currentDivision) ? this.currentDivision.title : ''}</span> <br />
+                        <span className="caption">
+                          {(this.currentDivision) ? moment(this.currentDivision.start).tz('America/Chicago').format('dddd, MMM DD YYYY') : ''} -
+                           {(this.currentDivision) ? moment(this.currentDivision.end).tz('America/Chicago').format('dddd, MMM DD YYYY') : ''}
+                        </span>
                       </div>
                     </Col>
                   </Row>
