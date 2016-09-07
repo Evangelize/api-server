@@ -62,7 +62,10 @@ class Schedules extends Component {
   }
 
   selectedYear = (event, selectedIndex, value) => {
+    const { classes } = this.props;
     this.academicYear = value;
+    const divisions = classes.getDivisionSchedules(value);
+    this.division = (divisions.length > 0) ? divisions[0].id : null;
   }
 
   selectedDivisionConfig = (event, selectedIndex, value) => {
