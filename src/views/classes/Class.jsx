@@ -47,8 +47,8 @@ class Class extends Component {
     const { classes } = this.props;
     this.cls = classes.getClass(params.classId);
     this.divisionClass = classes.getClassCurrentDivision(params.classId);
-    this.currentDivision = classes.getDivision(this.divisionClass.divisionId);
-    this.studentYearId = classes.getClassGroupingYear(this.currentDivision.divisionYear).id;
+    this.currentDivision = (this.divisionClass) ? classes.getDivision(this.divisionClass.divisionId) : null;
+    this.studentYearId = (this.currentDivision) ? classes.getClassGroupingYear(this.currentDivision.divisionYear).id : null;
     this.setState({
       masonryOptions: {},
     });
@@ -62,7 +62,7 @@ class Class extends Component {
     const { classes } = this.props;
     const attendance = classes.getClassAttendanceByDay(params.classId, day);
     const labels = attendance.map((day1) => moment.utc(day1.attendanceDate).tz('America/Chicago').format('MM/DD'));
-    const series = attendance.map((day1) => parseInt(day1.count,10));
+    const series = attendance.map((day1) => parseInt(day1.count, 10));
     //console.log("graphAttendance", labels, series);
     return {
       labels,
