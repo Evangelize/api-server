@@ -18,20 +18,26 @@ class RenderTeachers extends Component {
   render() {
     const { divClass, day } = this.props;
     const { classes } = this.props;
-    return (
-      <Async
-        pendingRender={<div />}
-        promise={classes.getDivisionClassTeachersByDay(divClass.id, day)}
-        then={(teachers) =>
-          <List>
-            <Subheader>{classes.getClass(divClass.classId).title}</Subheader>
-            {teachers.resultset.map((teacher) =>
-              <DisplayTeacher teacher={teacher} key={teacher.id} />
-            )}
-          </List>
-        }
-      />
-    );
+    let retVal;
+    if (divClass) {
+      retVal = (
+        <Async
+          pendingRender={<div />}
+          promise={classes.getDivisionClassTeachersByDay(divClass.id, day)}
+          then={(teachers) =>
+            <List>
+              <Subheader>{classes.getClass(divClass.classId).title}</Subheader>
+              {teachers.resultset.map((teacher) =>
+                <DisplayTeacher teacher={teacher} key={teacher.id} />
+              )}
+            </List>
+          }
+        />
+      );
+    } else {
+      retVal = <div />;
+    }
+    return retVal;
   }
 }
 export default RenderTeachers;
