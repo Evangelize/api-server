@@ -22,6 +22,16 @@ module.exports = function (sequelize, DataTypes) {
         }
       },
       day: DataTypes.INTEGER,
+      dayId: {
+        type: DataTypes.BLOB,
+        primaryKey: true,
+        get: function()  {
+          return this.getDataValue('dayId').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('dayId', new Buffer(val, "hex"));
+        }
+      },
       attendanceDate: {
         type: DataTypes.DATE,
         get: function()  {
