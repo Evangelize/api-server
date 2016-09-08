@@ -605,11 +605,15 @@ export default class Classes {
     );
   }
 
-  getCurrentDivisionMeetingDays(divisionConfig, today) {
+  getCurrentDivisionMeetingDays(yearId, day) {
     return this.db.store(
-      'classMeetingDays',
+      'yearMeetingDays',
       [
-        filter((rec) => rec.deletedAt === null && rec.day === today && rec.divisionConfigId === divisionConfig.id),
+        filter((rec) => rec.deletedAt === null
+                        && rec.dow === day
+                        && rec.yearId === yearId
+        ),
+        first
       ]
     );
   }
@@ -1085,14 +1089,17 @@ export default class Classes {
 
   }
 
-  updateClassAttendance(divisionClassId, now, count) {
+  updateClassAttendance(divisionClassId, now, count, dayId) {
     console.log('updateClassAttendance', moment().unix());
 
     let record = this.db.store(
       'divisionClassAttendance',
       [
-        filter((rec) => rec.deletedAt === null && rec.attendanceDate === now
-          && rec.divisionClassId === divisionClassId),
+        filter((rec) => rec.deletedAt === null
+                        && rec.attendanceDate === now
+                        && rec.divisionClassId === divisionClassId
+                        && rec.dayId === dayId
+        ),
         first,
       ]
     );
@@ -1104,6 +1111,7 @@ export default class Classes {
         day: moment(now, 'x').weekday(),
         deletedAt: null,
         divisionClassId,
+        dayId,
         id: null,
         revision: null,
         updatedAt: null,
