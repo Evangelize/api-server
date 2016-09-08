@@ -1,5 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import moment from 'moment-timezone';
+import { observable } from 'mobx';
 import { inject, observer } from 'mobx-react';
 import { browserHistory } from 'react-router';
 import ReactGridLayout from 'react-grid-layout';
@@ -21,7 +22,15 @@ const colStyle = {display: 'flex', alignItems: 'center', justifyContent: 'center
 @inject('classes')
 @observer
 class ClassAttendance extends Component {
+  @observable division;
+  @observable meetingDay;
+  @observable day;
   componentWillMount() {
+    const { divClass, date } = this.props;
+    const { classes } = this.props;
+    this.day = moment(date).day();
+    this.division = classes.getDivision(divClass.divisionId);
+    this.meetingDay = classes.getCurrentDivisionMeetingDays(this.division.divisionYear, this.day);
     this.setState({
       now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
     });
@@ -32,7 +41,7 @@ class ClassAttendance extends Component {
     const { classes } = this.props,
           { now } = this.state;
     console.log('attendanceUpdate', moment().unix());
-    classes.updateClassAttendance(divClass.id, date, parseInt(e.target.value, 10));
+    classes.updateClassAttendance(divClass.id, date, parseInt(e.target.value, 10), this.meetingDay.id);
   }
 
   isUpdating() {
