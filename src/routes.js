@@ -7,6 +7,7 @@ import People from './views/People';
 import Schedules from './views/classes/Schedules';
 import Attendance from './views/classes/Attendance';
 import AddClassDayTeacher from './views/classes/AddClassDayTeacher';
+import AddClassStudents from './views/classes/AddClassStudents';
 import EditDayAttendance from './views/classes/EditDayAttendance';
 import Classes from './views/classes/Classes';
 import Class from './views/classes/Class';
@@ -54,6 +55,11 @@ export default (settings) => {
       <Route
         path="classes/:classId"
         component={Class}
+        onEnter={requireAuth}
+      />
+      <Route
+        path="classes/:classId/:yearId/students"
+        component={AddClassStudents}
         onEnter={requireAuth}
       />
       <Route

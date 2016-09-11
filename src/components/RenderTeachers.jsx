@@ -1,18 +1,18 @@
 import React, { Component, PropTypes } from 'react';
-import moment from 'moment-timezone';
+import { observable } from 'mobx';
 import { inject, observer } from 'mobx-react';
 import { List } from 'material-ui/List';
 import Subheader from 'material-ui/Subheader/Subheader';
 import DisplayTeacher from './DisplayTeacher';
-import Async from './Async';
 
 @inject('classes')
 @observer
 class RenderTeachers extends Component {
+  @observable teachers;
   componentWillMount() {
-    this.setState({
-      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf(),
-    });
+    const { divClass, day } = this.props;
+    const { classes } = this.props;
+    this.teachers = classes.getDivisionClassTeachersByDayRaw(divClass.id, day);
   }
 
   render() {
@@ -21,18 +21,12 @@ class RenderTeachers extends Component {
     let retVal;
     if (divClass) {
       retVal = (
-        <Async
-          pendingRender={<div />}
-          promise={classes.getDivisionClassTeachersByDay(divClass.id, day)}
-          then={(teachers) =>
-            <List>
-              <Subheader>{classes.getClass(divClass.classId).title}</Subheader>
-              {teachers.resultset.map((teacher) =>
-                <DisplayTeacher teacher={teacher} key={teacher.id} />
-              )}
-            </List>
-          }
-        />
+        <List>
+          <Subheader>{classes.getClass(divClass.classId).title}</Subheader>
+          {this.teachers.map((teacher) =>
+            <DisplayTeacher teacher={teacher} key={teacher.id} />
+          )}
+        </List>
       );
     } else {
       retVal = <div />;

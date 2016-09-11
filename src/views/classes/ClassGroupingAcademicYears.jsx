@@ -12,6 +12,7 @@ import { Grid, Row, Col } from 'react-bootstrap';
 import NavToolBar from '../../components/NavToolBar';
 import ListAcademicYears from '../../components/ListAcademicYears';
 import DialogAcademicYear from '../../components/DialogAcademicYear';
+import DialogConfirmDelete from '../../components/DialogConfirmDelete';
 
 @inject('classes')
 @observer
@@ -20,6 +21,8 @@ class ClassGroupingAcadmicYears extends Component {
   @observable yearId;
   @observable start = moment();
   @observable end = moment();
+  @observable deleteId;
+  @observable dialogDeleteOpen = false;
   @observable dialogOpen = false;
   handleChange = (type, e, date) => {
     if (type === 'start') {
@@ -46,14 +49,28 @@ class ClassGroupingAcadmicYears extends Component {
     }
   }
 
-  handleEdit = (id) => {
+  handleDeleteClose = (type) => {
     const { classes } = this.props;
-    const year = classes.getClassGroupingYear(id);
-    this.isEdit = true;
-    this.yearId = id;
-    this.start = moment(year.startDate);
-    this.end = moment(year.endDate);
-    this.dialogOpen = true;
+    this.dialogDeleteOpen = false;
+    if (type === 'ok') {
+      classes.deleteRecord('divisionYears', this.deleteId);
+    }
+    this.deleteId = null;
+  }
+
+  handleTap = (type, id) => {
+    const { classes } = this.props;
+    if (type === 'edit') {
+      const year = classes.getClassGroupingYear(id);
+      this.isEdit = true;
+      this.yearId = id;
+      this.start = moment(year.startDate);
+      this.end = moment(year.endDate);
+      this.dialogOpen = true;
+    } else if (type === 'delete') {
+      this.deleteId = id;
+      this.dialogDeleteOpen = true;
+    }
   }
 
   render() {
@@ -86,7 +103,7 @@ class ClassGroupingAcadmicYears extends Component {
                 <CardMedia>
                   <ListAcademicYears 
                     classGroupingId={classGroupingId} 
-                    onEdit={this.handleEdit}
+                    onTap={this.handleTap}
                   />
                 </CardMedia>
               </Card>
@@ -100,6 +117,10 @@ class ClassGroupingAcadmicYears extends Component {
           end={this.end}
           onClose={this.handleClose}
           onChange={this.handleChange}
+        />
+        <DialogConfirmDelete
+          open={this.dialogDeleteOpen}
+          onClose={this.handleDeleteClose}
         />
       </div>
     );

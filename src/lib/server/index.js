@@ -1,4 +1,4 @@
-import attendance from './attendance';
+import divisionClassAttendance from './divisionClassAttendance';
 import classes from './classes';
 import divisions from './divisions';
 import divisionClasses from './divisionClasses';
@@ -15,8 +15,7 @@ import yearMeetingDays from './yearMeetingDays';
 import yearClassStudents from './yearClassStudents';
 
 module.exports = {
-  attendance,
-  divisionClassAttendance: attendance,
+  divisionClassAttendance,
   divisionClasses,
   divisionClassTeachers,
   divisionConfigs,

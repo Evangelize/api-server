@@ -7,11 +7,11 @@ import AcademicYear from './AcademicYear';
 @observer
 class ListAcademicYears extends Component {
   render() {
-    const { classes, classGroupingId, onEdit } = this.props;
+    const { classes, classGroupingId, onTap } = this.props;
     const retVal = (
       <List>
       {classes.getClassGroupingYears(classGroupingId).map((item) =>
-        <AcademicYear key={item.id} item={item} onEdit={onEdit} />
+        <AcademicYear key={item.id} item={item} onTap={onTap} />
       )}
       </List>
     );

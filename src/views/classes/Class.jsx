@@ -12,26 +12,16 @@ import Avatar from 'material-ui/Avatar';
 import List from 'material-ui/List/List';
 import ListItem from 'material-ui/List/ListItem';
 import Divider from 'material-ui/Divider';
-import TextField from 'material-ui/TextField';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
 import ToolbarGroup from 'material-ui/Toolbar/ToolbarGroup';
+import RaisedButton from 'material-ui/RaisedButton';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import { Grid, Row, Col } from 'react-bootstrap';
 import DashboardMediumGraph from '../../components/DashboardMediumGraph';
 import NavToolBar from '../../components/NavToolBar';
 import RenderTeachers from '../../components/RenderTeachers';
-import Async from '../../components/Async';
-
-const styles = {
-  headline: {
-    fontSize: 24,
-    paddingTop: 16,
-    marginBottom: 12,
-    fontWeight: 400,
-  },
-};
-//let Masonry = MasonryCtl(React);
+import DisplayTeacher from '../../components/DisplayTeacher';
 
 @inject('classes')
 @observer
@@ -42,16 +32,16 @@ class Class extends Component {
   @observable currentDivision;
   @observable slideIndex = 'overview';
   @observable showYear = false;
+  @observable currentTeachers;
+  @observable masonryOptions = [];
   componentWillMount() {
     const { params } = this.props;
     const { classes } = this.props;
     this.cls = classes.getClass(params.classId);
     this.divisionClass = classes.getClassCurrentDivision(params.classId);
     this.currentDivision = (this.divisionClass) ? classes.getDivision(this.divisionClass.divisionId) : null;
-    this.studentYearId = (this.currentDivision) ? classes.getClassGroupingYear(this.currentDivision.divisionYear).id : null;
-    this.setState({
-      masonryOptions: {},
-    });
+    this.yearId = (this.currentDivision) ? classes.getClassGroupingYear(this.currentDivision.divisionYear).id : null;
+    this.currentTeachers = (this.currentDivision) ? classes.getClassTeachers(this.cls.id) : null;
   }
 
   componentDidMount() {
@@ -94,10 +84,15 @@ class Class extends Component {
     this.showYear = (index === 'students' || index === 'teachers') ? true : false;
   }
 
+  addStudent = (e) => {
+    const { params } = this.props;
+
+    browserHistory.push(`/classes/${params.classId}/${this.yearId}/students`);
+  }
+
   render() {
     const { params } = this.props;
     const { classes } = this.props;
-    const { masonryOptions } = this.state;
     let lineChartOptions = {
       low: 0,
       showArea: true,
@@ -109,19 +104,24 @@ class Class extends Component {
           <Row>
             <Col xs={12} sm={12} md={12} lg={12}>
               <NavToolBar navLabel={this.cls.title} goBackTo="/classes" >
-                <ToolbarGroup key={2} lastChild style={{ float: 'right' }}>
-                  {this.showYear &&
-                    <DropDownMenu
-                      value={this.yearId}
-                      onChange={this.selectedYear}
-                      style={{ marginRight: '12px' }}
-                    >
-                      {this.currentDivision && classes.getClassGroupingYears(this.currentDivision.divisionConfigId).map((year) =>
-                        <MenuItem key={year.id} value={year.id} label={moment(year.endDate).format('YYYY')} primaryText={moment(year.endDate).format('YYYY')} />
-                      )}
-                    </DropDownMenu>
+                  {this.showYear && this.currentDivision &&
+                    <ToolbarGroup key={2} lastChild style={{ float: 'right' }}>
+                      <DropDownMenu
+                        value={this.yearId}
+                        onChange={this.selectedYear}
+                        style={{ marginRight: '12px' }}
+                      >
+                        {classes.getClassGroupingYears(this.currentDivision.divisionConfigId).map((year) =>
+                          <MenuItem key={year.id} value={year.id} label={moment(year.endDate).format('YYYY')} primaryText={moment(year.endDate).format('YYYY')} />
+                        )}
+                      </DropDownMenu>
+                      <RaisedButton
+                        label="Add Student"
+                        secondary
+                        onTouchTap={this.addStudent}
+                      />
+                    </ToolbarGroup>
                   }
-                </ToolbarGroup>
               </NavToolBar>
             </Col>
           </Row>
@@ -140,35 +140,34 @@ class Class extends Component {
                       <div>
                         <span className="button">{(this.currentDivision) ? this.currentDivision.title : ''}</span> <br />
                         <span className="caption">
-                          {(this.currentDivision) ? moment(this.currentDivision.start).tz('America/Chicago').format('dddd, MMM DD YYYY') : ''} -
-                           {(this.currentDivision) ? moment(this.currentDivision.end).tz('America/Chicago').format('dddd, MMM DD YYYY') : ''}
+                          {(this.currentDivision) ? moment(this.currentDivision.start).tz('America/Chicago').format('dddd, MMM DD YYYY') : ''}&nbsp;-
+                          &nbsp;{(this.currentDivision) ? moment(this.currentDivision.end).tz('America/Chicago').format('dddd, MMM DD YYYY') : ''}
                         </span>
                       </div>
                     </Col>
                   </Row>
-                  <Masonry className={"row"} options={masonryOptions}>
-
-                    {classes.getClassMeetingDays().map((day) =>
+                  <Masonry className={"row"} options={this.masonryOptions}>
+                    {classes.getYearMeetingDays(this.yearId).map((day) =>
                       <Col xs={12} sm={12} md={6} lg={6} key={day.id}>
                         <DashboardMediumGraph
-                          title={`${moment().weekday(day.day).format('dddd')} Attendance`}
+                          title={`${moment().weekday(day.dow).format('dddd')} Attendance`}
                           subtitle={'Past 8 weeks'}
                           avatar={<Avatar>A</Avatar>}
-                          lineChartData={classes.getGraphAttendance(day.day, 8)}
+                          lineChartData={classes.getGraphAttendance(day.dow, 8)}
                           lineChartOptions={lineChartOptions}
                         />
                       </Col>
                     )}
 
-                    {classes.getClassMeetingDays().map((day) =>
+                    {classes.getYearMeetingDays(this.yearId).map((day) =>
                       <Col xs={12} sm={12} md={6} lg={6} key={day.id}>
                         <Card>
                           <CardHeader
                             title={'Teachers'}
-                            subtitle={moment().weekday(day.day).format('dddd')}
-                            avatar={<Avatar>{moment().weekday(day.day).format('dd')}</Avatar>}
+                            subtitle={moment().weekday(day.dow).format('dddd')}
+                            avatar={<Avatar>{moment().weekday(day.dow).format('dd')}</Avatar>}
                           />
-                          <CardMedia><RenderTeachers divClass={this.divisionClass} day={day.day} /></CardMedia>
+                          <CardMedia><RenderTeachers divClass={this.divisionClass} day={day.dow} /></CardMedia>
                         </Card>
                       </Col>
                     )}
@@ -185,38 +184,15 @@ class Class extends Component {
                       avatar={<Avatar>{"T"}</Avatar>}
                     />
                     <CardMedia>
-                      <Async
-                        pendingRender={<div />}
-                        promise={classes.getClassTeachers(this.cls.id)}
-                        then={(teachers) =>
-                          <List>
-                            {teachers.resultset.map((teacher) =>
-                              <div key={teacher.id}>
-                                <Divider />
-                                <ListItem
-                                  leftAvatar={
-                                    <Avatar
-                                      src={
-                                        (teacher.person.individualPhotoUrl) ?
-                                          teacher.person.individualPhotoUrl :
-                                          teacher.person.familyPhotoUrl
-                                        }
-                                    >
-                                      {
-                                        (teacher.person.individualPhotoUrl || teacher.person.familyPhotoUrl) ?
-                                          null :
-                                          teacher.person.firstName.charAt(0)
-                                      }
-                                    </Avatar>
-                                  }
-                                  primaryText={`${teacher.person.lastName}, ${teacher.person.firstName}`}
-                                  secondaryText={`Last Taught: ${classes.getDivisionClass(teacher.divisionClassId).division.title} ${moment(classes.getDivisionClass(teacher.divisionClassId).division.start, 'x').fquarter(-4).year} - ${moment().isoWeekday(teacher.divClassTeacher.day).format('dddd')}`}
-                                />
-                              </div>
-                          )}
-                          </List>
-                        }
-                      />
+                      <List>
+                        {this.currentTeachers.map((teacher) =>
+                          <DisplayTeacher
+                            teacher={teacher}
+                            key={teacher.id}
+                            secondaryText={`Last Taught: ${classes.getDivisionClass(teacher.divisionClassId).division.title} ${moment(classes.getDivisionClass(teacher.divisionClassId).division.start, 'x').fquarter(-4).year}`}
+                          />
+                        )}
+                      </List>
                     </CardMedia>
                   </Card>
                 </Tab>

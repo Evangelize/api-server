@@ -33,9 +33,11 @@ class Division extends Component {
 
   handleTap = (e, obj) => {
     e.preventDefault();
-    const { item, classes, onEdit } = this.props;
+    const { item, classes, onTap } = this.props;
     if (obj.props.children === 'Edit') {
-      onEdit(item.id);
+      onTap('edit', item.id);
+    } else if (obj.props.children === 'Delete') {
+      onTap('delete', item.id);
     }
   }
   render() {

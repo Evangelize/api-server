@@ -16,6 +16,69 @@ import ToolbarGroup from 'material-ui/Toolbar/ToolbarGroup';
 import ToolbarTitle from 'material-ui/Toolbar/ToolbarTitle';
 import RaisedButton from 'material-ui/RaisedButton';
 import { Grid, Row, Col } from 'react-bootstrap';
+const lineChartOptions = {
+  low: 0,
+  showArea: true,
+};
+
+const paperStyle = {
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  height: '75px',
+  backgroundColor: Colors.cyan300,
+  color: 'white',
+};
+
+const AttendanceGraphs = inject('classes')(observer(({ classes, groupingId }) =>
+  <Col xs={12} sm={12} md={12} lg={12}>
+    {classes.getGroupingCurrentYearMeetingDays(groupingId).map((day, index) =>
+      <Col xs={12} sm={12} md={6} lg={6} key={day.id}>
+        <DashboardMediumGraph
+          title={moment().weekday(day.dow).format('dddd') + ' Attendance'}
+          subtitle={"Past 8 weeks"}
+          avatar={<Avatar>A</Avatar>}
+          lineChartData={classes.getGraphAttendance(day.dow, 8)}
+          lineChartOptions={lineChartOptions}
+        />
+      </Col>
+    )}
+  </Col>
+));
+
+const InfoBoxAvg = inject('classes')(observer(({ classes, day }) =>
+  <Col xs={12} sm={6} md={6} lg={3} key={day.id}>
+    <DashboardComponentSmall
+      zDepth={1}
+      title={'Avg. Attendance '+moment().weekday(day.dow).format('dddd')}
+      body={classes.avgAttendance(day.dow)}
+      style={paperStyle}
+    />
+  </Col>
+));
+
+const InfoBoxChange = inject('classes')(observer(({ classes, day }) =>
+  <Col xs={12} sm={6} md={6} lg={3}>
+    <DashboardComponentSmall
+      zDepth={1}
+      title={'Attendance Change '+moment().weekday(day.dow).format('dddd')}
+      body={classes.attendancePercentChange(day.dow)}
+      style={paperStyle}
+    />
+  </Col>
+));
+
+const InfoBoxes = inject('classes')(observer(({ classes, groupingId }) =>
+  <Row>
+    {classes.getGroupingCurrentYearMeetingDays(groupingId).map((day, index) =>
+      <div key={day.id}>
+        <InfoBoxAvg day={day} />
+        <InfoBoxChange day={day} />
+      </div>
+    )}
+  </Row>
+));
 
 @inject('classes', 'settings')
 @observer
@@ -28,11 +91,17 @@ class Dashboard extends Component {
   };
   @observable masonryOptions = {};
   @observable now = moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
+  @observable groupings;
 
   resize() {
     throttle(30)(() => {
       this.masonryOptions.updated = true;
     });
+  }
+
+  componentWillMount() {
+    const { classes } = this.props;
+    this.groupings = classes.getDivisionConfigs();
   }
 
   componentDidMount() {
@@ -57,59 +126,28 @@ class Dashboard extends Component {
   render() {
     console.log('dashboard:pre-render', moment().unix());
     const { classes } = this.props;
-    const paperStyle = {
-      display: 'flex',
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '75px',
-      backgroundColor: Colors.cyan300,
-      color: 'white',
-    };
-    const lineChartOptions = {
-      low: 0,
-      showArea: true,
-    };
     console.log('dashboard:render', moment().unix());
     return (
       <Row>
         <Grid fluid>
-          {classes.isClassDay() && <DivisionConfigsAttendance divisionConfigs={classes.getDivisionConfigs()} date={this.now} />}
-          <Masonry className={"row"} options={this.masonryOptions}>
-            {classes.getClassMeetingDays().map((day, index) =>
-              <Col xs={12} sm={12} md={6} lg={6} key={index}>
-                <DashboardMediumGraph
-                  title={moment().weekday(day.day).format('dddd') + ' Attendance'}
-                  subtitle={"Past 8 weeks"}
-                  avatar={<Avatar>A</Avatar>}
-                  lineChartData={classes.getGraphAttendance(day.day, 8)}
-                  lineChartOptions={lineChartOptions}
-                />
+          {classes.isClassDay() && <DivisionConfigsAttendance divisionConfigs={this.groupings} date={this.now} />}
+          <Masonry
+            className={"row"} 
+            options={this.masonryOptions}
+          >
+            {this.groupings.map((config, index) =>
+              <Col
+                xs={12}
+                sm={12}
+                md={12}
+                lg={12}
+                key={config.id}
+              >
+                <AttendanceGraphs groupingId={config.id} />
+                <InfoBoxes groupingId={config.id} />
               </Col>
             )}
-            {classes.isClassDay() && <DivisionConfigsTeachers divisionConfigs={classes.getDivisionConfigs()} date={this.now} />}
-            <Col xs={12} sm={12} md={6} lg={6}>
-              {classes.getClassMeetingDays().map((day, index) =>
-                <div key={day.id}>
-                <Col xs={12} sm={6} md={6} lg={6} key={index}>
-                  <DashboardComponentSmall
-                    zDepth={1}
-                    title={'Avg. Attendance '+moment().weekday(day.day).format('dddd')}
-                    body={classes.avgAttendance(day.day)}
-                    style={paperStyle}
-                  />
-                </Col>
-                <Col xs={12} sm={6} md={6} lg={6} key={'pc'+index}>
-                  <DashboardComponentSmall
-                    zDepth={1}
-                    title={'Attendance Change '+moment().weekday(day.day).format('dddd')}
-                    body={classes.attendancePercentChange(day.day)}
-                    style={paperStyle}
-                  />
-                </Col>
-                </div>
-              )}
-            </Col>
+            {classes.isClassDay() && <DivisionConfigsTeachers divisionConfigs={this.groupings} date={this.now} />}
             <Col xs={12} sm={12} md={6} lg={6}>
               <Toolbar>
                 <ToolbarGroup key={0} style={{ float: 'left' }}>

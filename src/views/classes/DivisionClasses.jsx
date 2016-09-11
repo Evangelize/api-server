@@ -13,6 +13,7 @@ import { Grid, Row, Col } from 'react-bootstrap';
 import NavToolBar from '../../components/NavToolBar';
 import ListDivisionClasses from '../../components/ListDivisionClasses';
 import DialogDivision from '../../components/DialogDivision';
+import DialogConfirmDelete from '../../components/DialogConfirmDelete';
 
 @inject('classes')
 @observer
@@ -23,6 +24,8 @@ class DivisionClasses extends Component {
   @observable end = moment();
   @observable isEdit = false;
   @observable dialogOpen = false;
+  @observable deleteId;
+  @observable dialogDeleteOpen = false;
   handleChange = (type, e, date) => {
     if (type === 'start') {
       this.start = moment(date);
@@ -40,15 +43,29 @@ class DivisionClasses extends Component {
     browserHistory.push(path);
   }
 
-  handleEdit = (id) => {
+  handleTap = (type, id) => {
     const { classes } = this.props;
-    const div = classes.getDivision(id);
-    this.isEdit = true;
-    this.divisionId = id;
-    this.title = div.title;
-    this.start = moment(div.start);
-    this.end = moment(div.end);
-    this.dialogOpen = true;
+    if (type === 'edit') {
+      const div = classes.getDivision(id);
+      this.isEdit = true;
+      this.divisionId = id;
+      this.title = div.title;
+      this.start = moment(div.start);
+      this.end = moment(div.end);
+      this.dialogOpen = true;
+    } else if (type === 'delete') {
+      this.deleteId = id;
+      this.dialogDeleteOpen = true;
+    }
+  }
+
+  handleDeleteClose = (type) => {
+    const { classes } = this.props;
+    this.dialogDeleteOpen = false;
+    if (type === 'ok') {
+      classes.deleteRecord('divisionClasses', this.deleteId);
+    }
+    this.deleteId = null;
   }
 
   render() {
@@ -86,7 +103,7 @@ class DivisionClasses extends Component {
                 <CardMedia>
                   <ListDivisionClasses
                     divisionId={divisionId}
-                    onEdit={this.handleEdit}
+                    onTap={this.handleTap}
                   />
                 </CardMedia>
               </Card>
@@ -101,6 +118,10 @@ class DivisionClasses extends Component {
           end={this.end}
           onClose={this.handleClose}
           onChange={this.handleChange}
+        />
+        <DialogConfirmDelete
+          open={this.dialogDeleteOpen}
+          onClose={this.handleDeleteClose}
         />
       </div>
     );

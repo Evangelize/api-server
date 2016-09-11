@@ -3,23 +3,20 @@ import async from 'async';
 import Promise from 'bluebird';
 
 export default {
-  get() {
+  all() {
     return new Promise((resolve, reject) => {
-      models.DivisionClasses.findAll(
-        {
-          order: "id ASC",
-        }
-      ).then(
-        (result) => {
-          resolve(result);
+      models.DivisionClasses.findAll({
+        order: [
+          ['updatedAt', 'DESC'],
+        ],
+      }).then(
+        (results) => {
+          resolve(results);
           return null;
         },
         (err) => {
-          let result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
+          console.log(error);
+          reject(error);
           return null;
         }
       );

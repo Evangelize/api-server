@@ -1,5 +1,5 @@
 import { observable, autorun, computed, toJS, action } from 'mobx';
-import { filter, sortBy, orderBy, first, map, reverse, find, uniqueId, pick } from 'lodash/fp';
+import { filter, sortBy, orderBy, first, map, reverse, find, uniqueId, pick, uniqBy } from 'lodash/fp';
 import moment from 'moment-timezone';
 import waterfall from 'async/waterfall';
 import change from 'percent-change';
@@ -618,6 +618,23 @@ export default class Classes {
     );
   }
 
+  getGroupingCurrentYearMeetingDays(groupingId) {
+    const year = this.getCurrentDivisionYear(groupingId);
+    let retVal = [];
+    if (year) {
+      retVal = this.db.store(
+        'yearMeetingDays',
+        [
+          filter((rec) => rec.deletedAt === null
+                          && rec.yearId === year.id
+          ),
+          sortBy('dow')
+        ]
+      );
+    }
+    return retVal;
+  }
+
   getYearMeetingDays(yearId) {
     return this.db.store(
       'yearMeetingDays',
@@ -794,37 +811,22 @@ export default class Classes {
   }
 
   getClassTeachers(classId) {
-    const self = this;
-    console.log('getClassTeachers:', classId);
-    const divisionClasses = toJS(this.db.store(
+    const divisionClasses = this.db.store(
       'divisionClasses',
       [
         filter((rec) => rec.deletedAt === null && rec.classId === classId),
         map((rec) => rec.id),
       ]
-    ));
-    const classTeachers = toJS(self.db.store(
+    );
+    return this.db.store(
       'divisionClassTeachers',
       [
-        filter((rec) => rec.deletedAt === null && divisionClasses.indexOf(rec.divisionClassId) > -1),
+        filter((rec) => rec.deletedAt === null
+                        && divisionClasses.indexOf(rec.divisionClassId) > -1
+        ),
+        uniqBy('peopleId'),
         sortBy('createdAt'),
       ]
-    ));
-    const people = toJS(self.db.store(
-      'people',
-      []
-    ));
-    return self.db.eqJoin(
-      people,
-      classTeachers,
-      'id',
-      'peopleId',
-      (left, right) => ({
-        id: right.id,
-        person: left,
-        divisionClassId: right.divisionClassId,
-        divClassTeacher: right,
-      })
     );
   }
 
@@ -987,6 +989,20 @@ export default class Classes {
     );
 
     return records;
+  }
+
+  getClassYearStudent(classId, yearId, peopleId) {
+    return this.db.store(
+      'yearClassStudents',
+      [
+        filter((rec) => rec.deletedAt === null
+                        && rec.classId === classId
+                        && rec.yearId === yearId
+                        && rec.peopleId === peopleId
+        ),
+        first,
+      ]
+    );
   }
 
   getAcademicYearMeetingDays(yearId) {
@@ -1335,6 +1351,25 @@ export default class Classes {
         retVal = this.deleteRecord('yearMeetingDays', record.id);
       }
     }
+    return retVal;
+  }
+
+  @action updateClassYearStudent(classId, yearId, peopleId) {
+    let retVal = null;
+    const newRecord = Object.assign(
+      {},
+      {
+        id: null,
+        yearId,
+        classId,
+        peopleId,
+        revision: null,
+        updatedAt: null,
+        createdAt: null,
+        deletedAt: null,
+      }
+    );
+    retVal = this.db.updateStore('yearClassStudents', newRecord, false);
     return retVal;
   }
 
