@@ -2,47 +2,46 @@ import models from '../../models';
 import Promise from 'bluebird';
 
 export default {
+  all() {
+    return new Promise((resolve, reject) => {
+      models.Families.findAll({
+        order: [
+          ['updatedAt', 'DESC'],
+        ],
+      }).then(
+        (results) => {
+          resolve(results);
+          return null;
+        },
+        (err) => {
+          console.log(error);
+          reject(error);
+          return null;
+        }
+      );
+    });
+  },
   get(id) {
-    if (id) {
-      return new Promise(function(resolve, reject){
-        id = new Buffer(id, 'hex');
-        models.Users.findOne(
-          {
-            where: {
-              id: id
-            }
+    return new Promise(function(resolve, reject){
+      id = new Buffer(id, 'hex');
+      models.Families.findOne(
+        {
+          where: {
+            id: id
           }
-        ).then(
-          function(result) {
-            resolve(result);
-            return null;
-          },
-          function(err){
-            console.log(err);
-            reject(err);
-            return null;
-          }
-        );
-      });
-    } else {
-      return new Promise(function(resolve, reject){
-        models.Users.findAll({
-          order: [
-            ['updatedAt', 'DESC']
-          ]
-        }).then(
-          function(results) {
-            resolve(results);
-            return null;
-          },
-          function(err){
-            console.log(error);
-            reject(error);
-            return null;
-          }
-        )
-      });
-    }
+        }
+      ).then(
+        function(result) {
+          resolve(result);
+          return null;
+        },
+        function(err){
+          console.log(err);
+          reject(err);
+          return null;
+        }
+      );
+    });
   },
   insert(record) {
     return new Promise(function(resolve, reject){

@@ -137,37 +137,20 @@ export default {
       );
     });
   },
-  teachers() {
-    return new Promise(function(resolve, reject){
+  all() {
+    return new Promise((resolve, reject) => {
       models.Teachers.findAll(
         {
-          order: "id ASC"
+          order: [
+            ['updatedAt', 'DESC'],
+          ],
         }
       ).then(
-        function(result) {
+        (result) => {
           resolve(result);
           return null;
         },
-        function(err){
-          console.log(err);
-          reject(err);
-          return null;
-        }
-      );
-    });
-  },
-  divisionClassTeachers() {
-    return new Promise(function(resolve, reject){
-      models.DivisionClassTeachers.findAll(
-        {
-          order: "id ASC"
-        }
-      ).then(
-        function(result) {
-          resolve(result);
-          return null;
-        },
-        function(err){
+        (err) => {
           console.log(err);
           reject(err);
           return null;

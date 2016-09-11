@@ -26,6 +26,9 @@ module.exports = {
         'ALTER TABLE `yearClassStudents` ADD `yearId` BINARY(16) NOT NULL'
       ),
       queryInterface.sequelize.query(
+        'ALTER TABLE `yearClassStudents` CHANGE `id` `id` BINARY(16) NOT NULL'
+      ),
+      queryInterface.sequelize.query(
         'ALTER TABLE `yearClassStudents` CHANGE `divisionClassId` `classId` BINARY(16) NOT NULL'
       ),
       queryInterface.sequelize.query(

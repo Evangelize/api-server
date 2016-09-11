@@ -48,18 +48,18 @@ export default {
       );
     });
   },
-  people() {
-    return new Promise(function (resolve, reject) {
-      models.People.findAll(
-        {
-          order: 'id ASC',
-        }
-      ).then(
-        function (result) {
+  all() {
+    return new Promise((resolve, reject) => {
+      models.People.findAll({
+        order: [
+          ['updatedAt', 'DESC'],
+        ],
+      }).then(
+        (result) => {
           resolve(result);
           return null;
         },
-        function (err) {
+        (err) => {
           console.log(err);
           reject(err);
           return null;

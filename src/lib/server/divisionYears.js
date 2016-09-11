@@ -2,6 +2,25 @@ import models from '../../models';
 import Promise from 'bluebird';
 
 export default {
+  all() {
+    return new Promise((resolve, reject) => {
+      models.DivisionYears.findAll({
+        order: [
+          ['updatedAt', 'DESC'],
+        ],
+      }).then(
+        (results) => {
+          resolve(results);
+          return null;
+        },
+        (err) => {
+          console.log(error);
+          reject(error);
+          return null;
+        }
+      );
+    });
+  },
   get(id) {
     return new Promise((resolve, reject) => {
       const recordId = new Buffer(id, 'hex');

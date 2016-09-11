@@ -71,17 +71,17 @@ export default {
       );
     });
   },
-  divisionClassAttendance() {
-    return new Promise(function(resolve, reject){
+  all() {
+    return new Promise((resolve, reject) => {
       models.DivisionClassAttendance.findAll(
         {
           order: "id ASC"
         }
       ).then(
-        function(attendance) {
+        (attendance) => {
           resolve(attendance);
         },
-        function(err){
+        (err) => {
           let result = {
             error: err,
             record: null

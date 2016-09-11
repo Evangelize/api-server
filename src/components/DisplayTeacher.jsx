@@ -1,63 +1,40 @@
 import React, { Component, PropTypes } from 'react';
-import moment from 'moment-timezone';
+import { observable } from 'mobx';
 import { inject, observer } from 'mobx-react';
-import { browserHistory } from 'react-router';
-import ReactGridLayout from 'react-grid-layout';
-import Card from 'material-ui/Card/Card';
-import CardActions from 'material-ui/Card/CardActions';
-import CardHeader from 'material-ui/Card/CardHeader';
-import CardMedia from 'material-ui/Card/CardMedia';
-import CardText from 'material-ui/Card/CardText';
-import * as Colors from 'material-ui/styles/colors';
-import Transitions from 'material-ui/styles/transitions';
-import {List, ListItem} from 'material-ui/List';
-import Subheader from 'material-ui/Subheader/Subheader';
-import Divider from 'material-ui/Divider';
-import ActionGrade from 'material-ui/svg-icons/action/grade';
+import { ListItem } from 'material-ui/List';
 import Avatar from 'material-ui/Avatar';
-import waterfall from 'async/waterfall';
-import { Grid, Row, Col } from 'react-bootstrap';
 
 @inject('classes')
 @observer
 class DisplayTeacher extends Component {
-
-  constructor(props, context) {
-    super(props, context);
-
-  }
-
+  @observable person;
   componentWillMount() {
-    this.setState({
-      now: moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf()
-    });
-  }
-
-  componentDidMount() {
-    
+    const { classes, teacher } = this.props;
+    this.person = classes.getPerson(teacher.peopleId);
   }
 
   render() {
-    const { teacher } = this.props;
+    const { teacher, secondaryText } = this.props;
     return (
       <ListItem
-          key={teacher.divClassTeacher.id}
-          primaryText={teacher.person.firstName+' '+teacher.person.lastName}
-          leftAvatar={
-          <Avatar 
-              src={
-              (teacher.person.individualPhotoUrl) ? 
-                  teacher.person.individualPhotoUrl : 
-                  teacher.person.familyPhotoUrl
-              }
-              >
-              {
-                  (teacher.person.individualPhotoUrl || teacher.person.familyPhotoUrl) ? 
-                  null : 
-                  teacher.person.firstName.charAt(0)
-              }
-              </Avatar>
-          }
+        key={teacher.id}
+        primaryText={`${this.person.firstName} ${this.person.lastName}`}
+        secondaryText={secondaryText}
+        leftAvatar={
+          <Avatar
+            src={
+            (this.person.individualPhotoUrl) ?
+                this.person.individualPhotoUrl :
+                this.person.familyPhotoUrl
+            }
+          >
+            {
+                (this.person.individualPhotoUrl || this.person.familyPhotoUrl) ?
+                null :
+                this.person.firstName.charAt(0)
+            }
+          </Avatar>
+        }
       />
     );
   }

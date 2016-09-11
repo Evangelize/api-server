@@ -13,6 +13,7 @@ import { Grid, Row, Col } from 'react-bootstrap';
 import NavToolBar from '../../components/NavToolBar';
 import ListDivisions from '../../components/ListDivisions';
 import DialogDivision from '../../components/DialogDivision';
+import DialogConfirmDelete from '../../components/DialogConfirmDelete';
 
 const styles = {
   toggle: {
@@ -31,6 +32,8 @@ class AcadmicYearDivisions extends Component {
   @observable end = moment();
   @observable isEdit = false;
   @observable dialogOpen = false;
+  @observable deleteId;
+  @observable dialogDeleteOpen = false;
   handleChange = (type, e, date) => {
     if (type === 'start') {
       this.start = moment(date);
@@ -50,16 +53,20 @@ class AcadmicYearDivisions extends Component {
     this.dialogOpen = true;
   }
 
-  handleEdit = (id) => {
+  handleTap = (type, id) => {
     const { classes } = this.props;
-    const div = classes.getDivision(id);
-    console.log(id);
-    this.isEdit = true;
-    this.divisionId = id;
-    this.title = div.title;
-    this.start = moment(div.start);
-    this.end = moment(div.end);
-    this.dialogOpen = true;
+    if (type === 'edit') {
+      const div = classes.getDivision(id);
+      this.isEdit = true;
+      this.divisionId = id;
+      this.title = div.title;
+      this.start = moment(div.start);
+      this.end = moment(div.end);
+      this.dialogOpen = true;
+    } else if (type === 'delete') {
+      this.deleteId = id;
+      this.dialogDeleteOpen = true;
+    }
   }
 
   handleClose = (type) => {
@@ -79,6 +86,15 @@ class AcadmicYearDivisions extends Component {
       };
       classes.updateDivision(record);
     }
+  }
+
+  handleDeleteClose = (type) => {
+    const { classes } = this.props;
+    this.dialogDeleteOpen = false;
+    if (type === 'ok') {
+      classes.deleteRecord('divisions', this.deleteId);
+    }
+    this.deleteId = null;
   }
 
   toggleSortable = () => {
@@ -127,7 +143,7 @@ class AcadmicYearDivisions extends Component {
                 <CardMedia>
                   <ListDivisions
                     yearId={yearId}
-                    onEdit={this.handleEdit}
+                    onTap={this.handleTap}
                     sortable={this.sortable}
                   />
                 </CardMedia>
@@ -143,6 +159,10 @@ class AcadmicYearDivisions extends Component {
           end={this.end}
           onClose={this.handleClose}
           onChange={this.handleChange}
+        />
+        <DialogConfirmDelete
+          open={this.dialogDeleteOpen}
+          onClose={this.handleDeleteClose}
         />
       </div>
     );

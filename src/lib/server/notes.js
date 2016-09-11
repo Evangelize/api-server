@@ -3,18 +3,18 @@ import Promise from 'bluebird';
 import async from 'async';
 
 export default {
-  get() {
-    return new Promise(function(resolve, reject){
+  all() {
+    return new Promise((resolve, reject) => {
       models.Notes.findAll({
         order: [
-          ['updatedAt', 'DESC']
-        ]
+          ['updatedAt', 'DESC'],
+        ],
       }).then(
-        function(results) {
+        (results) => {
           resolve(results);
           return null;
         },
-        function(err){
+        (err) => {
           console.log(error);
           reject(error);
           return null;
@@ -37,7 +37,7 @@ export default {
                 callback(err);
               }
             );
-          }
+          },
         ],
         function(error, result) {
           if (error) {
@@ -60,8 +60,8 @@ export default {
             models.Notes.findOne(
               {
                 where: {
-                  id: noteId
-                }
+                  id: noteId,
+                },
               }
             ).then(
               function(note, created) {
@@ -83,7 +83,7 @@ export default {
                 callback(err);
               }
             );
-          }
+          },
         ],
         function(error, result) {
           if (error) {
@@ -102,7 +102,7 @@ export default {
     return new Promise(function(resolve, reject){
       models.Notes.findAll(
         {
-          order: "id ASC"
+          order: "id ASC",
         }
       ).then(
         function(result) {
@@ -128,7 +128,7 @@ export default {
         function(err){
           let result = {
             error: err,
-            record: null
+            record: null,
           };
           reject(result);
         }
@@ -143,15 +143,15 @@ export default {
         record,
         {
           where: {
-            id: record.id
-          }
+            id: record.id,
+          },
         }
       ).then(
         function(rows) {
           models.Notes.findOne({
             where: {
-              id: record.id
-            }
+              id: record.id,
+            },
           }).then(
             function(result) {
               resolve(result);
@@ -161,7 +161,7 @@ export default {
         function(err){
           let result = {
             error: err,
-            record: null
+            record: null,
           };
           reject(result);
         }
@@ -172,8 +172,8 @@ export default {
     return new Promise(function(resolve, reject){
       models.Notes.destroy({
         where: {
-          id: new Buffer(record.id, 'hex')
-        }
+          id: new Buffer(record.id, 'hex'),
+        },
       }).then(
         function(results) {
           resolve(record);
@@ -181,11 +181,11 @@ export default {
         function(err){
           let result = {
             error: err,
-            record: null
+            record: null,
           };
           reject(result);
         }
       );
     });
-  }
+  },
 };

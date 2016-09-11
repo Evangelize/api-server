@@ -74,11 +74,11 @@ class ListDivisions extends Component {
   }
 
   render() {
-    const { classes, yearId, onEdit, sortable } = this.props;
+    const { classes, yearId, onTap, sortable } = this.props;
     let retVal = (
       <List>
       {classes.getDivisionSchedulesByPosition(yearId).map((item) =>
-        <Division key={item.id} item={item} onEdit={onEdit} />
+        <Division key={item.id} item={item} onTap={onTap} />
       )}
       </List>
     );

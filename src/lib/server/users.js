@@ -2,6 +2,25 @@ import models from '../../models';
 import Promise from 'bluebird';
 
 export default {
+  all() {
+    return new Promise((resolve, reject) => {
+      models.Users.findAll({
+        order: [
+          ['updatedAt', 'DESC'],
+        ],
+      }).then(
+        (results) => {
+          resolve(results);
+          return null;
+        },
+        (err) => {
+          console.log(error);
+          reject(error);
+          return null;
+        }
+      );
+    });
+  },
   get(peopleId) {
     return new Promise((resolve, reject) =>{
       peopleId = new Buffer(peopleId, 'hex');
