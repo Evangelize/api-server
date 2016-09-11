@@ -227,10 +227,7 @@ class Schedules extends Component {
                     <MenuItem
                       value="manage-schedules"
                       primaryText="Manage Schedules"
-                      menuItems={[
-                        <MenuItem value="new" primaryText="Add New Academic Year" />,
-                        <MenuItem value="edit" primaryText="Edit Academic Years" />,
-                      ]}
+                      onTouchTap={this.goToManageSchedule}
                     />
                   </IconMenu>
                 </ToolbarGroup>
@@ -246,7 +243,7 @@ class Schedules extends Component {
                   <CardHeader
                     title={(this.division) ? classes.getDivision(this.division).title : ''}
                     subtitle={(this.division) ? this.formatDateRange(classes.getDivision(this.division)) : ''}
-                    avatar={<Avatar>Q{(this.division) ? classes.getDivision(this.division).position : ''}</Avatar>}
+                    avatar={<Avatar>Q{(this.division) ? classes.getDivision(this.division).position + 1 : ''}</Avatar>}
                   />
                   <CardMedia>
                     <MediaQuery query="(min-device-width: 1024px)">
