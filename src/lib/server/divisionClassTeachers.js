@@ -27,6 +27,7 @@ export default {
       record.id = new Buffer(record.id, 'hex');
       record.peopleId = new Buffer(record.peopleId, 'hex');
       record.divisionClassId = new Buffer(record.divisionClassId, 'hex');
+      record.dayId = new Buffer(record.dayId, 'hex');
       models.DivisionClassTeachers.create(
         record
       ).then(
@@ -70,6 +71,7 @@ export default {
       record.id = new Buffer(record.id, 'hex');
       record.peopleId = new Buffer(record.peopleId, 'hex');
       record.divisionClassId = new Buffer(record.divisionClassId, 'hex');
+      record.dayId = new Buffer(record.dayId, 'hex');
       models.DivisionClassTeachers.update(
         record,
         {

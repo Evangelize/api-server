@@ -30,6 +30,15 @@ module.exports = function (sequelize, DataTypes) {
           this.setDataValue('peopleId', new Buffer(val, "hex"));
         }
       },
+      dayId:  {
+        type: DataTypes.BLOB,
+        get: function()  {
+          return this.getDataValue('dayId').toString('hex');
+        },
+        set: function(val) {
+          this.setDataValue('dayId', new Buffer(val, "hex"));
+        }
+      },
       day: DataTypes.INTEGER,
       confirmed: DataTypes.BOOLEAN,
       createdAt: {
