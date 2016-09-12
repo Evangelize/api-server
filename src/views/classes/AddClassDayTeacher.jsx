@@ -60,6 +60,7 @@ const ListTeachers = inject('classes')(observer(({ classes, teachers, actions })
 class AddClassDayTeacher extends Component {
   @observable divClass;
   @observable division;
+  @observable day;
   @observable searchType = 'lastName';
   @observable people = [];
 
@@ -67,6 +68,7 @@ class AddClassDayTeacher extends Component {
     const { classes, params } = this.props;
     this.divClass = classes.getDivisionClass(params.classId);
     this.division = classes.getDivision(this.divClass.divisionClass.divisionId);
+    this.day = classes.getCurrentDivisionMeetingDays(this.division.divisionYear, params.day);
   }
 
   handleInputChange = (e) => {
@@ -98,7 +100,7 @@ class AddClassDayTeacher extends Component {
       classes.confirmTeacher(false, this.divClass.divisionClass.id, teacher.divClassTeacher.id);
       break;
     case 'add':
-      classes.updateClassDayTeacher(this.divClass.divisionClass.id, parseInt(params.day, 10), teacher.id);
+      classes.updateClassDayTeacher(this.divClass.divisionClass.id, parseInt(params.day, 10), teacher.id, this.day.id);
       break;
     case 'delete':
       classes.deleteRecord('divisionClassTeachers', teacher.divClassTeacher.id);
@@ -147,8 +149,8 @@ class AddClassDayTeacher extends Component {
             <Card>
               <CardHeader
                 title={this.divClass.class.title}
-                subtitle={`${moment().isoWeekday(params.day).format('dddd')} ${this.division.title} ${moment(this.division.startDate).format('YYYY')}`}
-                avatar={<Avatar>{moment().isoWeekday(params.day).format('dd')}</Avatar>}
+                subtitle={`${moment().weekday(params.day).format('dddd')} ${this.division.title} ${moment(this.division.startDate).format('YYYY')}`}
+                avatar={<Avatar>{moment().weekday(params.day).format('dd')}</Avatar>}
               />
               <CardMedia>
                 <ListTeachers actions={this.menuItemTap} teachers={classes.getDivisionClassTeachersByDayRaw(params.classId, parseInt(params.day, 10))} />

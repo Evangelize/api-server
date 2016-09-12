@@ -64,20 +64,60 @@ class DisplayDivisionClass extends Component {
     const teachers = classes.getDivisionClassTeachersByDayRaw(divisionClass.id, parseInt(day.dow, 10));
     const arTeachers = [];
 
-    classes.getTeachers(teachers).map((teacher) => {
-      arTeachers.push(
-        <ListItem
-          key={teacher.id}
-          primaryText={`${teacher.firstName} ${teacher.lastName}`}
-          leftIcon={
-            <ActionGrade
+    if (teachers.length) {
+      teachers.map((teacher) => {
+        arTeachers.push(
+          <div key={teacher.id} style={{ width: '100%', clear: 'both' }}>
+            <IconButton
+              style={{
+                float: 'left',
+              }}
+              touch
               onClick={((...args) => this.confirmTeacher(divisionClass, day, teacher, ...args))}
-              color={(teacher.divClassTeacher.confirmed) ? Colors.deepOrange500 : Colors.grey400}
+            >
+              <ActionGrade
+                color={(teacher.confirmed) ? Colors.deepOrange500 : Colors.grey400}
+              />
+            </IconButton>
+            <FlatButton
+              style={{
+                float: 'left',
+                marginTop: '8px',
+              }}
+              label={`${classes.getPerson(teacher.peopleId).firstName} ${classes.getPerson(teacher.peopleId).lastName}`}
+              secondary
+              onClick={(...args) => this.handleEditDay(divisionClass, day, ...args)}
+              labelPosition="after"
             />
-          }
-        />
+          </div>
+        );
+      });
+    } else {
+      arTeachers.push(
+        <div key={0} style={{ width: '100%', clear: 'both' }}>
+          <IconButton
+            style={{
+              float: 'left',
+            }}
+            touch
+          >
+            <ActionGrade
+              color={Colors.grey400}
+            />
+          </IconButton>
+          <FlatButton
+            style={{
+              float: 'left',
+              marginTop: '8px',
+            }}
+            label={`No Teachers Assigned`}
+            secondary
+            onClick={(...args) => this.handleEditDay(divisionClass, day, ...args)}
+            labelPosition="after"
+          />
+        </div>
       );
-    });
+    }
 
     return arTeachers;
   }
@@ -102,31 +142,7 @@ class DisplayDivisionClass extends Component {
           </TableRowColumn>
           {meetingDays.map((day) =>
             <TableRowColumn key={day.id}>
-              {classes.getDivisionClassTeachersByDayRaw(divisionClass.id, parseInt(day.dow, 10)).map((teacher) => 
-                <div key={teacher.id} style={{ width: '100%', clear: 'both' }}>
-                  <IconButton
-                    style={{
-                      float: 'left',
-                    }}
-                    touch
-                    onClick={((...args) => this.confirmTeacher(divisionClass, day, teacher, ...args))}
-                  >
-                    <ActionGrade
-                      color={(teacher.confirmed) ? Colors.deepOrange500 : Colors.grey400}
-                    />
-                  </IconButton>
-                  <FlatButton
-                    style={{
-                      float: 'left',
-                      marginTop: '8px',
-                    }}
-                    label={`${classes.getPerson(teacher.peopleId).firstName} ${classes.getPerson(teacher.peopleId).lastName}`}
-                    secondary
-                    onClick={(...args) => this.handleEditDay(divisionClass, day, ...args)}
-                    labelPosition="after"
-                  />
-                </div>
-              )}
+              {this.renderTeachersTable(day)}
             </TableRowColumn>
           )}
         </TableRow>

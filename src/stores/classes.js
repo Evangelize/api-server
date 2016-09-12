@@ -610,7 +610,7 @@ export default class Classes {
       'yearMeetingDays',
       [
         filter((rec) => rec.deletedAt === null
-                        && rec.dow === day
+                        && rec.dow === parseInt(day, 10)
                         && rec.yearId === yearId
         ),
         first
@@ -1140,7 +1140,7 @@ export default class Classes {
     return this.db.updateStore('divisionClassAttendance', record, false);
   }
 
-  @action updateClassDayTeacher(divisionClassId, day, peopleId) {
+  @action updateClassDayTeacher(divisionClassId, day, peopleId, dayId) {
     let newRecord;
     const record = this.db.store(
       'divisionClassTeachers',
@@ -1158,6 +1158,7 @@ export default class Classes {
           peopleId,
           day,
           divisionClassId,
+          dayId,
           confirmed: false,
           id: null,
           revision: null,
