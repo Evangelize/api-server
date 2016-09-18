@@ -80,6 +80,7 @@
     "react-cookie": "^0.4.7",
     "react-dom": "^15.2.1",
     "react-grid-layout": "^0.12.7",
+    "react-input-mask": "^0.7.5",
     "react-masonry-component": "^4.2.1",
     "react-medium-editor": "mattvoss/react-medium-editor",
     "react-overlays": "^0.6.3",

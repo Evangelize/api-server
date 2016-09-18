@@ -1,5 +1,22 @@
-import { observable, autorun, computed, toJS, action } from 'mobx';
-import { filter, sortBy, orderBy, first, map, reverse, find, uniqueId, pick, uniqBy } from 'lodash/fp';
+import {
+  observable,
+  autorun,
+  computed,
+  toJS,
+  action
+} from 'mobx';
+import {
+  filter,
+  sortBy,
+  orderBy,
+  first,
+  map,
+  reverse,
+  find,
+  uniqueId,
+  pick,
+  uniqBy
+} from 'lodash/fp';
 import moment from 'moment-timezone';
 import waterfall from 'async/waterfall';
 import change from 'percent-change';
@@ -43,8 +60,7 @@ export default class Classes {
 
   getDivisionConfigs() {
     return this.db.store(
-      'divisionConfigs',
-      [
+      'divisionConfigs', [
         filter((rec) => rec.deletedAt === null),
         sortBy('order'),
       ]
@@ -53,8 +69,7 @@ export default class Classes {
 
   getFirstDivisionConfig() {
     const record = this.db.store(
-      'divisionConfigs',
-      [
+      'divisionConfigs', [
         filter((rec) => rec.deletedAt === null),
         sortBy('order'),
         first
@@ -66,8 +81,7 @@ export default class Classes {
 
   getDivisionConfig(id) {
     return this.db.store(
-      'divisionConfigs',
-      [
+      'divisionConfigs', [
         filter((rec) => rec.deletedAt === null && rec.id === id),
         first,
       ]
@@ -78,18 +92,16 @@ export default class Classes {
     let records;
     if (excludes) {
       records = this.db.store(
-        'classes',
-        [
-          filter((rec) => rec.deletedAt === null
-                          && excludes.indexOf(rec.id) === -1
+        'classes', [
+          filter((rec) => rec.deletedAt === null &&
+            excludes.indexOf(rec.id) === -1
           ),
           sortBy('order'),
         ]
       );
     } else {
       records = this.db.store(
-        'classes',
-        [
+        'classes', [
           sortBy('order'),
         ]
       );
@@ -100,8 +112,7 @@ export default class Classes {
 
   getClassGroupingYears(divisionConfigId) {
     const records = this.db.store(
-      'divisionYears',
-      [
+      'divisionYears', [
         filter((rec) => rec.deletedAt === null && rec.divisionConfigId === divisionConfigId),
         orderBy(['endDate'], ['desc']),
       ]
@@ -112,8 +123,7 @@ export default class Classes {
 
   getClassGroupingYear(id) {
     return this.db.store(
-      'divisionYears',
-      [
+      'divisionYears', [
         filter((rec) => rec.deletedAt === null && rec.id === id),
         first,
       ]
@@ -122,8 +132,7 @@ export default class Classes {
 
   getDivision(id) {
     return this.db.store(
-      'divisions',
-      [
+      'divisions', [
         filter((rec) => rec.deletedAt === null && rec.id === id),
         first,
       ]
@@ -133,12 +142,11 @@ export default class Classes {
   getCurrentDivisionYear(divisionConfigId) {
     const now = moment().valueOf();
     return this.db.store(
-      'divisionYears',
-      [
-        filter((rec) => rec.deletedAt === null
-              && rec.endDate >= now
-              && rec.startDate <= now
-              && rec.divisionConfigId === divisionConfigId),
+      'divisionYears', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.endDate >= now &&
+          rec.startDate <= now &&
+          rec.divisionConfigId === divisionConfigId),
         first,
       ]
     );
@@ -146,28 +154,26 @@ export default class Classes {
 
   async getDivisionScheduleOrdered(configId, yearId) {
     configId = configId || this.db.store(
-        'divisionConfigs',
-      [
+      'divisionConfigs', [
         first,
       ]
-      );
+    );
     let now = moment().valueOf(),
-      schedule, future = [], past = [];
+      schedule, future = [],
+      past = [];
     if (!yearId) {
       yearId = this.db.store(
-        'divisionYears',
-        [
-          filter((rec) => rec.deletedAt === null && rec.endDate >= now
-            && rec.startDate <= now && rec.divisionConfigId === configId),
+        'divisionYears', [
+          filter((rec) => rec.deletedAt === null && rec.endDate >= now &&
+            rec.startDate <= now && rec.divisionConfigId === configId),
           first,
         ]
       ).id;
     }
     schedule = this.db.store(
-      'divisions',
-      [
-        filter((rec) => rec.deletedAt === null && rec.divisionYear >= yearId
-          && rec.divisionConfigId === configId),
+      'divisions', [
+        filter((rec) => rec.deletedAt === null && rec.divisionYear >= yearId &&
+          rec.divisionConfigId === configId),
       ]
     );
     schedule.forEach((div) => {
@@ -186,10 +192,9 @@ export default class Classes {
 
   getDivisionSchedulesByPosition(yearId) {
     const records = this.db.store(
-      'divisions',
-      [
-        filter((rec) => rec.deletedAt === null
-                        && rec.divisionYear === yearId
+      'divisions', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.divisionYear === yearId
         ),
         sortBy('position'),
       ]
@@ -199,10 +204,9 @@ export default class Classes {
 
   getDivisionSchedules(yearId) {
     const records = this.db.store(
-      'divisions',
-      [
-        filter((rec) => rec.deletedAt === null
-                        && rec.divisionYear === yearId
+      'divisions', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.divisionYear === yearId
         ),
         sortBy('end'),
       ]
@@ -213,12 +217,11 @@ export default class Classes {
   getCurrentDivisionSchedule(yearId) {
     const now = moment().valueOf();
     return this.db.store(
-      'divisions',
-      [
-        filter((rec) => rec.deletedAt === null
-                        && rec.end >= now
-                        && rec.start <= now
-                        && rec.divisionYear === yearId
+      'divisions', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.end >= now &&
+          rec.start <= now &&
+          rec.divisionYear === yearId
         ),
         sortBy('end'),
         first,
@@ -228,8 +231,7 @@ export default class Classes {
 
   async getDivisionSchedule(id) {
     const record = this.db.store(
-      'divisions',
-      [
+      'divisions', [
         filter((rec) => rec.deletedAt === null && rec.id === id),
         sortBy('end'),
         first,
@@ -242,8 +244,7 @@ export default class Classes {
     // console.log(day, length);
     const now = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(length, 'week').valueOf();
     const latest = toJS(this.db.store(
-      'divisionClassAttendance',
-      [
+      'divisionClassAttendance', [
         filter((rec) => rec.deletedAt === null && rec.attendanceDate >= now && rec.day === day),
         sortBy('attendanceDate'),
       ]
@@ -252,12 +253,14 @@ export default class Classes {
       (mapping, d1) => {
         mapping[d1.attendanceDate] = (mapping[d1.attendanceDate] || 0) + d1.count;
         return mapping;
-      },
-      {}
+      }, {}
     );
 
-    const result = Object.keys(latestR).map(function (k1) { 
-      return { attendance: latestR[k1], attendanceDate: parseInt(k1, 10) };
+    const result = Object.keys(latestR).map(function(k1) {
+      return {
+        attendance: latestR[k1],
+        attendanceDate: parseInt(k1, 10)
+      };
     });
     return result;
   }
@@ -268,10 +271,9 @@ export default class Classes {
     end = end || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD HH:mm:ss')).valueOf();
 
     const latest = toJS(this.db.store(
-      'divisionClassAttendance',
-      [
-        filter((rec) => rec.deletedAt === null && rec.attendanceDate >= begin
-          && rec.attendanceDate <= end && rec.day === day),
+      'divisionClassAttendance', [
+        filter((rec) => rec.deletedAt === null && rec.attendanceDate >= begin &&
+          rec.attendanceDate <= end && rec.day === day),
         sortBy('attendanceDate'),
       ]
     )).reduce(
@@ -315,8 +317,7 @@ export default class Classes {
 
     let retVal;
     const attendance = self.db.store(
-      'divisionClassAttendance',
-      [
+      'divisionClassAttendance', [
         filter((rec) => rec.deletedAt === null && rec.attendanceDate >= date && rec.divisionClassId === classId),
       ]
     );
@@ -332,11 +333,10 @@ export default class Classes {
   async getClassAttendanceToday(classId) {
     let today = moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD'));
     const records = this.db.store(
-          'divisionClassAttendance',
-      [
+      'divisionClassAttendance', [
         filter((rec) => rec.deletedAt === null && rec.divisionClassId === classId && rec.attendanceDate >= today),
       ]
-        );
+    );
     return records;
   }
 
@@ -345,8 +345,7 @@ export default class Classes {
     endMonth = endMonth || moment(moment().format('MM/01/YYYY') + ' 00:00:00').valueOf();
     let dailyAttendance = [];
     let latest = this.db.store(
-      'divisionClassAttendance',
-      [
+      'divisionClassAttendance', [
         filter((rec) => rec.deletedAt === null && rec.attendanceDate >= startMonth && rec.attendanceDate <= endMonth),
         sortBy('attendanceDate'),
         reverse,
@@ -378,33 +377,30 @@ export default class Classes {
     startMonth = startMonth || moment(moment().format('MM/01/YYYY') + ' 00:00:00').subtract(3, 'month');
     endMonth = endMonth || moment(moment().format('MM/01/YYYY') + ' 00:00:00').valueOf();
     const divisions = this.db.store(
-      'divisions',
-      [
-        filter((rec) => rec.deletedAt === null 
-                        && rec.divisionConfigId === divisionConfigId
-                        && rec.end >= startMonth
-                        && rec.end <= endMonth
+      'divisions', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.divisionConfigId === divisionConfigId &&
+          rec.end >= startMonth &&
+          rec.start <= endMonth
         ),
         map(rec => rec.id),
       ]
     );
     const divisionClasses = this.db.store(
-      'divisionClasses',
-      [
-        filter((rec) => rec.deletedAt === null 
-                        && (divisions.indexOf(rec.divisionId) > -1)
+      'divisionClasses', [
+        filter((rec) => rec.deletedAt === null &&
+          divisions.indexOf(rec.divisionId) > -1
         ),
         map(rec => rec.id),
       ]
     );
     let dailyAttendance = [];
     let latest = this.db.store(
-      'divisionClassAttendance',
-      [
-        filter((rec) => rec.deletedAt === null
-                && rec.attendanceDate >= startMonth
-                && rec.attendanceDate <= endMonth
-                && (divisionClasses.indexOf(rec.divisionClassId) > -1)
+      'divisionClassAttendance', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.attendanceDate >= startMonth &&
+          rec.attendanceDate <= endMonth &&
+          (divisionClasses.indexOf(rec.divisionClassId) > -1)
         ),
         sortBy('attendanceDate'),
         reverse,
@@ -436,20 +432,18 @@ export default class Classes {
     begin = begin || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).subtract(8, 'week').valueOf();
     end = end || moment.utc(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
     const divisionClasses = this.db.store(
-      'divisionClasses',
-      [
+      'divisionClasses', [
         filter((rec) => rec.deletedAt === null && rec.classId === classId),
         map((rec) => rec.id),
       ]
     );
     const records = this.db.store(
-      'divisionClassAttendance',
-      [
-        filter((rec) => rec.deletedAt === null
-                        && rec.day === day
-                        && rec.attendanceDate >= begin
-                        && rec.attendanceDate <= end
-                        && (divisionClasses.indexOf(rec.divisionClassId) > -1)),
+      'divisionClassAttendance', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.day === day &&
+          rec.attendanceDate >= begin &&
+          rec.attendanceDate <= end &&
+          (divisionClasses.indexOf(rec.divisionClassId) > -1)),
         sortBy('attendanceDate'),
       ]
     );
@@ -460,29 +454,25 @@ export default class Classes {
     const self = this;
     return new Promise((resolve, reject) => {
       const attendance = self.db.store(
-        'divisionClassAttendance',
-        [
+        'divisionClassAttendance', [
           filter((rec) => rec.deletedAt === null && rec.attendanceDate >= parseInt(date, 10)),
           first,
         ]
       );
       const division = self.db.store(
-        'divisions',
-        [
+        'divisions', [
           filter((rec) => rec.deletedAt === null && rec.start <= parseInt(date, 10) && rec.end >= parseInt(date, 10)),
           first,
         ]
       );
       const divisionClasses = self.db.store(
-        'divisionClasses',
-        [
+        'divisionClasses', [
           filter((rec) => rec.deletedAt === null && rec.divisionId === division.id),
           first,
         ]
       );
       const classes = self.db.store(
-        'classes',
-        [
+        'classes', [
           sortBy('id'),
         ]
       );
@@ -492,19 +482,24 @@ export default class Classes {
         divisionClasses,
         'id',
         'classId',
-        (left, right) => 
-          ({
-            divisionClassId: right.id,
-            classId: right.classId,
-            divisionClasses: right,
-            class: left,
-          })
+        (left, right) =>
+        ({
+          divisionClassId: right.id,
+          classId: right.classId,
+          divisionClasses: right,
+          class: left,
+        })
       ).then(
         (data) => {
           data = sortBy(data)('divisionClassId');
           data.forEach((cls) => {
-            const classAttendance = find(attendance)({ 'divisionClassId': cls.divisionClassId });
-            const divisionClassAttendance = (classAttendance) ? classAttendance : { count: 0, updatedAt: null };
+            const classAttendance = find(attendance)({
+              'divisionClassId': cls.divisionClassId
+            });
+            const divisionClassAttendance = (classAttendance) ? classAttendance : {
+              count: 0,
+              updatedAt: null
+            };
             cls.divisionClassAttendance = divisionClassAttendance;
           });
           resolve(data);
@@ -518,11 +513,10 @@ export default class Classes {
     now = now || moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
     return computed(() => {
       const record = self.db.store(
-        'divisionYears',
-        [
-          filter((rec) => rec.deletedAt === null
-                          && rec.endDate >= now
-                          && rec.startDate <= now
+        'divisionYears', [
+          filter((rec) => rec.deletedAt === null &&
+            rec.endDate >= now &&
+            rec.startDate <= now
           ),
           sortBy('end'),
         ]
@@ -536,12 +530,11 @@ export default class Classes {
     now = now || moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
     return computed(() => {
       const record = self.db.store(
-        'divisions',
-        [
-          filter((rec) => rec.deletedAt === null
-                          && rec.end >= now
-                          && rec.start <= now
-                          && rec.divisionConfigId === divisionConfigId
+        'divisions', [
+          filter((rec) => rec.deletedAt === null &&
+            rec.end >= now &&
+            rec.start <= now &&
+            rec.divisionConfigId === divisionConfigId
           ),
           sortBy('end'),
           first,
@@ -557,11 +550,10 @@ export default class Classes {
     now = now || moment(moment.tz('America/Chicago').format('YYYY-MM-DD')).valueOf();
     return computed(() => {
       const record = self.db.store(
-        'divisions',
-        [
-          filter((rec) => rec.deletedAt === null
-                          && rec.end >= now
-                          && rec.start <= now
+        'divisions', [
+          filter((rec) => rec.deletedAt === null &&
+            rec.end >= now &&
+            rec.start <= now
           ),
           sortBy('end'),
         ]
@@ -577,11 +569,10 @@ export default class Classes {
     const ids = (allCurrentDivs.length) ? allCurrentDivs.map(obj => obj.id) : [];
     return computed(() => {
       const record = self.db.store(
-        'divisionClasses',
-        [
-          filter((rec) => rec.deletedAt === null
-                          && ids.indexOf(rec.divisionId) > -1
-                          && rec.classId === classId
+        'divisionClasses', [
+          filter((rec) => rec.deletedAt === null &&
+            ids.indexOf(rec.divisionId) > -1 &&
+            rec.classId === classId
           ),
           sortBy('end'),
           first,
@@ -595,11 +586,10 @@ export default class Classes {
     const now = moment().valueOf();
     const years = this.getAllCurrentYears(now).map(obj => obj.id);
     return this.db.store(
-      'yearMeetingDays',
-      [
-        filter((rec) => rec.deletedAt === null
-                        && rec.dow === day
-                        && years.indexOf(rec.yearId) > -1
+      'yearMeetingDays', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.dow === day &&
+          years.indexOf(rec.yearId) > -1
         ),
       ]
     );
@@ -607,11 +597,10 @@ export default class Classes {
 
   getCurrentDivisionMeetingDays(yearId, day) {
     return this.db.store(
-      'yearMeetingDays',
-      [
-        filter((rec) => rec.deletedAt === null
-                        && rec.dow === parseInt(day, 10)
-                        && rec.yearId === yearId
+      'yearMeetingDays', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.dow === parseInt(day, 10) &&
+          rec.yearId === yearId
         ),
         first
       ]
@@ -623,10 +612,9 @@ export default class Classes {
     let retVal = [];
     if (year) {
       retVal = this.db.store(
-        'yearMeetingDays',
-        [
-          filter((rec) => rec.deletedAt === null
-                          && rec.yearId === year.id
+        'yearMeetingDays', [
+          filter((rec) => rec.deletedAt === null &&
+            rec.yearId === year.id
           ),
           sortBy('dow')
         ]
@@ -637,8 +625,7 @@ export default class Classes {
 
   getYearMeetingDays(yearId) {
     return this.db.store(
-      'yearMeetingDays',
-      [
+      'yearMeetingDays', [
         filter((rec) => rec.deletedAt === null && rec.yearId === yearId),
       ]
     );
@@ -647,8 +634,7 @@ export default class Classes {
   getDivisionMeetingDays(divisionConfigId) {
     const self = this;
     const records = self.db.store(
-      'classMeetingDays',
-      [
+      'classMeetingDays', [
         filter((rec) => rec.deletedAt === null && rec.divisionConfigId === divisionConfigId),
       ]
     );
@@ -658,8 +644,7 @@ export default class Classes {
   getCurrentDivisionClasses(divisionId) {
     const self = this;
     const divisionClasses = this.db.store(
-      'divisionClasses',
-      [
+      'divisionClasses', [
         filter((rec) => rec.deletedAt === null && rec.divisionId === divisionId),
         sortBy('classId'),
       ]
@@ -683,30 +668,25 @@ export default class Classes {
     const self = this;
     return computed(() => {
       const divisionClass = self.db.store(
-        'divisionClasses',
-        [
+        'divisionClasses', [
           filter((rec) => rec.deletedAt === null && rec.id === divisionClassId),
           first,
         ]
       );
       const division = self.db.store(
-        'divisions',
-        [
+        'divisions', [
           filter((rec) => rec.deletedAt === null && rec.id === divisionClass.divisionId),
           first,
         ]
       );
       const cls = self.db.store(
-        'classes',
-        [
+        'classes', [
           filter((rec) => rec.deletedAt === null && rec.id === divisionClass.classId),
           first,
         ]
       );
-      return observable(Object.assign(
-        {},
-        divisionClass,
-        {
+      return observable(Object.assign({},
+        divisionClass, {
           order: cls.order,
           class: cls,
           classId: cls.id,
@@ -721,8 +701,7 @@ export default class Classes {
 
   getDivisionClassByDivisionAndClass(divisionId, classId) {
     const divisionClass = this.db.store(
-      'divisionClasses',
-      [
+      'divisionClasses', [
         filter((rec) => rec.deletedAt === null && rec.divisionId === divisionId && rec.classId === classId),
         first,
       ]
@@ -732,10 +711,9 @@ export default class Classes {
   }
 
   getTeachers(teachers) {
-    const ids = teachers.map((rec)=> rec.peopleId);
+    const ids = teachers.map((rec) => rec.peopleId);
     const people = this.db.store(
-      'people',
-      [
+      'people', [
         filter((rec) => rec.deletedAt === null && ids.indexOf(rec.id) > -1),
         sortBy(['lastName', 'firstName']),
       ]
@@ -751,33 +729,31 @@ export default class Classes {
     return new Promise((resolve, reject) => {
       const day = moment().weekday();
       const divisionClassTeachers = self.db.store(
-        'divisionClassTeachers',
-        [
+        'divisionClassTeachers', [
           filter((rec) => rec.deletedAt === null && rec.day === day && rec.divisionClassId === divisionClassId),
           sortBy('classId'),
         ]
       );
       const people = self.db.store(
-        'people',
-        []
+        'people', []
       );
       self.db.eqJoin(
         people,
         divisionClassTeachers,
         'id',
         'peopleId',
-        function (left, right) {
+        function(left, right) {
           return {
             person: left,
             divClassTeacher: right,
           };
         }
       ).then(
-        function (data) {
+        function(data) {
           resolve(data);
         }
       ).catch(
-        function (err) {
+        function(err) {
           reject(err);
         }
       );
@@ -788,20 +764,18 @@ export default class Classes {
     const self = this;
     console.log('getDivisionClassTeacher:', divisionClassId, peopleId);
     const divisionClassTeacher = this.db.store(
-      'divisionClassTeachers',
-      [
-        filter((rec) => rec.deletedAt === null
-                        && rec.divisionClassId === divisionClassId
-                        && rec.peopleId === peopleId
+      'divisionClassTeachers', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.divisionClassId === divisionClassId &&
+          rec.peopleId === peopleId
         ),
         first,
       ]
     );
     const person = self.db.store(
-      'people',
-      [
-        filter((rec) => rec.deletedAt === null
-                        && rec.id === peopleId
+      'people', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.id === peopleId
         ),
         first,
       ]
@@ -812,17 +786,15 @@ export default class Classes {
 
   getClassTeachers(classId) {
     const divisionClasses = this.db.store(
-      'divisionClasses',
-      [
+      'divisionClasses', [
         filter((rec) => rec.deletedAt === null && rec.classId === classId),
         map((rec) => rec.id),
       ]
     );
     return this.db.store(
-      'divisionClassTeachers',
-      [
-        filter((rec) => rec.deletedAt === null
-                        && divisionClasses.indexOf(rec.divisionClassId) > -1
+      'divisionClassTeachers', [
+        filter((rec) => rec.deletedAt === null &&
+          divisionClasses.indexOf(rec.divisionClassId) > -1
         ),
         uniqBy('peopleId'),
         sortBy('createdAt'),
@@ -835,8 +807,7 @@ export default class Classes {
     console.log('getDivisionClassTeachersByDayRaw:', divisionClassId, day);
     return computed(() => {
       return self.db.store(
-        'divisionClassTeachers',
-        [
+        'divisionClassTeachers', [
           filter((rec) => rec.deletedAt === null && rec.day === day && rec.divisionClassId === divisionClassId),
         ]
       );
@@ -848,15 +819,13 @@ export default class Classes {
     console.log('getDivisionClassTeachersByDay:', divisionClassId, day);
     return computed(() => {
       const divisionClassTeachers = self.db.store(
-        'divisionClassTeachers',
-        [
+        'divisionClassTeachers', [
           filter((rec) => rec.deletedAt === null && rec.day === day && rec.divisionClassId === divisionClassId),
           sortBy('classId'),
         ]
       );
       const people = self.db.store(
-        'people',
-        []
+        'people', []
       );
       return self.db.eqJoin(
         people,
@@ -879,15 +848,13 @@ export default class Classes {
     console.log('getDivisionClassTeachersByDay:', divisionClassId, day);
     return computed(() => {
       const divisionClassTeachers = self.db.store(
-        'divisionClassTeachers',
-        [
+        'divisionClassTeachers', [
           filter((rec) => rec.deletedAt === null && rec.day === day && rec.divisionClassId === divisionClassId),
           sortBy('classId'),
         ]
       );
       const people = self.db.store(
-        'people',
-        []
+        'people', []
       );
       return self.db.eqJoin(
         people,
@@ -912,7 +879,7 @@ export default class Classes {
       let retVal = {
         divisionClass: self.getDivisionClass(divisionClassId),
       };
-      const fetchDay = function (day) {
+      const fetchDay = function(day) {
         return self.getClassDayTeachers(retVal.divisionClass, day);
       };
       return Promise.map(
@@ -927,7 +894,7 @@ export default class Classes {
     });
   }
 
-  getClassDayTeachers(divClass, day){
+  getClassDayTeachers(divClass, day) {
     const self = this;
     return new Promise((resolve, reject) => {
       self.getDivisionClassTeachersByDay(divClass.id, day.day).then(
@@ -969,20 +936,18 @@ export default class Classes {
 
   getClassYearStudents(classId, yearId) {
     const classStudents = this.db.store(
-      'yearClassStudents',
-      [
-        filter((rec) => rec.deletedAt === null
-                        && rec.classId === classId
-                        && rec.yearId === yearId
+      'yearClassStudents', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.classId === classId &&
+          rec.yearId === yearId
         ),
         map(rec => rec.peopleId),
       ]
     );
     const records = this.db.store(
-      'people',
-      [
-        filter((rec) => rec.deletedAt === null
-                        && classStudents.indexOf(rec.id) > -1
+      'people', [
+        filter((rec) => rec.deletedAt === null &&
+          classStudents.indexOf(rec.id) > -1
         ),
         orderBy(['lastName', 'firstName'], ['desc']),
       ]
@@ -993,12 +958,11 @@ export default class Classes {
 
   getClassYearStudent(classId, yearId, peopleId) {
     return this.db.store(
-      'yearClassStudents',
-      [
-        filter((rec) => rec.deletedAt === null
-                        && rec.classId === classId
-                        && rec.yearId === yearId
-                        && rec.peopleId === peopleId
+      'yearClassStudents', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.classId === classId &&
+          rec.yearId === yearId &&
+          rec.peopleId === peopleId
         ),
         first,
       ]
@@ -1007,10 +971,9 @@ export default class Classes {
 
   getAcademicYearMeetingDays(yearId) {
     return this.db.store(
-      'yearMeetingDays',
-      [
-        filter((rec) => rec.deletedAt === null
-                        && rec.yearId === yearId
+      'yearMeetingDays', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.yearId === yearId
         ),
         sortBy('dow'),
       ]
@@ -1019,8 +982,7 @@ export default class Classes {
 
   getClassMeetingDays() {
     return this.db.store(
-      'classMeetingDays',
-      [
+      'classMeetingDays', [
         filter((rec) => rec.deletedAt === null),
         sortBy('day'),
       ]
@@ -1029,8 +991,7 @@ export default class Classes {
 
   getClass(classId) {
     return this.db.store(
-      'classes',
-      [
+      'classes', [
         filter((rec) => rec.deletedAt === null && rec.id === classId),
         first,
       ]
@@ -1039,8 +1000,7 @@ export default class Classes {
 
   getNotes() {
     const records = this.db.store(
-      'notes',
-      [
+      'notes', [
         filter((rec) => rec.deletedAt === null),
         sortBy('createdAt'),
       ]
@@ -1049,24 +1009,27 @@ export default class Classes {
   }
 
   findPeople(search, type) {
-    const self = this;
     const regex = new RegExp('^' + search, 'i');
-    return new Promise((resolve, reject) => {
-      const records = self.db.store(
-        'people',
-        [
-          filter((rec) => rec.deletedAt === null && regex.test(rec[type])),
-          sortBy(['lastName', 'firstName']),
-        ]
-      );
-      resolve(records);
-    });
+    return this.db.store(
+      'people', [
+        filter((rec) => rec.deletedAt === null && regex.test(rec[type])),
+        sortBy(['lastName', 'firstName']),
+      ]
+    );
+  }
+
+  getFamily(id) {
+    return this.db.store(
+      'families', [
+        filter((rec) => rec.deletedAt === null && rec.id === id),
+        first,
+      ]
+    );
   }
 
   getPerson(id) {
     return this.db.store(
-      'people',
-      [
+      'people', [
         filter((rec) => rec.deletedAt === null && rec.id === id),
         first,
       ]
@@ -1075,8 +1038,7 @@ export default class Classes {
 
   async confirmTeacher(confirm, divClassId, teacherId) {
     let record = this.db.store(
-      'divisionClassTeachers',
-      [
+      'divisionClassTeachers', [
         filter((rec) => rec.deletedAt === null && rec.id === teacherId),
         first,
       ]
@@ -1091,8 +1053,7 @@ export default class Classes {
 
   async updateClassOrder(classId, currentPos, newPos) {
     let record = this.db.store(
-      'classes',
-      [
+      'classes', [
         filter((rec) => rec.deletedAt === null && rec.id === classId),
         first,
       ]
@@ -1109,12 +1070,11 @@ export default class Classes {
     console.log('updateClassAttendance', moment().unix());
 
     let record = this.db.store(
-      'divisionClassAttendance',
-      [
-        filter((rec) => rec.deletedAt === null
-                        && rec.attendanceDate === now
-                        && rec.divisionClassId === divisionClassId
-                        && rec.dayId === dayId
+      'divisionClassAttendance', [
+        filter((rec) => rec.deletedAt === null &&
+          rec.attendanceDate === now &&
+          rec.divisionClassId === divisionClassId &&
+          rec.dayId === dayId
         ),
         first,
       ]
@@ -1143,18 +1103,15 @@ export default class Classes {
   @action updateClassDayTeacher(divisionClassId, day, peopleId, dayId) {
     let newRecord;
     const record = this.db.store(
-      'divisionClassTeachers',
-      [
-        filter((rec) => rec.deletedAt === null && rec.peopleId === peopleId
-          && rec.day === day && rec.divisionClassId === divisionClassId),
+      'divisionClassTeachers', [
+        filter((rec) => rec.deletedAt === null && rec.peopleId === peopleId &&
+          rec.day === day && rec.divisionClassId === divisionClassId),
         first,
       ]
     );
     if (!record) {
-      newRecord = Object.assign(
-        {},
-        toJS(record),
-        {
+      newRecord = Object.assign({},
+        toJS(record), {
           peopleId,
           day,
           divisionClassId,
@@ -1180,23 +1137,18 @@ export default class Classes {
     let newRecord;
     const record = (id) ? this.getDivisionConfig(id) : id;
     if (!record) {
-      newRecord = Object.assign(
-        {},
-        {
-          title,
-          id: null,
-          order,
-          revision: null,
-          updatedAt: null,
-          createdAt: null,
-          deletedAt: null,
-        }
-      );
+      newRecord = Object.assign({}, {
+        title,
+        id: null,
+        order,
+        revision: null,
+        updatedAt: null,
+        createdAt: null,
+        deletedAt: null,
+      });
     } else {
-      newRecord = Object.assign(
-        {},
-        toJS(record),
-        {
+      newRecord = Object.assign({},
+        toJS(record), {
           title,
           order,
         }
@@ -1208,8 +1160,7 @@ export default class Classes {
   @action updateClassGroupingOrder(id, currentPos, newPos) {
     let retVal = null;
     let record = this.db.store(
-      'divisionConfigs',
-      [
+      'divisionConfigs', [
         filter((rec) => rec.deletedAt === null && rec.id === id),
         first,
       ]
@@ -1226,24 +1177,19 @@ export default class Classes {
     let newRecord;
     const record = (id) ? this.getClassGroupingYear(id) : id;
     if (!record) {
-      newRecord = Object.assign(
-        {},
-        {
-          id: null,
-          divisionConfigId: classGroupingId,
-          startDate,
-          endDate,
-          revision: null,
-          updatedAt: null,
-          createdAt: null,
-          deletedAt: null,
-        }
-      );
+      newRecord = Object.assign({}, {
+        id: null,
+        divisionConfigId: classGroupingId,
+        startDate,
+        endDate,
+        revision: null,
+        updatedAt: null,
+        createdAt: null,
+        deletedAt: null,
+      });
     } else {
-      newRecord = Object.assign(
-        {},
-        toJS(record),
-        {
+      newRecord = Object.assign({},
+        toJS(record), {
           startDate,
           endDate
         }
@@ -1256,13 +1202,11 @@ export default class Classes {
     let newRecord;
     const record = ('id' in rec && rec.id) ? this.getClassGroupingYear(id) : null;
     if (!record) {
-      newRecord = Object.assign(
-        {},
+      newRecord = Object.assign({},
         rec
       );
     } else {
-      newRecord = Object.assign(
-        {},
+      newRecord = Object.assign({},
         toJS(record),
         rec
       );
@@ -1273,8 +1217,7 @@ export default class Classes {
   @action updateDivisionOrder(divisionId, currentPos, newPos) {
     let retVal = null;
     let record = this.db.store(
-      'divisions',
-      [
+      'divisions', [
         filter((rec) => rec.deletedAt === null && rec.id === divisionId),
         first,
       ]
@@ -1290,26 +1233,22 @@ export default class Classes {
   @action updateDivisionClass(classId, divisionId, add) {
     let retVal = null;
     if (add) {
-      const newRecord = Object.assign(
-        {},
-        {
-          id: null,
-          divisionId,
-          classId,
-          revision: null,
-          updatedAt: null,
-          createdAt: null,
-          deletedAt: null,
-        }
-      );
+      const newRecord = Object.assign({}, {
+        id: null,
+        divisionId,
+        classId,
+        revision: null,
+        updatedAt: null,
+        createdAt: null,
+        deletedAt: null,
+      });
       retVal = this.db.updateStore('divisionClasses', newRecord, false);
     } else {
       const record = this.db.store(
-        'divisionClasses',
-        [
-          filter((rec) => rec.deletedAt === null
-                          && rec.classId === classId
-                          && rec.divisionId === divisionId
+        'divisionClasses', [
+          filter((rec) => rec.deletedAt === null &&
+            rec.classId === classId &&
+            rec.divisionId === divisionId
           ),
           first,
         ]
@@ -1324,26 +1263,22 @@ export default class Classes {
   @action updateAcademicYearMeetingDay(yearId, dow, add) {
     let retVal = null;
     if (add) {
-      const newRecord = Object.assign(
-        {},
-        {
-          id: null,
-          yearId,
-          dow,
-          revision: null,
-          updatedAt: null,
-          createdAt: null,
-          deletedAt: null,
-        }
-      );
+      const newRecord = Object.assign({}, {
+        id: null,
+        yearId,
+        dow,
+        revision: null,
+        updatedAt: null,
+        createdAt: null,
+        deletedAt: null,
+      });
       retVal = this.db.updateStore('yearMeetingDays', newRecord, false);
     } else {
       const record = this.db.store(
-        'yearMeetingDays',
-        [
-          filter((rec) => rec.deletedAt === null
-                          && rec.yearId === yearId
-                          && rec.dow === dow
+        'yearMeetingDays', [
+          filter((rec) => rec.deletedAt === null &&
+            rec.yearId === yearId &&
+            rec.dow === dow
           ),
           first,
         ]
@@ -1357,19 +1292,16 @@ export default class Classes {
 
   @action updateClassYearStudent(classId, yearId, peopleId) {
     let retVal = null;
-    const newRecord = Object.assign(
-      {},
-      {
-        id: null,
-        yearId,
-        classId,
-        peopleId,
-        revision: null,
-        updatedAt: null,
-        createdAt: null,
-        deletedAt: null,
-      }
-    );
+    const newRecord = Object.assign({}, {
+      id: null,
+      yearId,
+      classId,
+      peopleId,
+      revision: null,
+      updatedAt: null,
+      createdAt: null,
+      deletedAt: null,
+    });
     retVal = this.db.updateStore('yearClassStudents', newRecord, false);
     return retVal;
   }

@@ -1,24 +1,25 @@
 import React, { Component } from 'react';
+import { observable } from 'mobx';
 import { inject, observer } from 'mobx-react';
 import { browserHistory } from 'react-router';
-import DashboardMedium from '../components/DashboardMedium';
-import { Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn } from 'material-ui/Table';
+import Card from 'material-ui/Card/Card';
+import CardHeader from 'material-ui/Card/CardHeader';
+import CardMedia from 'material-ui/Card/CardMedia';
+import Avatar from 'material-ui/Avatar';
 import TextField from 'material-ui/TextField';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
 import Toggle from 'material-ui/Toggle';
+import NavToolBar from '../components/NavToolBar';
+import RenderPeople from '../components/RenderPeople';
 import { Grid, Row, Col } from 'react-bootstrap';
 
-@inject("classes")
+@inject('classes')
 @observer
 class People extends Component {
-  constructor(props, context) {
-    super(props, context);
-    this.state = {
-      searchType: 'lastName',
-    };
-  }
-
+  @observable people = [];
+  @observable searchType = 'lastName';
+  @observable filter = '';
   componentWillMount() {
     this.setState({
       fixedHeader: true,
@@ -38,141 +39,74 @@ class People extends Component {
     });
   }
 
-  handleInputChange(e) {
-    const { classes } = this.props,
-          { searchType } = this.state,
-          filter = e.target.value;
-    if (filter && filter.length > 1) {
-      //dispatch(getPeople(people.key, e.target.value));
-      this.setState({
-        filter,
-        people: classes.findPeople(filter, searchType),
-      });
+  handleInputChange = (e) => {
+    const { classes } = this.props;
+    this.filter = e.target.value;
+    if (this.filter && this.filter.length > 1) {
+      this.people = classes.findPeople(this.filter, this.searchType);
     }
   }
 
-  handleSelectValueChange(e, index, value) {
-    this.setState({
-      searchType: e.target.value,
-    });
+  handleSelectValueChange = (e, index, value) => {
+    this.searchType = value;
 
   }
 
-  handlePersonToggle(e, toggle, index) {
+  handlePersonToggle = (e, toggle, index) => {
     const { people } = this.props,
           person = people.data[index];
     //dispatch(setPerson(person.id, index, e.target.value, toggle));
   }
 
-  navigate(path, e) {
+  navigate = (path, e) => {
     browserHistory.push(path);
   }
 
   render() {
-    const { searchType, people } = this.state;
-    let grid = {
-          className: 'layout',
-          isDraggable: false,
-          isResizable: false,
-          cols: 12,
-          rowHeight: 50,
-        },
-        dropDownStyle = {
-          marginTop: '16px',
-        },
-        divStyle = {
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'flex-start',
-          justifyContent: 'flex-start',
-        };
+    const dropDownStyle = {
+      marginTop: '16px',
+    };
     return (
-      <Grid fluid={true}>
+      <Grid fluid>
         <Row>
           <Col xs={12} sm={12} md={12} lg={12}>
-            <nav className={"grey darken-1"}>
-              <div className={"nav-wrapper"}>
-                <div style={{margin: '0 0.5em'}}>
-                  <a href="#!" onClick={((...args)=>this.navigate('/dashboard', ...args))} className={"breadcrumb"}>Dashboard</a>
-                  <a className={"breadcrumb"}>Members</a>
-                </div>
-              </div>
-            </nav>
+            <NavToolBar navLabel="Members" goBackTo="/dashboard" />
+          </Col>
+        </Row>
+        <Row>
+          <Col xs={12} sm={12} md={3} lg={2}>
+            <DropDownMenu
+              value={this.searchType}
+              onChange={((...args) => this.handleSelectValueChange(...args))}
+              style={dropDownStyle}
+            >
+              <MenuItem value={"lastName"} primaryText="Last Name" />
+              <MenuItem value={"firstName"} primaryText="First Name" />
+              <MenuItem value={"emailAddress"} primaryText="Email" />
+            </DropDownMenu>
+          </Col>
+          <Col xs={12} sm={12} md={9} lg={10}>
+            <TextField
+              className={"searchBox"}
+              ref="searchField"
+              floatingLabelText="Search"
+              value={this.filter}
+              onChange={((...args) => this.handleInputChange(...args))}
+            />
           </Col>
         </Row>
         <Row>
           <Col xs={12} sm={12} md={12} lg={12}>
-            <DashboardMedium title={"Find Members"} subtitle={"Search for members"}>
-              <Row>
-                <Col xs={12} sm={12} md={3} lg={2}>
-                  <DropDownMenu
-                    value={searchType}
-                    onChange={((...args)=>this.handleSelectValueChange(...args))}
-                    style={dropDownStyle}>
-                    <MenuItem value={"lastName"} primaryText="Last Name" />
-                    <MenuItem value={"firstName"} primaryText="First Name" />
-                    <MenuItem value={"emailAddress"} primaryText="Email" />
-                  </DropDownMenu>
-                </Col>
-                <Col xs={12} sm={12} md={9} lg={10}>
-                  <TextField
-                    className={"searchBox"}
-                    ref="searchField"
-                    floatingLabelText="Search"
-                    defaultValue={this.state.filter}
-                    onChange={((...args)=>this.handleInputChange(...args))} />
-                </Col>
-              </Row>
-              <div>
-                <Table
-                  height={this.state.height}
-                  fixedHeader={this.state.fixedHeader}
-                  fixedFooter={this.state.fixedFooter}
-                  selectable={this.state.selectable}
-                  multiSelectable={this.state.multiSelectable}
-                  onRowSelection={this._onRowSelection}>
-                  <TableHeader
-                    adjustForCheckbox={this.state.adjustForCheckbox}
-                    displaySelectAll={this.state.displaySelectAll}
-                    enableSelectAll={this.state.enableSelectAll}>
-                    <TableRow>
-                      <TableHeaderColumn style={{ width: '50%' }}>Name</TableHeaderColumn>
-                      <TableHeaderColumn style={{ width: '25%' }}>Teacher</TableHeaderColumn>
-                      <TableHeaderColumn style={{ width: '25%' }}>Student</TableHeaderColumn>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody
-                    displayRowCheckbox={this.state.displayRowCheckbox}
-                    deselectOnClickaway={this.state.deselectOnClickaway}
-                    showRowHover={this.state.showRowHover}
-                    stripedRows={this.state.stripedRows}>
-                    {people.map((person, index) =>
-                      <TableRow selected={false} key={person.id}>
-                        <TableRowColumn style={{ width: '50%' }}>
-                          <div>{person.lastName}, {person.firstName}</div>
-                          <div className={"mdl-typography--caption-color-contrast"}>{person.familyName}</div>
-                        </TableRowColumn>
-                        <TableRowColumn style={{ width: '25%' }}>
-                          <Toggle
-                            name="toggleTeacher"
-                            value="teacher"
-                            defaultToggled={person.teacher}
-                            onToggle={(e, toggle) => ::this.handlePersonToggle(e, toggle, index)}  />
-                        </TableRowColumn>
-                        <TableRowColumn style={{ width: '25%' }}>
-                          <Toggle
-                            name="toggleStudent"
-                            value="student"
-                            defaultToggled={person.student}
-                            onToggle={(e, toggle) => ::this.handlePersonToggle(e, toggle, index)} />
-                        </TableRowColumn>
-                      </TableRow>
-                    )}
-
-                  </TableBody>
-                </Table>
-              </div>
-            </DashboardMedium>
+            <Card>
+              <CardHeader
+                title={"Members"}
+                subtitle={"Search for members"}
+                avatar={<Avatar>{"M"}</Avatar>}
+              />
+              <CardMedia>
+                <RenderPeople people={this.people} />
+              </CardMedia>
+            </Card>
           </Col>
         </Row>
       </Grid>

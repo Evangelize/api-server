@@ -13,6 +13,12 @@ module.exports = function (sequelize, DataTypes) {
         }
       },
       name: DataTypes.STRING(255),
+      familyName: DataTypes.STRING,
+      address1: DataTypes.STRING,
+      address2: DataTypes.STRING,
+      city: DataTypes.STRING,
+      state: DataTypes.STRING(2),
+      zipCode: DataTypes.STRING(20),
       createdAt: {
         type: DataTypes.DATE,
         get() {

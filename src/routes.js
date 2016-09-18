@@ -4,6 +4,7 @@ import App from './containers/App';
 import Dashboard from './views/Dashboard';
 import Login from './views/Login';
 import People from './views/People';
+import Member from './views/Member';
 import Schedules from './views/classes/Schedules';
 import Attendance from './views/classes/Attendance';
 import AddClassDayTeacher from './views/classes/AddClassDayTeacher';
@@ -63,8 +64,13 @@ export default (settings) => {
         onEnter={requireAuth}
       />
       <Route
-        path="people"
+        path="members"
         component={People}
+        onEnter={requireAuth}
+      />
+      <Route
+        path="members/:id"
+        component={Member}
         onEnter={requireAuth}
       />
       <Route

@@ -168,7 +168,7 @@ class App extends Component {
               <ListItem
                 value={"/people"}
                 primaryText="Members"
-                onClick={((...args) => this.handleLeftNavChange('/people', ...args))}
+                onClick={((...args) => this.handleLeftNavChange('/members', ...args))}
               />
               <ListItem
                 value={"/settings"}

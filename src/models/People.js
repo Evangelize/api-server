@@ -1,76 +1,76 @@
 module.exports = function (sequelize, DataTypes) {
-  var People = sequelize.define(
+  const People = sequelize.define(
     'people',
     {
-      "id": {
+      id: {
         type: DataTypes.BLOB,
         primaryKey: true,
-        get: function()  {
+        get() {
           return this.getDataValue('id').toString('hex');
         },
-        set: function(val) {
-          this.setDataValue('id', new Buffer(val, "hex"));
-        }
+        set(val) {
+          this.setDataValue('id', new Buffer(val, 'hex'));
+        },
       },
-      "familyId": {
+      familyId: {
         type: DataTypes.BLOB,
-        primaryKey: true,
-        get: function()  {
+        get() {
           if (this.getDataValue('familyId')) {
             return this.getDataValue('familyId').toString('hex');
           } else {
             return null;
           }
         },
-        set: function(val) {
-          this.setDataValue('familyId', new Buffer(val, "hex"));
-        }
+        set(val) {
+          if (val) {
+            this.setDataValue('familyId', new Buffer(val, 'hex'));
+          } else {
+            this.setDataValue('familyId', null);
+          }
+        },
       },
-      "cohort": {
+      cohort: {
         type: DataTypes.BLOB,
-        primaryKey: true,
-        get: function()  {
+        get() {
           if (this.getDataValue('cohort')) {
             return this.getDataValue('cohort').toString('hex');
           } else {
             return null;
           }
         },
-        set: function(val) {
-          this.setDataValue('cohort', new Buffer(val, "hex"));
-        }
+        set(val) {
+          if (val) {
+            this.setDataValue('cohort', new Buffer(val, 'hex'));
+          } else {
+            this.setDataValue('cohort', null);
+          }
+        },
       },
-      "familyName": DataTypes.STRING,
-      "lastName": DataTypes.STRING,
-      "firstName": DataTypes.STRING,
-      "familyPosition": DataTypes.STRING(1),
-      "gender": DataTypes.STRING(1),
-      "address1": DataTypes.STRING,
-      "address2": DataTypes.STRING,
-      "city": DataTypes.STRING,
-      "state": DataTypes.STRING(2),
-      "zipCode": DataTypes.STRING(20),
-      "homePhoneNumber": DataTypes.STRING,
-      "workPhoneNumber": DataTypes.STRING,
-      "cellPhoneNumber": DataTypes.STRING,
-      "emailAddress": DataTypes.STRING,
-      "birthday": {
+      
+      lastName: DataTypes.STRING,
+      firstName: DataTypes.STRING,
+      familyPosition: DataTypes.STRING(1),
+      gender: DataTypes.STRING(1),
+      homePhoneNumber: DataTypes.STRING,
+      workPhoneNumber: DataTypes.STRING,
+      cellPhoneNumber: DataTypes.STRING,
+      emailAddress: DataTypes.STRING,
+      birthday: {
         type: DataTypes.DATE,
-        get: function()  {
+        get: function() {
 
-          if (this.getDataValue('birthday') && this.getDataValue('birthday') !== "0000-00-00 00:00:00") {
+          if (this.getDataValue('birthday') && this.getDataValue('birthday') !== '0000-00-00 00:00:00') {
             return this.getDataValue('birthday').getTime();
           } else {
             return null;
           }
-        }
+        },
       },
-      "nonChristian": { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
-      "nonMember": { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
-      "membershipStatus": DataTypes.STRING(1),
-      "collegeStudent": { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
-      "individualPhotoUrl": DataTypes.STRING,
-      "familyPhotoUrl": DataTypes.STRING,
+      nonChristian: { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
+      nonMember: { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
+      membershipStatus: DataTypes.STRING(1),
+      collegeStudent: { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
+      photoUrl: DataTypes.STRING,
       createdAt: {
         type: DataTypes.DATE,
         get() {
@@ -109,11 +109,11 @@ module.exports = function (sequelize, DataTypes) {
     {
       paranoid: true,
       classMethods: {
-        associate: function(models) {
-          People.hasOne(models.Teachers, {foreignKey: 'peopleId'});
-          People.hasOne(models.Students, {foreignKey: 'peopleId'});
-        }
-      }
+        associate(models) {
+          People.hasOne(models.Teachers, { foreignKey: 'peopleId' });
+          People.hasOne(models.Students, { foreignKey: 'peopleId' });
+        },
+      },
     }
   );
 
