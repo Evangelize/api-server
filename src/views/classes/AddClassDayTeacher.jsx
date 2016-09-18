@@ -76,11 +76,7 @@ class AddClassDayTeacher extends Component {
     const { classes } = this.props;
     const filter = e.target.value;
     if (filter.length > 1) {
-      classes.findPeople(filter, self.searchType).then(
-        (data) => {
-          self.people = data;
-        }
-      );
+      this.people = classes.findPeople(filter, self.searchType);
     }
   }
 
