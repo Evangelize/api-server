@@ -49,7 +49,6 @@ class People extends Component {
 
   handleSelectValueChange = (e, index, value) => {
     this.searchType = value;
-
   }
 
   handlePersonToggle = (e, toggle, index) => {
