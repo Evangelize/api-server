@@ -22,8 +22,8 @@ import DatePicker from 'material-ui/DatePicker';
 import Toggle from 'material-ui/Toggle';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import { Grid, Row, Col } from 'react-bootstrap';
-import NavToolBar from '../components/NavToolBar';
-import MaskedInput from '../components/MaskedInput';
+import NavToolBar from '../../components/NavToolBar';
+import MaskedInput from '../../components/MaskedInput';
 
 const style = {
   marginLeft: 20,
@@ -76,8 +76,6 @@ class Member extends Component {
     record[field] = payload;
     classes.db.updateCollectionFields('people', this.member.id, record);
   }
-
-  
 
   handleChangeDate = (field, ...args) => {
     const { classes } = this.props;

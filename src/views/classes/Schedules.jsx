@@ -105,11 +105,16 @@ class Schedules extends Component {
     event.preventDefault();
     this.openMenu = true;
     this.anchorEl = event.currentTarget;
-  };
+  }
 
   handleRequestClose = () => {
     this.openMenu = false;
-  };
+  }
+
+  printPlacards = (event) => {
+    const url = `/api/print/division/${this.division}/placards`;
+    window.open(url, '_blank');
+  }
 
   render() {
     const { configs, classes } = this.props;
@@ -168,6 +173,11 @@ class Schedules extends Component {
                       <MenuItem value="edit" primaryText="Edit Academic Years" />
                     </Menu>
                   </Popover>
+                  <RaisedButton
+                    label="Print"
+                    secondary
+                    onTouchTap={this.printPlacards}
+                  />
                 </ToolbarGroup>
               </NavToolBar>
             </MediaQuery>

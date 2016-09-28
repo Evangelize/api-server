@@ -8,18 +8,24 @@ import CardMedia from 'material-ui/Card/CardMedia';
 import Avatar from 'material-ui/Avatar';
 import TextField from 'material-ui/TextField';
 import DropDownMenu from 'material-ui/DropDownMenu';
+import RaisedButton from 'material-ui/RaisedButton';
+import Popover from 'material-ui/Popover';
+import Menu from 'material-ui/Menu';
 import MenuItem from 'material-ui/MenuItem';
 import Toggle from 'material-ui/Toggle';
-import NavToolBar from '../components/NavToolBar';
-import RenderPeople from '../components/RenderPeople';
+import ToolbarGroup from 'material-ui/Toolbar/ToolbarGroup';
+import NavToolBar from '../../components/NavToolBar';
+import RenderPeople from '../../components/RenderPeople';
 import { Grid, Row, Col } from 'react-bootstrap';
 
 @inject('classes')
 @observer
-class People extends Component {
+class Members extends Component {
   @observable people = [];
   @observable searchType = 'lastName';
   @observable filter = '';
+  @observable open = false;
+  @observable anchorEl;
   componentWillMount() {
     this.setState({
       fixedHeader: true,
@@ -51,14 +57,30 @@ class People extends Component {
     this.searchType = value;
   }
 
-  handlePersonToggle = (e, toggle, index) => {
-    const { people } = this.props,
-          person = people.data[index];
-    //dispatch(setPerson(person.id, index, e.target.value, toggle));
+  handleNavMenu = (e, value, index) => {
+    if (index === 0) {
+      this.navigate('/members/add/family');
+    } else if (index === 1) {
+      this.navigate('/members/add/person');
+    } else if (index === 2) {
+      this.navigate('/members/import');
+    }
   }
 
   navigate = (path, e) => {
     browserHistory.push(path);
+  }
+
+  handleTouchTap = (event) => {
+    // This prevents ghost click.
+    event.preventDefault();
+
+    this.open = true;
+    this.anchorEl = event.currentTarget;
+  }
+
+  handleRequestClose = () => {
+    this.open = false;
   }
 
   render() {
@@ -69,7 +91,30 @@ class People extends Component {
       <Grid fluid>
         <Row>
           <Col xs={12} sm={12} md={12} lg={12}>
-            <NavToolBar navLabel="Members" goBackTo="/dashboard" />
+            <NavToolBar navLabel="Members" goBackTo="/dashboard">
+              <ToolbarGroup key={2} lastChild style={{ float: 'right' }}>
+                <RaisedButton
+                  label="Manage Members"
+                  secondary
+                  onTouchTap={this.handleTouchTap}
+                />
+                <Popover
+                  open={this.open}
+                  anchorEl={this.anchorEl}
+                  anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
+                  targetOrigin={{ horizontal: 'left', vertical: 'top' }}
+                  onRequestClose={this.handleRequestClose}
+                >
+                  <Menu
+                    onItemTouchTap={((...args) => this.handleNavMenu(...args))}
+                  >
+                    <MenuItem primaryText="Add Person" />
+                    <MenuItem primaryText="Add Family" />
+                    <MenuItem primaryText="Import CSV" />
+                  </Menu>
+                </Popover>
+              </ToolbarGroup>
+            </NavToolBar>
           </Col>
         </Row>
         <Row>
@@ -113,4 +158,4 @@ class People extends Component {
   }
 }
 
-export default People;
+export default Members;

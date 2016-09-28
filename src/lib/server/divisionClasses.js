@@ -99,4 +99,30 @@ export default {
       );
     });
   },
+  get(id) {
+    return new Promise((resolve, reject) => {
+      models.DivisionsClasses.findOne({
+        where: {
+          id: new Buffer(id, 'hex'),
+        },
+      }).then(
+        (result) => {
+          resolve(result);
+        }
+      );
+    });
+  },
+  getByDivision(divisionId) {
+    return new Promise((resolve, reject) => {
+      models.DivisionClasses.findAll({
+        where: {
+          divisionId: new Buffer(divisionId, 'hex'),
+        },
+      }).then(
+        (result) => {
+          resolve(result);
+        }
+      );
+    });
+  },
 };

@@ -11,6 +11,7 @@ import Db from './stores/db';
 import Classes from './stores/classes';
 import Settings from './stores/settings';
 import Sockets from './stores/sockets';
+import Utils from './stores/Utils';
 import routes from './routes';
 import { browserHistory, Router } from 'react-router';
 import EventEmitter from 'eventemitter3';
@@ -35,6 +36,7 @@ let settings;
 let classes;
 let r;
 let context;
+let utils;
 const events = new EventEmitter();
 const sockets = new Sockets();
 sockets.init(events);
@@ -65,12 +67,14 @@ if (authenticated()) {
   settings.authenticated = true;
   settings.user = JSON.parse(window.user);
   classes = new Classes(db, null, events);
+  utils = new Utils(db, null, events);
 } else {
   db = new Db();
   db.init(window.dbJson, events);
-  settings = new Settings();
+  settings = new Settings(null, events);
   settings.authenticated = false;
-  classes = new Classes(db);
+  classes = new Classes(db, null, events);
+  utils = new Utils(db, null, events);
 }
 r = routes(settings);
 context = {
@@ -78,6 +82,7 @@ context = {
   classes,
   settings,
   sockets,
+  utils,
 };
 
 ReactDOM.render(<Root context={context} history={browserHistory} routes={r} />, rootElement);

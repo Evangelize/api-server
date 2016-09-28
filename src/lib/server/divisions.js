@@ -95,6 +95,19 @@ export default {
       );
     });
   },
+  get(id) {
+    return new Promise((resolve, reject) => {
+      models.Divisions.findOne({
+        where: {
+          id: new Buffer(id, 'hex'),
+        },
+      }).then(
+        (result) => {
+          resolve(result);
+        }
+      );
+    });
+  },
 };
 
 

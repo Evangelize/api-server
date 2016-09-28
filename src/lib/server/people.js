@@ -4,11 +4,10 @@ import Promise from 'bluebird';
 export default {
   get(id) {
     return new Promise((resolve, reject) => {
-      id = new Buffer(id, 'hex');
       models.People.findOne(
         {
           where: {
-            id,
+            id: new Buffer(id, 'hex'),
           },
         }
       ).then(

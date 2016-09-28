@@ -1,5 +1,6 @@
 import models from '../../models';
 import Promise from 'bluebird';
+import people from './people';
 
 export default {
   all() {
@@ -116,6 +117,24 @@ export default {
             record: null,
           };
           reject(result);
+        }
+      );
+    });
+  },
+  getByClassYear(yearId, classId) {
+    return new Promise((resolve, reject) => {
+      models.YearClassStudents.findAll({
+        where: {
+          yearId: new Buffer(yearId, 'hex'),
+          classId: new Buffer(classId, 'hex'),
+        },
+      })
+      .then(
+        (results) => Promise.map(results, (result) => people.get(result.peopleId))
+      )
+      .then(
+        (results) => {
+          resolve(results);
         }
       );
     });

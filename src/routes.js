@@ -3,8 +3,9 @@ import { Route, IndexRoute } from 'react-router';
 import App from './containers/App';
 import Dashboard from './views/Dashboard';
 import Login from './views/Login';
-import People from './views/People';
-import Member from './views/Member';
+import Member from './views/members/Member';
+import Members from './views/members/Members';
+import ImportMembers from './views/members/ImportMembers';
 import Schedules from './views/classes/Schedules';
 import Attendance from './views/classes/Attendance';
 import AddClassDayTeacher from './views/classes/AddClassDayTeacher';
@@ -65,7 +66,12 @@ export default (settings) => {
       />
       <Route
         path="members"
-        component={People}
+        component={Members}
+        onEnter={requireAuth}
+      />
+      <Route
+        path="members/import"
+        component={ImportMembers}
         onEnter={requireAuth}
       />
       <Route

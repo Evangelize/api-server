@@ -1,4 +1,12 @@
-import { extendObservable, observable, computed, autorun, isObservable, isObservableMap, map } from "mobx";
+import {
+  extendObservable,
+  observable,
+  computed,
+  autorun,
+  isObservable,
+  isObservableMap,
+  map
+} from 'mobx';
 import moment from 'moment-timezone';
 import api from '../api';
 import * as types from '../constants';
@@ -23,7 +31,7 @@ export default class Settings {
       this.setupEvents(events);
     }
   }
-  
+
   setupWs(websocket) {
     this.ws = websocket;
   }
@@ -35,31 +43,31 @@ export default class Settings {
   authenticate(email, password, callback) {
     let self = this;
     api.auth.login(email, password)
-    .then(
-      function(result) {
-        let token = jwtDecode(result.jwt);
-        reactCookie.save(
-          'accessToken',
-          result.jwt,
-          {
-            expires: moment(token.exp, "X").toDate(),
-            path: '/'
-          }
-        );
-        self.authenticated = true;
-        console.log("user", result.user);
-        self.user = result.user;
-        callback(self.authenticated);
-      },
-      function(err){
-        console.log("unauthorized", err);
-        callback(self.authenticated);
-      }
-    );
+      .then(
+        function(result) {
+          let token = jwtDecode(result.jwt);
+          reactCookie.save(
+            'accessToken',
+            result.jwt,
+            {
+              expires: moment(token.exp, 'X').toDate(),
+              path: '/'
+            }
+          );
+          self.authenticated = true;
+          console.log('user', result.user);
+          self.user = result.user;
+          callback(self.authenticated);
+        },
+        function(err) {
+          console.log('unauthorized', err);
+          callback(self.authenticated);
+        }
+      );
   }
-  
+
   @computed get userFullName() {
-    let name = (this.user && this.user.person) ? this.user.person.firstName + " " + this.user.person.lastName : "User Name";
+    let name = (this.user && this.user.person) ? this.user.person.firstName + ' ' + this.user.person.lastName : 'User Name';
     return name;
   }
 }

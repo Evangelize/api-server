@@ -27,6 +27,7 @@ import { Provider } from 'mobx-react';
 import Db from '../src/stores/db';
 import Classes from '../src/stores/classes';
 import Settings from '../src/stores/settings';
+import Utils from '../src/stores/Utils';
 import createRoutes from '../src/routes';
 import api from '../src/lib/server';
 import utils from '../src/lib/utils';
@@ -220,12 +221,17 @@ export default function (HOST, PORT, callback) {
               const store = mobxstore(_data);
               const finalMobx = JSON.stringify(store.object);
               const db = new Db();
-              let classes, appSettings, routes, context;
+              let classes;
+              let appSettings;
+              let routes;
+              let context;
+              let appUtils;
               console.log('init db');
               db.init(data);
               process.nextTick(() => {
                 console.log('init classes');
                 classes = new Classes(db);
+                appUtils = new Utils(db);
                 appSettings = new Settings();
                 appSettings.user = { person };
                 appSettings.authenticated = authenticated;
@@ -235,6 +241,7 @@ export default function (HOST, PORT, callback) {
                   classes,
                   sockets: null,
                   settings: appSettings,
+                  utils: appUtils,
                   store: {},
                 };
                 match({ routes, location }, (error, redirectLocation, renderProps) => {

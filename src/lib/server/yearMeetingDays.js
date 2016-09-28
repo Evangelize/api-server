@@ -116,4 +116,17 @@ export default {
       );
     });
   },
+  getByYear(yearId) {
+    return new Promise((resolve, reject) => {
+      models.YearMeetingDays.findAll({
+        where: {
+          yearId: new Buffer(yearId, 'hex'),
+        },
+      }).then(
+        (result) => {
+          resolve(result);
+        }
+      );
+    });
+  },
 };

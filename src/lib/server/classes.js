@@ -92,5 +92,27 @@ export default {
         }
       );
     });
-  }
+  },
+  get(id) {
+    return new Promise((resolve, reject) => {
+      const recordId = new Buffer(id, 'hex');
+      models.Classes.findOne(
+        {
+          where: {
+            id: recordId,
+          },
+        }
+      ).then(
+        (result) => {
+          resolve(result);
+          return null;
+        },
+        (err) => {
+          console.log(err);
+          reject(err);
+          return null;
+        }
+      );
+    });
+  },
 };

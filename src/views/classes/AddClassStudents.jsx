@@ -68,11 +68,7 @@ class AddClassStudents extends Component {
     const { classes } = this.props;
     const filter = e.target.value;
     if (filter.length > 1) {
-      classes.findPeople(filter, self.searchType).then(
-        (data) => {
-          self.people = data;
-        }
-      );
+      self.people = classes.findPeople(filter, self.searchType);
     }
   }
 

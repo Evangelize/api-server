@@ -1,6 +1,7 @@
 import models from '../../models';
 import async from 'async';
 import Promise from 'bluebird';
+import people from './people';
 
 export default {
   all() {
@@ -23,7 +24,7 @@ export default {
     });
   },
   insert(record) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       record.id = new Buffer(record.id, 'hex');
       record.peopleId = new Buffer(record.peopleId, 'hex');
       record.divisionClassId = new Buffer(record.divisionClassId, 'hex');
@@ -31,13 +32,13 @@ export default {
       models.DivisionClassTeachers.create(
         record
       ).then(
-        function(result) {
+        (result) => {
           resolve(result);
         },
-        function(err){
+        (err) => {
           let result = {
             error: err,
-            record: null
+            record: null,
           };
           reject(result);
         }
@@ -45,21 +46,21 @@ export default {
     });
   },
   delete(record) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       models.DivisionClassTeachers.destroy({
         where: {
-          id: new Buffer(record.id, 'hex')
+          id: new Buffer(record.id, 'hex'),
         },
         individualHooks: true,
-        hooks: true
+        hooks: true,
       }).then(
-        function(results) {
+        (results) => {
           resolve(record);
         },
-        function(err){
+        (err) => {
           let result = {
             error: err,
-            record: null
+            record: null,
           };
           reject(result);
         }
@@ -67,7 +68,7 @@ export default {
     });
   },
   update(record) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       record.id = new Buffer(record.id, 'hex');
       record.peopleId = new Buffer(record.peopleId, 'hex');
       record.divisionClassId = new Buffer(record.divisionClassId, 'hex');
@@ -76,27 +77,59 @@ export default {
         record,
         {
           where: {
-            id: record.id
-          }
+            id: record.id,
+          },
         }
       ).then(
-        function(rows) {
+        (rows) => {
           models.DivisionClassTeachers.findOne({
             where: {
-              id: record.id
-            }
+              id: record.id,
+            },
           }).then(
-            function(result) {
+            (result) => {
               resolve(result);
             }
           );
         },
-        function(err){
+        (err) => {
           let result = {
             error: err,
-            record: null
+            record: null,
           };
           reject(result);
+        }
+      );
+    });
+  },
+  get(id) {
+    return new Promise((resolve, reject) => {
+      models.DivisionsClassTeachers.findOne({
+        where: {
+          id: new Buffer(id, 'hex'),
+        },
+      }).then(
+        (result) => {
+          resolve(result);
+        }
+      );
+    });
+  },
+  getByDivisionClassDay(divisionClassId, day) {
+    return new Promise((resolve, reject) => {
+      models.DivisionClassTeachers
+      .findAll({
+        where: {
+          divisionClassId: new Buffer(divisionClassId, 'hex'),
+          day,
+        },
+      })
+      .then(
+        (results) => Promise.map(results, (result) => people.get(result.peopleId))
+      )
+      .then(
+        (results) => {
+          resolve(results);
         }
       );
     });

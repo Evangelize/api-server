@@ -31,10 +31,6 @@ const styles = {
 class Classes extends Component {
   @observable sortable = false;
 
-  componentDidMount() {
-
-  }
-
   formatDateRange(division) {
     return moment(division.start).format('MMM D YYYY') + ' - ' + moment(division.end).format('MMM D YYYY')
   }
@@ -45,10 +41,6 @@ class Classes extends Component {
 
   goBack() {
     this.context.router.goBack();
-  }
-  
-  handleNewClass(){
-    
   }
 
   toggleSortable = () => {
