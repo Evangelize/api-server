@@ -34,16 +34,22 @@ module.exports = [
       const docDefinition = {
         pageSize: 'LETTER',
         pageOrientation: 'landscape',
-        pageMargins: [5, 40, 5, 40],
+        pageMargins: [20, 40, 20, 40],
         content: [],
         styles: {
           classTitle: {
             alignment: 'center',
-            fontSize: 22,
+            fontSize: 24,
             bold: true,
             margin: [0, 0, 0, 10],
           },
           day: {
+            alignment: 'center',
+            fontSize: 14,
+            bold: true,
+            margin: [0, 10, 0, 5],
+          },
+          student: {
             alignment: 'center',
             fontSize: 16,
             bold: true,
@@ -55,7 +61,7 @@ module.exports = [
           students: {
             margin: [0, 10, 0, 0],
           },
-          tableExample: {
+          tablePlacard: {
             margin: [0, 0, 0, 0],
           },
           tableHeader: {
@@ -101,12 +107,29 @@ module.exports = [
         async.eachSeries(
           divPlacard.classes,
           (cls, callback) => {
-            let fragment = {
-              width: '48%',
-              style: 'tableExample',
-              layout: 'noBorders',
+            const fragment = {
+              width: '50%',
+              style: 'tablePlacard',
+              layout: {
+                hLineWidth: (i, node) => (i === 0 || i === node.table.body.length) ? 2 : 1,
+                vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length) ? 2 : 1,
+                hLineColor: (i, node) => (i === 0 || i === node.table.body.length) ? 'black' : 'white',
+                vLineColor: (i, node) => (i === 0 || i === node.table.widths.length) ? 'black' : 'white',
+              },
               table: {
-                widths: ['100%'],
+                widths: ['97%'],
+                height: (i) => {
+                  let height = 1;
+                  if (i === 0) {
+                    height = 40;
+                  } else if (i === 1 || i === 2) {
+                    height = 80;
+                  } else if (i === 3) {
+                    height = 280;
+                  }
+                  console.log('row', i, height);
+                  return height;
+                },
                 body: [
                 ],
               },
@@ -140,7 +163,10 @@ module.exports = [
                         {
                           style: 'day',
                           decoration: 'underline',
-                          text: moment().weekday(day.dow).format('dddd'),
+                          text: moment()
+                                .weekday(day.dow)
+                                .format('dddd')
+                                .toUpperCase() + ' TEACHER',
                         }
                       );
                       api.divisionClassTeachers
@@ -176,6 +202,12 @@ module.exports = [
                       stack: [],
                     },
                   ];
+                  stack[0].stack.push(
+                    {
+                      style: 'student',
+                      text: 'STUDENTS',
+                    }
+                  );
                   api.yearClassStudents
                   .getByClassYear(divPlacard.division.divisionYear, data.id)
                   .then((students) => {
@@ -207,19 +239,6 @@ module.exports = [
                   };
                 } else {
                   page.columns.push(fragment);
-                  page.columns.push(
-                    {
-                      width: '2%',
-                      canvas: [
-                        {
-                          type: 'line',
-                          x1: 15, y1: 0,
-                          x2: 15, y2: 530,
-                          lineWidth: 1,
-                        },
-                      ],
-                    },
-                  );
                 }
                 i += 1;
                 callback();

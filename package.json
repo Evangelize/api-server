@@ -73,7 +73,7 @@
     "neat-csv": "^2.1.0",
     "nes": "^4.0.0",
     "pdfjs": "^1.0.0-alpha.5",
-    "pdfmake": "bpampuch/pdfmake",
+    "pdfmake": "mattvoss/bitpdfmake",
     "pem": "^1.8.1",
     "percent-change": "^1.0.1",
     "promise-file-reader": "^0.3.0",
