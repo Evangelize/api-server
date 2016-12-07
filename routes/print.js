@@ -99,10 +99,10 @@ module.exports = [
       // getByDivisionClassDay(divisionId, classId, day)
 
       const printClasses = () => {
-        let i = 1;
+        const numClasses = divPlacard.classes.length;
+        let placard = 1;
         let page = {
           columns: [],
-          pageBreak: 'after',
         };
         async.eachSeries(
           divPlacard.classes,
@@ -231,16 +231,21 @@ module.exports = [
                 },
               ],
               (result, err) => {
-                if (i % 2 === 0) {
+                if (placard % 2 === 0) {
+                  // console.log('page:', placard / 2, ' column:', placard);
+                  if (placard < numClasses) {
+                    page.pageBreak = 'after';
+                  }
                   page.columns.push(fragment);
                   docDefinition.content.push(page);
                   page = {
                     columns: [],
                   };
                 } else {
+                  // console.log('column:', placard);
                   page.columns.push(fragment);
                 }
-                i += 1;
+                placard = placard + 1;
                 callback();
               }
             );
