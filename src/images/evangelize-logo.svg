@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.0"
+   width="500"
+   height="140"
+   viewBox="0 0 400 112"
+   preserveAspectRatio="xMidYMid meet"
+   id="svg2"
+   inkscape:version="0.91 r"
+   sodipodi:docname="evangelize-logo.svg">
+  <defs
+     id="defs14" />
+  <sodipodi:namedview
+     pagecolor="#7b1fa2"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     id="namedview12"
+     showgrid="false"
+     inkscape:zoom="1.45"
+     inkscape:cx="394.73661"
+     inkscape:cy="0.34630819"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g6"
+     units="px"
+     showguides="true"
+     inkscape:guide-bbox="true">
+    <sodipodi:guide
+       position="1035.8974,284.10256"
+       orientation="0,1"
+       id="guide4146" />
+    <sodipodi:guide
+       position="107.30159,111.74603"
+       orientation="0,1"
+       id="guide4150" />
+    <sodipodi:guide
+       position="85.079365,0.63492063"
+       orientation="0,1"
+       id="guide4152" />
+    <sodipodi:guide
+       position="1328.2051,366.15385"
+       orientation="1,0"
+       id="guide4154" />
+    <sodipodi:guide
+       position="0.63492063,139.04762"
+       orientation="1,0"
+       id="guide4156" />
+    <sodipodi:guide
+       position="400,76.825397"
+       orientation="1,0"
+       id="guide4167" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata4">
+Created by potrace 1.13, written by Peter Selinger 2001-2015
+<rdf:RDF>
+  <cc:Work
+     rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type
+       rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+    <dc:title></dc:title>
+  </cc:Work>
+</rdf:RDF>
+</metadata>
+  <g
+     transform="matrix(0.1,0,0,-0.1,0,112)"
+     id="g6"
+     style="fill:#000000;stroke:none">
+    <path
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.69999999;stroke-miterlimit:4;stroke-dasharray:0.7, 4.2;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 797.57974,936.83406 -438.64063,-1.75 -217.81249,-380.73438 220.84375,-379.00001 438.64062,1.7344 217.79691,380.74999 -220.82816,379 z M 381.67349,768.0528 l 164.375,0 164.39062,0 37.51564,-65.85938 37.81249,-65.875 -73.03125,0 c -40.09466,0 -72.75,-0.56784 -72.75,-1.14062 0,-0.57278 9.16402,-16.90561 20.04688,-36.09374 11.1692,-19.18815 20.04687,-35.2241 20.04687,-35.79688 0,-0.57278 -8.87767,-16.60873 -20.04687,-35.79688 -10.88286,-19.18815 -20.04688,-35.52097 -20.04688,-36.09375 0,-0.57277 32.65534,-1.14062 72.75,-1.14062 l 73.03125,0 -37.81249,-65.875 -37.51564,-65.85938 -164.39062,0 -164.375,0 5.71875,9.45313 c 19.47451,32.0757 110.26563,193.02137 110.26563,195.3125 0,2.29112 -90.79113,163.2473 -110.26563,195.60937 l -5.71875,9.15625 z"
+       id="path3355"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:91.64487457px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="1055.9097"
+       y="-405.51657"
+       id="text3376"
+       sodipodi:linespacing="125%"
+       transform="scale(1,-1)"><tspan
+         sodipodi:role="line"
+         id="tspan3378"
+         x="1055.9097"
+         y="-405.51657"
+         style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-size:412.40194702px;font-family:'Nexa Rust Slab';-inkscape-font-specification:'Nexa Rust Slab Heavy';fill:#ffffff;fill-opacity:1">vangelize</tspan></text>
+  </g>
+</svg>

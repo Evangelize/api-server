@@ -1,3 +1,4 @@
+const moduleUtils = require('../lib/moduleUtils');
 module.exports = function (sequelize, DataTypes) {
   const YearMeetingDays = sequelize.define(
     'yearMeetingDays',
@@ -6,16 +7,25 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.BLOB,
         primaryKey: true,
         get() {
-          return this.getDataValue('id').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('id'));
         },
         set(val) {
           this.setDataValue('id', new Buffer(val, 'hex'));
         },
       },
+      entityId: {
+        type: DataTypes.BLOB,
+        get: function () {
+          return moduleUtils.binToHex(this.getDataValue('entityId'));
+        },
+        set: function (val) {
+          this.setDataValue('entityId', new Buffer(val, 'hex'));
+        },
+      },
       yearId: {
         type: DataTypes.BLOB,
         get() {
-          return this.getDataValue('yearId').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('yearId'));
         },
         set(val) {
           this.setDataValue('yearId', new Buffer(val, 'hex'));

@@ -6,15 +6,8 @@ export default {
   all() {
     return new Promise((resolve, reject) => {
       models.YearClassStudents.findAll().then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          console.log(err);
-          reject(err);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
@@ -28,20 +21,13 @@ export default {
           },
         }
       ).then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          console.log(err);
-          reject(err);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
   insert(record) {
-    let newrecord = Object.assign({}, record);
+    const newrecord = Object.assign({}, record);
     newrecord.id = new Buffer(record.id, 'hex');
     newrecord.yearId = new Buffer(record.yearId, 'hex');
     newrecord.classId = new Buffer(record.classId, 'hex');
@@ -50,24 +36,14 @@ export default {
       models.YearClassStudents.create(
         newrecord
       ).then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          const result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
   update(record) {
     return new Promise((resolve, reject) => {
-      let newrecord = Object.assign({}, record);
+      const newrecord = Object.assign({}, record);
       newrecord.id = new Buffer(record.id, 'hex');
       newrecord.yearId = new Buffer(record.yearId, 'hex');
       newrecord.classId = new Buffer(record.classId, 'hex');
@@ -86,18 +62,11 @@ export default {
               id: newrecord.id,
             },
           }).then(
-            (result) => {
-              resolve(result);
-            }
+            (result) => resolve(result),
+            (err) => reject(err)
           );
         },
-        (err) => {
-          const result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-        }
+        (err) => reject(err)
       );
     });
   },
@@ -108,16 +77,8 @@ export default {
           id: new Buffer(record.id, 'hex'),
         },
       }).then(
-        () => {
-          resolve(record);
-        },
-        (error) => {
-          const result = {
-            error,
-            record: null,
-          };
-          reject(result);
-        }
+        () => resolve(record),
+        (err) => reject(err)
       );
     });
   },
@@ -130,12 +91,12 @@ export default {
         },
       })
       .then(
-        (results) => Promise.map(results, (result) => people.get(result.peopleId))
+        (results) => Promise.map(results, (result) => people.get(result.peopleId)),
+        (err) => reject(err)
       )
       .then(
-        (results) => {
-          resolve(results);
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },

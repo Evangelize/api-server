@@ -5,15 +5,8 @@ export default {
   all() {
     return new Promise((resolve, reject) => {
       models.YearMeetingDays.findAll().then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          console.log(err);
-          reject(err);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
@@ -27,15 +20,8 @@ export default {
           },
         }
       ).then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          console.log(err);
-          reject(err);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
@@ -47,18 +33,8 @@ export default {
       models.YearMeetingDays.create(
         newrecord
       ).then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          const result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
@@ -81,18 +57,11 @@ export default {
               id: newrecord.id,
             },
           }).then(
-            (result) => {
-              resolve(result);
-            }
+            (result) => resolve(result),
+            (err) => reject(err)
           );
         },
-        (err) => {
-          const result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-        }
+        (err) => reject(err)
       );
     });
   },
@@ -103,16 +72,8 @@ export default {
           id: new Buffer(record.id, 'hex'),
         },
       }).then(
-        () => {
-          resolve(record);
-        },
-        (error) => {
-          const result = {
-            error,
-            record: null,
-          };
-          reject(result);
-        }
+        () => resolve(record),
+        (err) => reject(err)
       );
     });
   },
@@ -123,9 +84,8 @@ export default {
           yearId: new Buffer(yearId, 'hex'),
         },
       }).then(
-        (result) => {
-          resolve(result);
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },

@@ -1018,6 +1018,16 @@ export default class Classes {
     );
   }
 
+  findFamilies(search) {
+    const regex = new RegExp('^' + search, 'i');
+    return this.db.store(
+      'families', [
+        filter((rec) => rec.deletedAt === null && regex.test(rec.name)),
+        sortBy(['name']),
+      ]
+    );
+  }
+
   getFamily(id) {
     return this.db.store(
       'families', [

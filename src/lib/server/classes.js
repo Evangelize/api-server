@@ -9,87 +9,56 @@ export default {
           ['updatedAt', 'DESC'],
         ],
       }).then(
-        (results) => {
-          resolve(results);
-          return null;
-        },
-        (err) => {
-          console.log(error);
-          reject(error);
-          return null;
-        }
+        (results) => resolve(results),
+        (err) => reject(err)
       );
     });
   },
   insert(record) {
     record.id = new Buffer(record.id, 'hex');
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       models.Classes.create(
         record
       ).then(
-        function(result) {
-          resolve(result);
-        },
-        function(err){
-          let result = {
-            error: err,
-            record: null
-          };
-          reject(result);
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
   update(record) {
-    console.log(record);
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       record.id = new Buffer(record.id, 'hex');
       models.Classes.update(
         record,
         {
           where: {
-            id: record.id
-          }
+            id: record.id,
+          },
         }
       ).then(
-        function(rows) {
+        () => {
           models.Classes.findOne({
             where: {
-              id: record.id
-            }
+              id: record.id,
+            },
           }).then(
-            function(result) {
-              resolve(result);
-            }
+            (result) => resolve(result),
+            (err) => reject(err)
           );
         },
-        function(err){
-          let result = {
-            error: err,
-            record: null
-          };
-          reject(result);
-        }
+        (err) => reject(err)
       );
     });
   },
   delete(record) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       models.Classes.destroy({
         where: {
-          id: new Buffer(record.id, 'hex')
-        }
-      }).then(
-        function(results) {
-          resolve(record);
+          id: new Buffer(record.id, 'hex'),
         },
-        function(err){
-          let result = {
-            error: err,
-            record: null
-          };
-          reject(result);
-        }
+      }).then(
+        () => resolve(record),
+        (err) => reject(err)
       );
     });
   },
@@ -103,15 +72,8 @@ export default {
           },
         }
       ).then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          console.log(err);
-          reject(err);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },

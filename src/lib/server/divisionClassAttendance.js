@@ -4,54 +4,42 @@ import Promise from 'bluebird';
 
 export default {
   latest() {
-    return new Promise(function(resolve, reject){
-       async.waterfall(
+    return new Promise((resolve, reject) => {
+      async.waterfall(
         [
-          function(callback) {
-            //console.log("Get Attendance");
+          (callback) => {
             models.DivisionClassAttendance.findAll(
               {
                 group: ['attendanceDate'],
-                order: "attendanceDate DESC",
+                order: 'attendanceDate DESC',
                 limit: 8,
                 attributes: [
                   'day',
                   'attendanceDate',
                   [
                     models.sequelize.fn('SUM', models.sequelize.col('count')),
-                    'attendance'
-                  ]
-                ]
+                    'attendance',
+                  ],
+                ],
               }
             ).then(
-              function(attendance) {
-                callback(null, attendance);
-              },
-              function(err){
-                console.log(err)
-                callback(err);
-              }
+              (attendance) => callback(null, attendance),
+              (err) => callback(err)
             );
-          }
+          },
         ],
-        function(error, result) {
+        (error, result) => {
           if (error) {
-            let result = {
-              error: err,
-              record: null
-            };
-            reject(result);
-            return null;
+            return reject(error);
           } else {
-            resolve(result);
-            return null;
+            return resolve(result);
           }
         }
       );
     });
   },
   average() {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       models.sequelize.query(
         `
           SELECT AVG(t1.attendance) as attendance
@@ -60,14 +48,12 @@ export default {
           ) as t1
         `,
         {
-          type: models.sequelize.QueryTypes.SELECT
+          type: models.sequelize.QueryTypes.SELECT,
         }
       )
       .then(
-        function(results) {
-          resolve(results);
-          return null;
-        }
+        (results) => resolve(results),
+        (err) => reject(err)
       );
     });
   },
@@ -75,115 +61,76 @@ export default {
     return new Promise((resolve, reject) => {
       models.DivisionClassAttendance.findAll(
         {
-          order: "id ASC"
+          order: 'id ASC',
         }
       ).then(
-        (attendance) => {
-          resolve(attendance);
-        },
-        (err) => {
-          let result = {
-            error: err,
-            record: null
-          };
-          reject(result);
-        }
+        (attendance) => resolve(attendance),
+        (err) => reject(err)
       );
     });
   },
   insert(record) {
     record.id = new Buffer(record.id, 'hex');
     record.divisionClassId = new Buffer(record.divisionClassId, 'hex');
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       models.DivisionClassAttendance.create(
         record
       ).then(
-        function(result) {
-          resolve(result);
-        },
-        function(err){
-          console.log(err);
+        (result) => resolve(result),
+        () => {
           models.DivisionClassAttendance.findOne(
             {
-                where: {
-                  divisionClassId: record.divisionClassId,
-                  day: 0,
-                  attendanceDate: '2016-05-01 00:00:00'
-                }
+              where: {
+                divisionClassId: record.divisionClassId,
+                day: 0,
+                attendanceDate: '2016-05-01 00:00:00',
+              },
             }
           ).then(
-            function(attendance) {
-              let result = {
-                error: err,
-                record: attendance
-              };
-              reject(result);
-            },
-            function(err){
-              let result = {
-                error: err,
-                record: null
-              };
-              reject(result);
-            }
+            (result) => resolve(result),
+            (error) => reject(error)
           );
         }
       );
     });
   },
   update(record) {
-    console.log(record);
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       record.id = new Buffer(record.id, 'hex');
       models.DivisionClassAttendance.update(
         record,
         {
           where: {
-            id: record.id
-          }
+            id: record.id,
+          },
         }
       ).then(
-        function(rows) {
+        () => {
           models.DivisionClassAttendance.findOne({
             where: {
-              id: record.id
-            }
+              id: record.id,
+            },
           }).then(
-            function(result) {
-              resolve(result);
-            }
+            (result) => resolve(result),
+            (error) => reject(error)
           );
         },
-        function(err){
-          let result = {
-            error: err,
-            record: null
-          };
-          reject(result);
-        }
+        (err) => reject(err)
       );
     });
   },
   delete(record) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       models.DivisionClassAttendance.destroy({
         where: {
-          id: new Buffer(record.id, 'hex')
-        }
-      }).then(
-        function(results) {
-          resolve(record);
+          id: new Buffer(record.id, 'hex'),
         },
-        function(err){
-          let result = {
-            error: err,
-            record: null
-          };
-          reject(result);
-        }
+      }).then(
+        () => resolve(record),
+        (err) => reject(err)
       );
     });
-  }
+  },
 };
 
 

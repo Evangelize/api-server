@@ -1,9 +1,15 @@
 import Promise from 'bluebird';
 import async from 'async';
 import jwt from 'jsonwebtoken';
+import path from 'path';
+import nconf from 'nconf';
 import { createClient } from './redisClient';
 import api from './server';
 let pubClient;
+let jwtCert;
+const config = nconf.argv()
+    .env()
+    .file({ file: path.join(__dirname, '../../config/settings.json') });
 
 createClient().then(
   (client) => {
@@ -12,13 +18,16 @@ createClient().then(
 );
 
 export default {
+  setCert(cert) {
+    jwtCert = cert;
+  },
   pushLast8Attenance() {
     return api
     .attendance
     .latest()
     .then(
       (results) => {
-        pubClient.publish('congregate:attendance.UPDATE_LATEST_ATTENDANCE_FULFILLED', JSON.stringify(results));
+        pubClient.publish('evangelize:attendance.UPDATE_LATEST_ATTENDANCE_FULFILLED', JSON.stringify(results));
         return results;
       },
       (err) => {
@@ -33,7 +42,7 @@ export default {
     .average()
     .then(
       (results) => {
-        pubClient.publish('congregate:attendance.UPDATE_AVG_ATTENDANCE_FULFILLED', JSON.stringify(results));
+        pubClient.publish('evangelize:attendance.UPDATE_AVG_ATTENDANCE_FULFILLED', JSON.stringify(results));
         return results;
       },
       (err) => {
@@ -43,7 +52,7 @@ export default {
     );
   },
   pushMessage(channel, message) {
-    pubClient.publish(`congregate: ${channel}`, JSON.stringify(message));
+    pubClient.publish(`evangelize:${channel}`, JSON.stringify(message));
     return null;
   },
   getPeoplePassword(email) {
@@ -64,7 +73,7 @@ export default {
               (results) => {
                 const payload = {
                   person: people[0].toJSON(),
-                  user: results.toJSON()
+                  user: results.toJSON(),
                 };
                 resolve(payload);
                 return null;
@@ -124,40 +133,34 @@ export default {
       );
     });
   },
-  validateJwt(token, cert) {
-    return new Promise((resolve, reject) => {
-      console.log('validateJwt');
-      jwt.verify(
-        token,
-        cert,
-        {
-          algorithm: 'RS256'
-        },
-        (err, decoded) => {
-          console.log('jwt', decoded);
-          if (err) {
-            console.log(decoded);
-            reject(err);
-          }
-          api
-          .people
-          .get(decoded.peopleId)
-          .then(
-            (results) => {
-              if (results) {
-                resolve(results.toJSON());
-              } else {
-                resolve(null);
-              }
-              return null;
-            },
-            (err) => {
-              reject(err);
-              return null;
-            }
-          );
+  validateJwt(token, callback) {
+    console.log('validateJwt');
+    jwt.verify(
+      token,
+      jwtCert,
+      {
+        algorithm: 'RS256',
+      },
+      (err, decoded) => {
+        console.log('jwt', decoded);
+        if (err) {
+          console.log(decoded);
+          return callback(err, false, decoded);
         }
-      );
-    });
-  }
+        api
+        .people
+        .get(decoded.peopleId)
+        .then(
+          (results) => {
+            if (results) {
+              return callback(null, true, results.toJSON());
+            } else {
+              return callback(null, false, null);
+            }
+          },
+          (error) => callback(error, false, null)
+        );
+      }
+    );
+  },
 }

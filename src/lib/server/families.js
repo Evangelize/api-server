@@ -9,111 +9,72 @@ export default {
           ['updatedAt', 'DESC'],
         ],
       }).then(
-        (results) => {
-          resolve(results);
-          return null;
-        },
-        (err) => {
-          console.log(error);
-          reject(error);
-          return null;
-        }
+        (results) => resolve(results),
+        (err) => reject(err)
       );
     });
   },
   get(id) {
-    return new Promise(function(resolve, reject){
-      id = new Buffer(id, 'hex');
+    return new Promise((resolve, reject) => {
+      const newId = new Buffer(id, 'hex');
       models.Families.findOne(
         {
           where: {
-            id: id
-          }
+            id: newId,
+          },
         }
       ).then(
-        function(result) {
-          resolve(result);
-          return null;
-        },
-        function(err){
-          console.log(err);
-          reject(err);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
   insert(record) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       models.Families.create(
         record
       ).then(
-        function(result) {
-          resolve(result);
-          return null;
-        },
-        function(err){
-          let result = {
-            error: err,
-            record: null
-          };
-          reject(result);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
   update(record) {
     console.log(record);
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       record.id = new Buffer(record.id, 'hex');
       models.Families.update(
         record,
         {
           where: {
-            id: record.id
-          }
+            id: record.id,
+          },
         }
       ).then(
-        function(rows) {
+        () => {
           models.Families.findOne({
             where: {
-              id: record.id
-            }
+              id: record.id,
+            },
           }).then(
-            function(result) {
-              resolve(result);
-            }
+            (result) => resolve(result),
+            (err) => reject(err)
           );
         },
-        function(err){
-          let result = {
-            error: err,
-            record: null
-          };
-          reject(result);
-        }
+        (err) => reject(err)
       );
     });
   },
   delete(record) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       models.Families.destroy({
         where: {
-          id: new Buffer(record.id, 'hex')
-        }
-      }).then(
-        function(results) {
-          resolve(record);
+          id: new Buffer(record.id, 'hex'),
         },
-        function(err){
-          let result = {
-            error: err,
-            record: null
-          };
-          reject(result);
-        }
+      }).then(
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
-  }
+  },
 };

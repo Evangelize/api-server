@@ -9,15 +9,8 @@ export default {
           ['updatedAt', 'DESC'],
         ],
       }).then(
-        (results) => {
-          resolve(results);
-          return null;
-        },
-        (err) => {
-          console.log(error);
-          reject(error);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
@@ -31,15 +24,8 @@ export default {
           },
         }
       ).then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          console.log(err);
-          reject(err);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
@@ -48,18 +34,8 @@ export default {
       models.Users.create(
         record
       ).then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          let result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
@@ -75,24 +51,17 @@ export default {
           },
         }
       ).then(
-        (rows) => {
+        () => {
           models.Users.findOne({
             where: {
               id: record.id,
             },
           }).then(
-            (result) => {
-              resolve(result);
-            }
+            (result) => resolve(result),
+            (err) => reject(err)
           );
         },
-        (err) => {
-          let result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-        }
+        (err) => reject(err)
       );
     });
   },
@@ -103,16 +72,8 @@ export default {
           id: new Buffer(record.id, 'hex'),
         },
       }).then(
-        (results) => {
-          resolve(record);
-        },
-        (err) => {
-          let result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-        }
+        () => resolve(record),
+        (err) => reject(err)
       );
     });
   },

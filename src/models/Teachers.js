@@ -1,21 +1,31 @@
+const moduleUtils = require('../lib/moduleUtils');
 module.exports = function (sequelize, DataTypes) {
-  var Teachers = sequelize.define(
+  const Teachers = sequelize.define(
     'teachers',
     {
       id: {
         type: DataTypes.BLOB,
         primaryKey: true,
         get: function()  {
-          return this.getDataValue('id').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('id'));
         },
         set: function(val) {
           this.setDataValue('id', new Buffer(val, "hex"));
         }
       },
+      entityId: {
+        type: DataTypes.BLOB,
+        get: function () {
+          return moduleUtils.binToHex(this.getDataValue('entityId'));
+        },
+        set: function (val) {
+          this.setDataValue('entityId', new Buffer(val, 'hex'));
+        },
+      },
       peopleId:  {
         type: DataTypes.BLOB,
         get: function()  {
-          return this.getDataValue('peopleId').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('peopleId'));
         },
         set: function(val) {
           this.setDataValue('peopleId', new Buffer(val, "hex"));

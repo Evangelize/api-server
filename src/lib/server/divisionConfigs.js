@@ -9,15 +9,8 @@ export default {
           ['updatedAt', 'DESC'],
         ],
       }).then(
-        (results) => {
-          resolve(results);
-          return null;
-        },
-        (err) => {
-          console.log(error);
-          reject(error);
-          return null;
-        }
+        (results) => resolve(results),
+        (err) => reject(err)
       );
     });
   },
@@ -31,15 +24,8 @@ export default {
           },
         }
       ).then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          console.log(err);
-          reject(err);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
@@ -49,24 +35,14 @@ export default {
       models.DivisionConfigs.create(
         record
       ).then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          const result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
   update(record) {
     return new Promise((resolve, reject) => {
-      let newrecord = Object.assign({}, record);
+      const newrecord = Object.assign({}, record);
       newrecord.id = new Buffer(record.id, 'hex');
       models.DivisionConfigs.update(
         newrecord,
@@ -82,18 +58,11 @@ export default {
               id: newrecord.id,
             },
           }).then(
-            (result) => {
-              resolve(result);
-            }
+            (result) => resolve(result),
+            (err) => reject(err)
           );
         },
-        (err) => {
-          const result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-        }
+        (err) => reject(err)
       );
     });
   },
@@ -104,16 +73,8 @@ export default {
           id: new Buffer(record.id, 'hex'),
         },
       }).then(
-        () => {
-          resolve(record);
-        },
-        (error) => {
-          const result = {
-            error,
-            record: null,
-          };
-          reject(result);
-        }
+        () => resolve(record),
+        (err) => reject(err)
       );
     });
   },

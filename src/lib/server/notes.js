@@ -10,53 +10,39 @@ export default {
           ['updatedAt', 'DESC'],
         ],
       }).then(
-        (results) => {
-          resolve(results);
-          return null;
-        },
-        (err) => {
-          console.log(error);
-          reject(error);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       )
     });
   },
   add(note) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       async.waterfall(
         [
-          function(callback) {
+          (callback) => {
             models.Notes.create(
               note
             ).then(
-              function(note) {
-                callback(null, note);
-              },
-              function(err){
-                callback(err);
-              }
+              (result) => callback(null, result),
+              (err) => callback(err),
             );
           },
         ],
-        function(error, result) {
+        (error, result) => {
           if (error) {
-            console.log(error);
-            reject(error);
-            return null;
+            return reject(error);
           } else {
-            resolve(result);
-            return null;
+            return resolve(result);
           }
         }
       );
     });
   },
   updateNote(noteId, fields) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       async.waterfall(
         [
-          function(callback) {
+          (callback) => {
             models.Notes.findOne(
               {
                 where: {
@@ -64,80 +50,53 @@ export default {
                 },
               }
             ).then(
-              function(note, created) {
-                callback(null, note);
-              },
-              function(err){
-                callback(err);
-              }
+              (note) => callback(null, note),
+              (err) => callback(err)
             );
           },
-          function(note, callback) {
+          (note, callback) => {
             note.update(
               fields
             ).then(
-              function(note, created) {
-                callback(null, note);
-              },
-              function(err){
-                callback(err);
-              }
+              (result) => callback(null, result),
+              (err) => callback(err)
             );
           },
         ],
-        function(error, result) {
+        (error, result) => {
           if (error) {
-            console.log(error);
-            reject(error);
-            return null;
+            return reject(error);
           } else {
-            resolve(result);
-            return null;
+            return resolve(result);
           }
         }
       );
     });
   },
   notes() {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       models.Notes.findAll(
         {
-          order: "id ASC",
+          order: 'id ASC',
         }
       ).then(
-        function(result) {
-          resolve(result);
-          return null;
-        },
-        function(err){
-          console.log(err);
-          reject(err);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
   insert(record) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       models.Notes.create(
         record
       ).then(
-        function(result) {
-          resolve(result);
-        },
-        function(err){
-          let result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
-   update(record) {
-    console.log(record);
-    return new Promise(function(resolve, reject){
+  update(record) {
+    return new Promise((resolve, reject) => {
       record.id = new Buffer(record.id, 'hex');
       models.Notes.update(
         record,
@@ -147,44 +106,29 @@ export default {
           },
         }
       ).then(
-        function(rows) {
+        () => {
           models.Notes.findOne({
             where: {
               id: record.id,
             },
           }).then(
-            function(result) {
-              resolve(result);
-            }
+            (result) => resolve(result),
+            (err) => reject(err)
           );
         },
-        function(err){
-          let result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-        }
+        (err) => reject(err)
       );
     });
   },
   delete(record) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       models.Notes.destroy({
         where: {
           id: new Buffer(record.id, 'hex'),
         },
       }).then(
-        function(results) {
-          resolve(record);
-        },
-        function(err){
-          let result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-        }
+        () => resolve(record),
+        (err) => reject(err)
       );
     });
   },

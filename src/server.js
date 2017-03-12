@@ -15,6 +15,7 @@ import Hapi from 'hapi';
 import Inert from 'inert';
 import h2o2 from 'h2o2';
 import hapiRouter from 'hapi-router';
+import AuthBearer from 'hapi-auth-bearer-token';
 import cookieJwt from 'hapi-auth-cookie-jwt';
 
 // React imports
@@ -25,9 +26,7 @@ import { Provider } from 'mobx-react';
 
 // React-router routes and history imports
 import Db from '../src/stores/db';
-import Classes from '../src/stores/classes';
-import Settings from '../src/stores/settings';
-import Utils from '../src/stores/Utils';
+import Stores from './stores';
 import createRoutes from '../src/routes';
 import api from '../src/lib/server';
 import utils from '../src/lib/utils';
@@ -39,6 +38,22 @@ import { NotAuthorizedException, RedirectException } from './lib/errors';
 let subClient;
 let cert;
 const CronJob = Cron.CronJob;
+const getToken = (headers) => {
+  let parts;
+  let jwt = null;
+  const authorization = headers.authorization;
+  const cookie = parseCookies(headers, 'accessToken');
+  if (authorization) {
+    parts = authorization.split(/\s+/);
+  }
+  if (cookie) {
+    jwt = cookie;
+  } else if (parts) {
+    jwt = parts[1];
+  }
+
+  return jwt;
+}
 const pushResults = function (message, result) {
   console.log('pushResults', message, result);
   const update = {
@@ -48,10 +63,10 @@ const pushResults = function (message, result) {
     record: result,
     error: result.error,
   };
-  utils.pushMessage('changes.'+message.type, update);
+  utils.pushMessage(`changes.${message.type}`, update);
 };
 const setSubscription = function () {
-  subClient.psubscribe('congregate:*');
+  subClient.psubscribe('evangelize:*');
   // console.log("Subscribing");
   subClient.on('pmessage', (pattern, channel, message) => {
     const subChannel = channel.split(':')[1];
@@ -60,46 +75,44 @@ const setSubscription = function () {
       message = JSON.parse(message);
       const record = message.record;
       console.log('pmessage', message);
-      delete record.meta;
-      delete record.$loki;
       switch (message.type) {
-        case 'insert':
-          api[message.collection].insert(record)
-          .then(
-            (results) => {
-              results.error = false;
-              pushResults(message, results);
-            },
-            (err) => {
-              pushResults(message, err);
-            }
-          );
+      case 'insert':
+        api[message.collection].insert(record)
+        .then(
+          (results) => {
+            results.error = false;
+            pushResults(message, results);
+          },
+          (err) => {
+            pushResults(message, err);
+          }
+        );
         break;
-        case 'update':
-          api[message.collection].update(record)
-          .then(
-            (results) => {
-              results.error = false;
-              pushResults(message, results);
-            },
-            (err) => {
-              pushResults(message, err);
-            }
-          );
+      case 'update':
+        api[message.collection].update(record)
+        .then(
+          (results) => {
+            results.error = false;
+            pushResults(message, results);
+          },
+          (err) => {
+            pushResults(message, err);
+          }
+        );
         break;
-        case 'delete':
-          api[message.collection].delete(record)
-          .then(
-            (results) => {
-              results.error = false;
-              pushResults(message, results);
-            },
-            (err) => {
-              pushResults(message, err);
-            }
-          );
+      case 'delete':
+        api[message.collection].delete(record)
+        .then(
+          (results) => {
+            results.error = false;
+            pushResults(message, results);
+          },
+          (err) => {
+            pushResults(message, err);
+          }
+        );
         break;
-        default:
+      default:
         break;
       }
     }
@@ -137,16 +150,13 @@ export default function (HOST, PORT, callback) {
       register: Inert,
     },
     {
-      register: hapiRouter,
-      options: {
-        routes: 'routes/**/*.js', // uses glob to include files
-      },
-    },
-    {
       register: h2o2,
     },
     {
       register: cookieJwt,
+    },
+    {
+      register: AuthBearer,
     },
   ];
   const settings = nconf.argv()
@@ -154,6 +164,7 @@ export default function (HOST, PORT, callback) {
        .file({ file: path.join(__dirname, '../config/settings.json') });
   // console.log("jwtCert", settings.get("jwtCert"));
   cert = fs.readFileSync(settings.get('jwtCert'));
+  utils.setCert(cert);
   // console.log("mysql", settings.get("mysql"));
   const server = new Hapi.Server();
   server.connection(
@@ -193,7 +204,6 @@ export default function (HOST, PORT, callback) {
       options: { compiler, assets, hot },
     });
   }
-
   // Register Hapi plugins
   server.register(
     plugins,
@@ -201,107 +211,128 @@ export default function (HOST, PORT, callback) {
       if (error) {
         return console.error(error);
       }
+      server.auth.strategy(
+        'authBearer',
+        'bearer-access-token',
+        false,
+        {
+          validateFunc: utils.validateJwt,
+        }
+      );
+      server.auth.strategy(
+        'accessToken',
+        'jwt-cookie',
+        false,
+        {
+          key: cert,
+          validateFunc: utils.validateJwt,
+        }
+      );
 
-      server.auth.strategy('accessToken', 'jwt-cookie', {
-        key: cert,
-        validateFunc: utils.validateJwt,
-      });
+      server.register(
+        {
+          register: hapiRouter,
+          options: {
+            routes: 'routes/**/*.js', // uses glob to include files
+          },
+        },
+        (error1) => {
+          if (error1) {
+            return console.error(error1);
+          }
+          /**
+          * Attempt to serve static requests from the public folder.
+          */
 
-      /**
-      * Attempt to serve static requests from the public folder.
-      */
-
-      server.ext('onPreResponse', (request, reply) => {
-        const cookie = parseCookies(request.headers, 'accessToken');
-        const location = createLocation(request.path);
-        let authenticated = false,
-            retFunc = function (data, person) {
-              const _data = Object.assign({}, data);
-              const finalDb = JSON.stringify(_data);
-              const store = mobxstore(_data);
+          server.ext('onPreResponse', (request, reply) => {
+            const cookie = getToken(request.headers);
+            const location = createLocation(request.path);
+            const stores = new Stores();
+            let authenticated = false;
+            const retFunc = function (data, person) {
+              const newData = Object.assign({}, data);
+              const finalDb = JSON.stringify(newData);
+              const store = mobxstore(newData);
               const finalMobx = JSON.stringify(store.object);
               const db = new Db();
-              let classes;
-              let appSettings;
               let routes;
               let context;
-              let appUtils;
               console.log('init db');
               db.init(data);
               process.nextTick(() => {
-                console.log('init classes');
-                classes = new Classes(db);
-                appUtils = new Utils(db);
-                appSettings = new Settings();
-                appSettings.user = { person };
-                appSettings.authenticated = authenticated;
-                routes = createRoutes(appSettings);
-                context = {
-                  db,
-                  classes,
-                  sockets: null,
-                  settings: appSettings,
-                  utils: appUtils,
-                  store: {},
-                };
-                match({ routes, location }, (error, redirectLocation, renderProps) => {
-                  if (error || !renderProps) {
-                    // reply("500: " + error.message)
-                    reply.continue();
-                  } else if (redirectLocation) {
-                    reply.redirect(redirectLocation.pathname + redirectLocation.search);
-                  } else if (renderProps) {
-                    console.log('ReactDOM: begin render to string');
-                    const reactString = ReactDOM.renderToString(
-                      <Provider {...context}><RouterContext {...renderProps} /></Provider>
+                stores.init(db, null).then(
+                  () => {
+                    stores.stores.settings.authenticated = authenticated;
+                    stores.stores.settings.user = { person };
+                    routes = createRoutes(stores.stores.settings);
+                    context = Object.assign(
+                      {
+                        db,
+                        sockets: null,
+                      },
+                      stores.stores
                     );
-                    console.log('ReactDOM: end render to string');
-                    const config = nconf.argv()
-                      .env()
-                      .file({ file: path.join(__dirname, '../config/settings.json') });
-                    const script = process.env.NODE_ENV === 'production' ? '/dist/client.min.js' : '/hot/client.js';
-                    const websocketUri = '//'+config.get('websocket:host')+':'+settings.get('websocket:port');
-                    const output = (
-                      `<!doctype html>
-                      <html lang="en-us">
-                        <head>
-                          <script>
-                            var wsUri = '${websocketUri}',
-                                dbJson = ${finalDb},
-                                mobxStore = ${finalMobx},
-                                user = '${JSON.stringify({ person })}';
-                          </script>
-                          <meta charset="utf-8">
-                          <meta name="viewport" content="width=device-width, minimum-scale=1.0">
-                          <title>Evangelize</title>
-                          <link rel="stylesheet" href="/css/sanitize.css" />
-                          <link rel="stylesheet" href="/css/typography.css" />
-                          <link rel="stylesheet" href="/chartist/css/chartist.min.css">
-                          <link rel="shortcut icon" sizes="16x16 32x32 48x48 64x64 128x128 256x256" href="/favicon.ico">
-                          <link href="//fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
-                          <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons" />
-                          <link rel="stylesheet" href="/css/custom.css" />
-                        </head>
-                        <body>
-                          <div id="root"><div>${reactString}</div></div>
-                          <script async=async src=${script}></script>
-                        </body>
-                      </html>`
-                    );
-                    const eTag = etag(output);
-                    reply(output).header('cache-control', 'max-age=0, private, must-revalidate').header('etag', eTag);
+                    match({ routes, location }, (err, redirectLocation, renderProps) => {
+                      if (err || !renderProps) {
+                        // reply("500: " + error.message)
+                        reply.continue();
+                      } else if (redirectLocation) {
+                        reply.redirect(redirectLocation.pathname + redirectLocation.search);
+                      } else if (renderProps) {
+                        console.log('ReactDOM: begin render to string');
+                        const reactString = ReactDOM.renderToString(
+                          <Provider {...context}><RouterContext {...renderProps} /></Provider>
+                        );
+                        console.log('ReactDOM: end render to string');
+                        const config = nconf.argv()
+                          .env()
+                          .file({ file: path.join(__dirname, '../config/settings.json') });
+                        const script = process.env.NODE_ENV === 'production' ? '/dist/client.min.js' : '/hot/client.js';
+                        const websocketUri = `//${config.get('websocket:host')}:${settings.get('websocket:port')}`;
+                        const output = (
+                          `<!doctype html>
+                          <html lang="en-us">
+                            <head>
+                              <script>
+                                var wsUri = '${websocketUri}',
+                                    dbJson = ${finalDb},
+                                    mobxStore = ${finalMobx},
+                                    user = '${JSON.stringify({ person })}';
+                              </script>
+                              <meta charset="utf-8">
+                              <meta name="viewport" content="width=device-width, minimum-scale=1.0">
+                              <title>Evangelize</title>
+                              <link rel="stylesheet" href="/css/sanitize.css" />
+                              <link rel="stylesheet" href="/css/typography.css" />
+                              <link rel="stylesheet" href="/chartist/css/chartist.min.css">
+                              <link rel="shortcut icon" sizes="16x16 32x32 48x48 64x64 128x128 256x256" href="/favicon.ico">
+                              <link href="//fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+                              <link rel="stylesheet" href="//fonts.googleapis.com/icon?family=Material+Icons" />
+                              <link rel="stylesheet" href="/css/custom.css" />
+                            </head>
+                            <body>
+                              <div id="root"><div>${reactString}</div></div>
+                              <script async=async src=${script}></script>
+                            </body>
+                          </html>`
+                        );
+                        const eTag = etag(output);
+                        reply(output).header('cache-control', 'max-age=0, private, must-revalidate').header('etag', eTag);
+                      }
+                    });
                   }
-                });
+                );
               });
-            },
-            processRequest = (person) => {
-              person = person || null;
+            };
+            const processRequest = (person) => {
+              const newPerson = person || null;
               try {
                 if (typeof request.response.statusCode !== 'undefined') {
                   return reply.continue();
                 }
 
                 if (!authenticated && request.path !== '/login') {
+                  console.log(request.headers);
                   throw new NotAuthorizedException('/login');
                 } else if (authenticated && request.path === '/login') {
                   console.log('error authenticated already');
@@ -310,7 +341,7 @@ export default function (HOST, PORT, callback) {
 
                 console.log('Create Window Object');
                 if (typeof window === 'undefined'){
-                  global.window = new Object();
+                  global.window = Object();
                 }
 
                 const { headers } = request;
@@ -324,16 +355,17 @@ export default function (HOST, PORT, callback) {
                 .then(
                   (results) => {
                     console.log('got all tables');
-                    retFunc(results, person);
+                    retFunc(results, newPerson);
                   },
                   (err) => {
                     console.log('error getting all tables', err);
-                    retFunc(null, person);
+                    retFunc(null, newPerson);
                   }
                 );
               } catch (err) {
                 if (err instanceof NotAuthorizedException) {
                   console.log('redirect to login');
+                  console.error(err);
                   reply.redirect('/login');
                 } else if (err instanceof RedirectException) {
                   console.log('redirect to dashboard');
@@ -342,23 +374,26 @@ export default function (HOST, PORT, callback) {
               }
               return true;
             };
-        if (cookie) {
-          // console.log("cookie", cookie);
-          utils.validateJwt(cookie, cert)
-          .then(
-            (person) => {
-              authenticated = true;
-              processRequest(person);
-            },
-            () => {
+            if (cookie) {
+              // console.log("cookie", cookie);
+              utils.validateJwt(
+                cookie,
+                (errors, authorized, credentials) => {
+                  if (authorized) {
+                    authenticated = true;
+                    processRequest(credentials);
+                  } else {
+                    processRequest();
+                  }
+                }
+              );
+            } else {
               processRequest();
             }
-          );
-        } else {
-          processRequest();
+          });
+          return true;
         }
-      });
-      return true;
+      );
     }
   );
   // Start Development Server
@@ -367,7 +402,7 @@ export default function (HOST, PORT, callback) {
 
 process.on('uncaughtException', (err) => {
   const date = new Date();
-  console.error(date.toUTCString() + ' uncaughtException:', err.message);
+  console.error(`${date.toUTCString()} uncaughtException:`, err.message);
   console.error(err.stack);
   process.exit(1);
 });

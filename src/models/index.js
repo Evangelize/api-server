@@ -18,14 +18,14 @@ if (config.use_env_variable) {
     config.mysql.password,
     config.mysql,
     {
-      "timezone": "+00:00"
+      'timezone': '+00:00'
     }
   );
 }
 
-var Revisions = require("sequelize-revisions")(sequelize, {
-  revisionModel: "revisions",
-  revisionChangeModel: "revisionChanges",
+var Revisions = require('sequelize-revisions')(sequelize, {
+  revisionModel: 'revisions',
+  revisionChangeModel: 'revisionChanges',
 });
 
 fs

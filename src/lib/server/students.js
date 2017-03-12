@@ -4,134 +4,102 @@ import Promise from 'bluebird';
 
 export default {
   add(personId) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       async.waterfall(
         [
-          function(callback) {
+          (callback) => {
             models.Students.findOrCreate(
               {
                 where: {
-                  peopleId: personId
-                }
+                  peopleId: personId,
+                },
               }
             ).spread(
-              function(student, created) {
-                callback(null, student);
-              },
-              function(err){
-                callback(err);
-              }
+              (student) => callback(null, student),
+              (err) => callback(err)
             );
           },
-          function(student, callback) {
+          (student, callback) => {
             models.People.findOne(
               {
                 where: {
-                  id: personId
+                  id: personId,
                 },
                 include: [
                   {
-                    model: models.Teachers
+                    model: models.Teachers,
                   },
                   {
-                    model: models.Students
-                  }
-                ]
+                    model: models.Students,
+                  },
+                ],
               }
             ).then(
-              function(people) {
-                callback(null, people);
-              },
-              function(err){
-                callback(err);
-              }
+              (people) => callback(null, people),
+              (err) => callback(err)
             );
-          }
+          },
         ],
-        function(error, result) {
+        (error, result) => {
           if (error) {
-            let result = {
-              error: err,
-              record: null
-            };
-            reject(result);
-            return null;
+            return reject(error);
           } else {
-            resolve(result);
-            return null;
+            return resolve(result);
           }
         }
       );
     });
   },
   delete(personId) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       async.waterfall(
         [
-          function(callback) {
+          (callback) => {
             models.Students.findOne(
               {
                 where: {
-                  peopleId: personId
-                }
+                  peopleId: personId,
+                },
               }
             ).then(
-              function(student) {
-                callback(null, student);
-              },
-              function(err){
-                callback(err);
-              }
+              (student) => callback(null, student),
+              (err) => callback(err)
             );
           },
-          function(student, callback) {
+          (student, callback) => {
             student
             .destroy()
             .then(
-              function(people) {
-                callback(null, student);
-              },
-              function(err){
-                callback(err);
-              }
+              () => callback(null, student),
+              (err) => callback(err)
             );
           },
-          function(student, callback) {
+          (student, callback) => {
             models.People.findOne(
               {
                 where: {
-                  id: personId
+                  id: personId,
                 },
                 include: [
                   {
-                    model: models.Teachers
+                    model: models.Teachers,
                   },
                   {
-                    model: models.Students
-                  }
-                ]
+                    model: models.Students,
+                  },
+                ],
               }
             ).then(
-              function(people) {
-                callback(null, people);
-              },
-              function(err){
-                callback(err);
-              }
+              (people) => callback(null, people),
+              (err) => callback(err)
             );
-          }
+          },
         ],
-        function(error, result) {
+        (error, result) => {
           if (error) {
-            let result = {
-              error: err,
-              record: null
-            };
-            reject(result);
-            return null;
+            return reject(error);
           } else {
-            resolve(result);
-            return null;
+            return resolve(result);
           }
         }
       );
@@ -146,16 +114,9 @@ export default {
           ],
         }
       ).then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          console.log(err);
-          reject(err);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
-  }
+  },
 };

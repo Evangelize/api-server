@@ -44,7 +44,7 @@ class Classes extends Component {
   }
 
   toggleSortable = () => {
-    this.sortable = !this.state.sortable;
+    this.sortable = !this.sortable;
   }
 
   render() {

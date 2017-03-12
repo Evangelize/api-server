@@ -2,6 +2,7 @@ import React from 'react';
 import { Route, IndexRoute } from 'react-router';
 import App from './containers/App';
 import Dashboard from './views/Dashboard';
+import Families from './views/members/Families';
 import Login from './views/Login';
 import Member from './views/members/Member';
 import Members from './views/members/Members';
@@ -19,6 +20,7 @@ import AcademicYearDivisions from './views/classes/AcademicYearDivisions';
 import DivisionClasses from './views/classes/DivisionClasses';
 import DivisionClassesSelect from './views/classes/DivisionClassesSelect';
 import MeetingDaysSelect from './views/classes/MeetingDaysSelect';
+import WorshipServices from './views/worship/WorshipServices';
 
 export default (settings) => {
   // console.log('createRoutes', settings.authenticated);
@@ -65,7 +67,7 @@ export default (settings) => {
         onEnter={requireAuth}
       />
       <Route
-        path="members"
+        path="members/search"
         component={Members}
         onEnter={requireAuth}
       />
@@ -75,8 +77,13 @@ export default (settings) => {
         onEnter={requireAuth}
       />
       <Route
-        path="members/:id"
+        path="members/person/:id"
         component={Member}
+        onEnter={requireAuth}
+      />
+      <Route
+        path="members/families"
+        component={Families}
         onEnter={requireAuth}
       />
       <Route
@@ -126,6 +133,11 @@ export default (settings) => {
       <Route
         path="schedule/academicYearDivision/:divisionId/select"
         component={DivisionClassesSelect}
+        onEnter={requireAuth}
+      />
+      <Route
+        path="worship/services/list"
+        component={WorshipServices}
         onEnter={requireAuth}
       />
     </Route>

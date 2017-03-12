@@ -5,6 +5,7 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import CustomColors from '../components/CustomColors';
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
+import GoogleLogin from 'react-google-login';
 
 @inject('settings', 'sockets')
 @observer
@@ -53,6 +54,23 @@ class Login extends Component {
     }
   }
 
+  responseGoogle = (response) => {
+    const { sockets, settings } = this.props;
+    console.log(response);
+    settings.thirdPartyLogin(
+      'google',
+      response,
+      (authenticated) => {
+        if (authenticated) {
+          sockets.setupWs();
+          browserHistory.push('/dashboard');
+        } else {
+          self.setState({ error: 'Incorrect Google Login' });
+        }
+      }
+    );
+  }
+
   render() {
     return (
       <div className="login-box">
@@ -62,14 +80,17 @@ class Login extends Component {
                 style={{
                   backgroundColor: this.state.muiTheme.rawTheme.palette.primary1Color,
                   color: this.state.muiTheme.rawTheme.palette.alternateTextColor,
+                  backgroundImage: 'url(/img/evangelize-logo.svg)',
                 }}
             >
-              <div
-                style={{ fontSize: '45px' }}>
-                Evangelize
-              </div>
             </div>
             <div className="login-body">
+              <GoogleLogin
+                clientId="642847737907-diod4bhvk18nfn5dg7bjm6di0kpict2k.apps.googleusercontent.com"
+                buttonText="Login with GOOGLE"
+                onSuccess={this.responseGoogle}
+                onFailure={this.responseGoogle}
+              />
               <TextField
                 hintText="Email"
                 floatingLabelText="Email"

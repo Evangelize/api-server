@@ -63,6 +63,10 @@ export default class Db {
   @observable store;
   @observable events;
 
+  constructor(data, events) {
+    this.init(data, events);
+  }
+
   init(data, events) {
     const self = this;
     if (events) {
@@ -78,7 +82,6 @@ export default class Db {
     this.events = events;
 
     this.events.on('db', self.eventHandler.bind(this));
-    //this.ws.emitAsync = bPromise.promisify(this.ws.emit);
     return true;
   }
 
@@ -91,7 +94,6 @@ export default class Db {
     let record;
     let deleted = false;
     let retValue = true;
-    console.log('eventHandler', moment().unix());
     if (data.error) {
       if (data.error.name === 'SequelizeUniqueConstraintError') {
         record = this.store(
@@ -212,7 +214,7 @@ export default class Db {
 
   @action deleteRecord(collection, id) {
     const ts = moment.utc().format('YYYY-MM-DDTHH:mm:ss.sssZ');
-    let record = this.store(
+    const record = this.store(
           collection,
           [
             filter((x) => x.id === id),

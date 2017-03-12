@@ -1,21 +1,31 @@
+const moduleUtils = require('../lib/moduleUtils');
 module.exports = function (sequelize, DataTypes) {
-  var DivisionClassAttendance = sequelize.define(
+  const DivisionClassAttendance = sequelize.define(
     'divisionClassAttendance',
     {
       id: {
         type: DataTypes.BLOB,
         primaryKey: true,
         get: function()  {
-          return this.getDataValue('id').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('id'));
         },
         set: function(val) {
           this.setDataValue('id', new Buffer(val, "hex"));
         }
       },
+      entityId: {
+        type: DataTypes.BLOB,
+        get: function () {
+          return moduleUtils.binToHex(this.getDataValue('entityId'));
+        },
+        set: function (val) {
+          this.setDataValue('entityId', new Buffer(val, 'hex'));
+        },
+      },
       divisionClassId: {
         type: DataTypes.BLOB,
         get: function()  {
-          return this.getDataValue('divisionClassId').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('divisionClassId'));
         },
         set: function(val) {
           this.setDataValue('divisionClassId', new Buffer(val, "hex"));
@@ -26,7 +36,7 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.BLOB,
         primaryKey: true,
         get: function()  {
-          return this.getDataValue('dayId').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('dayId'));
         },
         set: function(val) {
           this.setDataValue('dayId', new Buffer(val, "hex"));

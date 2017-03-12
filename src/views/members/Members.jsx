@@ -16,6 +16,7 @@ import Toggle from 'material-ui/Toggle';
 import ToolbarGroup from 'material-ui/Toolbar/ToolbarGroup';
 import NavToolBar from '../../components/NavToolBar';
 import RenderPeople from '../../components/RenderPeople';
+import DialogConfirmDelete from '../../components/DialogConfirmDelete';
 import { Grid, Row, Col } from 'react-bootstrap';
 
 @inject('classes')
@@ -26,6 +27,9 @@ class Members extends Component {
   @observable filter = '';
   @observable open = false;
   @observable anchorEl;
+  @observable deleteId = null;
+  @observable dialogOpen = false;
+  @observable dialogDeleteOpen = false;
   componentWillMount() {
     this.setState({
       fixedHeader: true,
@@ -83,77 +87,108 @@ class Members extends Component {
     this.open = false;
   }
 
+  handleOpenDialog = () => {
+    const ts = moment();
+    this.dialogDeleteOpen = true;
+  }
+
+
+  handleDeleteClose = (type) => {
+    const { classes } = this.props;
+    this.dialogDeleteOpen = false;
+    if (type === 'ok') {
+      classes.deleteRecord('people', this.deleteId);
+      this.people = classes.findPeople(this.filter, this.searchType);
+    }
+    this.deleteId = null;
+  }
+
+  tapItem = (type, item) => {
+    if (type === 'edit') {
+      this.navigate(`/members/person/${item.id}`);
+    } else if (type === 'delete') {
+      this.deleteId = item.id;
+      this.dialogDeleteOpen = true;
+    }
+  }
+
   render() {
     const dropDownStyle = {
       marginTop: '16px',
     };
     return (
-      <Grid fluid>
-        <Row>
-          <Col xs={12} sm={12} md={12} lg={12}>
-            <NavToolBar navLabel="Members" goBackTo="/dashboard">
-              <ToolbarGroup key={2} lastChild style={{ float: 'right' }}>
-                <RaisedButton
-                  label="Manage Members"
-                  secondary
-                  onTouchTap={this.handleTouchTap}
-                />
-                <Popover
-                  open={this.open}
-                  anchorEl={this.anchorEl}
-                  anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
-                  targetOrigin={{ horizontal: 'left', vertical: 'top' }}
-                  onRequestClose={this.handleRequestClose}
-                >
-                  <Menu
-                    onItemTouchTap={((...args) => this.handleNavMenu(...args))}
+      <div>
+        <Grid fluid>
+          <Row>
+            <Col xs={12} sm={12} md={12} lg={12}>
+              <NavToolBar navLabel="Members" goBackTo="/dashboard">
+                <ToolbarGroup key={2} lastChild style={{ float: 'right' }}>
+                  <RaisedButton
+                    label="Manage Members"
+                    secondary
+                    onTouchTap={this.handleTouchTap}
+                  />
+                  <Popover
+                    open={this.open}
+                    anchorEl={this.anchorEl}
+                    anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
+                    targetOrigin={{ horizontal: 'left', vertical: 'top' }}
+                    onRequestClose={this.handleRequestClose}
                   >
-                    <MenuItem primaryText="Add Person" />
-                    <MenuItem primaryText="Add Family" />
-                    <MenuItem primaryText="Import CSV" />
-                  </Menu>
-                </Popover>
-              </ToolbarGroup>
-            </NavToolBar>
-          </Col>
-        </Row>
-        <Row>
-          <Col xs={12} sm={12} md={3} lg={2}>
-            <DropDownMenu
-              value={this.searchType}
-              onChange={((...args) => this.handleSelectValueChange(...args))}
-              style={dropDownStyle}
-            >
-              <MenuItem value={"lastName"} primaryText="Last Name" />
-              <MenuItem value={"firstName"} primaryText="First Name" />
-              <MenuItem value={"emailAddress"} primaryText="Email" />
-            </DropDownMenu>
-          </Col>
-          <Col xs={12} sm={12} md={9} lg={10}>
-            <TextField
-              className={"searchBox"}
-              ref="searchField"
-              floatingLabelText="Search"
-              value={this.filter}
-              onChange={((...args) => this.handleInputChange(...args))}
-            />
-          </Col>
-        </Row>
-        <Row>
-          <Col xs={12} sm={12} md={12} lg={12}>
-            <Card>
-              <CardHeader
-                title={"Members"}
-                subtitle={"Search for members"}
-                avatar={<Avatar>{"M"}</Avatar>}
+                    <Menu
+                      onItemTouchTap={((...args) => this.handleNavMenu(...args))}
+                    >
+                      <MenuItem primaryText="Add Person" />
+                      <MenuItem primaryText="Add Family" />
+                      <MenuItem primaryText="Import CSV" />
+                    </Menu>
+                  </Popover>
+                </ToolbarGroup>
+              </NavToolBar>
+            </Col>
+          </Row>
+          <Row>
+            <Col xs={12} sm={12} md={3} lg={2}>
+              <DropDownMenu
+                value={this.searchType}
+                onChange={((...args) => this.handleSelectValueChange(...args))}
+                style={dropDownStyle}
+              >
+                <MenuItem value={"lastName"} primaryText="Last Name" />
+                <MenuItem value={"firstName"} primaryText="First Name" />
+                <MenuItem value={"emailAddress"} primaryText="Email" />
+              </DropDownMenu>
+            </Col>
+            <Col xs={12} sm={12} md={9} lg={10}>
+              <TextField
+                className={"searchBox"}
+                ref="searchField"
+                floatingLabelText="Search"
+                value={this.filter}
+                onChange={((...args) => this.handleInputChange(...args))}
               />
-              <CardMedia>
-                <RenderPeople people={this.people} />
-              </CardMedia>
-            </Card>
-          </Col>
-        </Row>
-      </Grid>
+            </Col>
+          </Row>
+          <Row>
+            <Col xs={12} sm={12} md={12} lg={12}>
+              <Card>
+                <CardHeader
+                  title={"Members"}
+                  subtitle={"Search for members"}
+                  avatar={<Avatar>{"M"}</Avatar>}
+                />
+                <CardMedia>
+                  <RenderPeople people={this.people} onTap={this.tapItem} />
+                </CardMedia>
+              </Card>
+            </Col>
+          </Row>
+        </Grid>
+        <DialogConfirmDelete
+          open={this.dialogDeleteOpen}
+          onClose={this.handleDeleteClose}
+        />
+      </div>
     );
   }
 }

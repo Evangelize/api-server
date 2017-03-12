@@ -46,6 +46,7 @@ export default class Sockets {
     console.log('socket:onMessage', message);
     const data = (message.data) ? JSON.parse(message.data) : {};
     if ('payload' in data) this.events.emit('db', data);
+    if (data.type === 'info') this.events.emit('broadcast', data);
   }
 
 }

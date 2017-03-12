@@ -1,16 +1,26 @@
+const moduleUtils = require('../lib/moduleUtils');
 module.exports = function (sequelize, DataTypes) {
-  var Users = sequelize.define(
+  const Users = sequelize.define(
     'users',
     {
       peopleId: {
         type: DataTypes.BLOB,
         primaryKey: true,
-        get: function()  {
-          return this.getDataValue('peopleId').toString('hex');
+        get() {
+          return moduleUtils.binToHex(this.getDataValue('peopleId'));
         },
-        set: function(val) {
+        set(val) {
           this.setDataValue('peopleId', new Buffer(val, "hex"));
         }
+      },
+      entityId: {
+        type: DataTypes.BLOB,
+        get: function () {
+          return moduleUtils.binToHex(this.getDataValue('entityId'));
+        },
+        set: function (val) {
+          this.setDataValue('entityId', new Buffer(val, 'hex'));
+        },
       },
       password: DataTypes.STRING,
       active: DataTypes.BOOLEAN,
@@ -52,7 +62,7 @@ module.exports = function (sequelize, DataTypes) {
     {
       paranoid: true,
       classMethods: {
-        associate: function(models) {
+        associate(models) {
 
         }
       }

@@ -1,15 +1,25 @@
+const moduleUtils = require('../lib/moduleUtils');
 module.exports = function (sequelize, DataTypes) {
-  var DivisionConfigs = sequelize.define(
+  const DivisionConfigs = sequelize.define(
     'divisionConfigs',
     {
       id: {
         type: DataTypes.BLOB,
         primaryKey: true,
         get () {
-          return this.getDataValue('id').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('id'));
         },
         set (val) {
           this.setDataValue('id', new Buffer(val, 'hex'));
+        },
+      },
+      entityId: {
+        type: DataTypes.BLOB,
+        get: function () {
+          return moduleUtils.binToHex(this.getDataValue('entityId'));
+        },
+        set: function (val) {
+          this.setDataValue('entityId', new Buffer(val, 'hex'));
         },
       },
       title: { type: DataTypes.STRING, defaultValue: 'Children\'s Classes' },

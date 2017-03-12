@@ -2,36 +2,36 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Launch",
+			"name": "Launch via NPM",
 			"type": "node",
 			"request": "launch",
-			"program": "${workspaceRoot}/babel.server.js",
+			"cwd": "${workspaceRoot}",
+			"runtimeExecutable": "npm",
+			"runtimeArgs": [
+					"run-script", "debug"
+			],
+			"sourceMaps": true,
+			"port": 5858
+		},
+		{
+			"name": "Launch Node",
+			"type": "node2",
+			"request": "launch",
+			"program": "${workspaceRoot}/index.js",
 			"stopOnEntry": false,
 			"args": [],
 			"cwd": "${workspaceRoot}",
 			"preLaunchTask": null,
-			"runtimeExecutable": null,
 			"runtimeArgs": [
-				"--nolazy"
+				"--nolazy",
+				"--harmony"
 			],
 			"env": {
 				"NODE_ENV": "development"
 			},
-			"externalConsole": false,
-			"sourceMaps": false,
-			"outDir": null
-		},
-		{
-			"name": "Attach",
-			"type": "node",
-			"request": "attach",
-			"port": 5858,
-			"address": "localhost",
-			"restart": false,
-			"sourceMaps": false,
-			"outDir": null,
-			"localRoot": "${workspaceRoot}",
-			"remoteRoot": null
+			"console": "internalConsole",
+			"sourceMaps": true,
+			"outFiles": []
 		}
 	]
 }

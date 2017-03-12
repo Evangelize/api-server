@@ -1,16 +1,26 @@
+const moduleUtils = require('../lib/moduleUtils');
 module.exports = function (sequelize, DataTypes) {
-  var Notes = sequelize.define(
+  const Notes = sequelize.define(
     'notes',
     {
       id: {
         type: DataTypes.BLOB,
         primaryKey: true,
         get: function()  {
-          return this.getDataValue('id').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('id'));
         },
         set: function(val) {
           this.setDataValue('id', new Buffer(val, "hex"));
         }
+      },
+      entityId: {
+        type: DataTypes.BLOB,
+        get: function () {
+          return moduleUtils.binToHex(this.getDataValue('entityId'));
+        },
+        set: function (val) {
+          this.setDataValue('entityId', new Buffer(val, 'hex'));
+        },
       },
       type: {
         type: DataTypes.ENUM(

@@ -11,15 +11,8 @@ export default {
           },
         }
       ).then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          console.log(err);
-          reject(err);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
@@ -36,14 +29,47 @@ export default {
           },
         ],
       }).then(
-        (people) => {
-          resolve(people);
-          return null;
-        },
-        (err) => {
-          reject(err);
-          return null;
+        (result) => resolve(result),
+        (err) => reject(err)
+      );
+    });
+  },
+  fuzzySearch(first, last, email, gender) {
+    return new Promise((resolve, reject) => {
+      let query = `
+        SELECT * 
+        FROM people 
+        WHERE 
+      `;
+      let nameQuery;
+      if (first) {
+        nameQuery = `(SOUNDEX(firstName) LIKE CONCAT('%',SOUNDEX('${first}'),'%')`;
+      }
+      if (last) {
+        nameQuery = (nameQuery) ? `${nameQuery} AND` : nameQuery;
+        nameQuery = `${nameQuery} SOUNDEX(lastName) LIKE CONCAT('%',SOUNDEX('${last}'),'%')`;
+      }
+      if (nameQuery) {
+        nameQuery = `${nameQuery})`;
+      }
+      if (email) {
+        nameQuery = (nameQuery) ? `${nameQuery} AND` : nameQuery;
+        nameQuery = `${nameQuery} emailAddress LIKE CONCAT('%','${email}','%')`;
+      }
+      if (gender) {
+        nameQuery = (nameQuery) ? `${nameQuery} AND` : nameQuery;
+        nameQuery = `${nameQuery} gender = '${gender}'`;
+      }
+      query = `${query} ${nameQuery}`;
+      models.sequelize.query(
+        query,
+        {
+          type: models.sequelize.QueryTypes.SELECT,
         }
+      )
+      .then(
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
@@ -54,15 +80,8 @@ export default {
           ['updatedAt', 'DESC'],
         ],
       }).then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          console.log(err);
-          reject(err);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
@@ -71,18 +90,8 @@ export default {
       models.People.create(
         record
       ).then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          let result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
@@ -97,24 +106,17 @@ export default {
           },
         }
       ).then(
-        (rows) => {
+        () => {
           models.People.findOne({
             where: {
               id: record.id,
             },
           }).then(
-            (result) => {
-              resolve(result);
-            }
+            (result) => resolve(result),
+            (err) => reject(err)
           );
         },
-        (err) => {
-          let result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-        }
+        (err) => reject(err)
       );
     });
   },
@@ -125,16 +127,8 @@ export default {
           id: new Buffer(record.id, 'hex'),
         },
       }).then(
-        (results) => {
-          resolve(record);
-        },
-        (err) => {
-          let result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-        }
+        () => resolve(record),
+        (err) => reject(err)
       );
     });
   },

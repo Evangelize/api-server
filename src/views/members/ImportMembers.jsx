@@ -83,10 +83,11 @@ const Field = observer((props) => (
   </div>
 ));
 
-@inject('classes', 'utils')
+@inject('classes', 'utils', 'messages')
 @observer
 class ImportMembers extends Component {
   @observable success = false;
+  @observable statusMessage = '';
   @observable reset = false;
   @observable familyFields = [
     {
@@ -211,6 +212,22 @@ class ImportMembers extends Component {
   @observable csv;
   @observable finished = false;
   @observable stepIndex = 0;
+  componentWillMount() {
+    const { messages } = this.props;
+    messages.subscribe(
+      'broadcast',
+      this.onBroadcast
+    );
+  }
+
+  onBroadcast = (update) => {
+    const data = update.payload.data;
+    if (data.type === 'info:import-complete') {
+      this.success = true;
+    } else if (data.type === 'info:import-update') {
+      this.statusMessage = `${data.record.lastName}, ${data.record.firstName}`;
+    }
+  }
 
   navigate = (path, e) => {
     browserHistory.push(path);
@@ -271,7 +288,7 @@ class ImportMembers extends Component {
       <Grid fluid>
         <Row>
           <Col xs={12} sm={12} md={12} lg={12}>
-            <NavToolBar navLabel="Import Members" goBackTo="/members" />
+            <NavToolBar navLabel="Import Members" goBackTo="/members/search" />
           </Col>
         </Row>
         <Row>
@@ -371,7 +388,7 @@ class ImportMembers extends Component {
                           </Col>
                           <Col xs={12} sm={12} md={4} lg={4}>
                             {!this.success &&
-                              <h4>Importing...</h4>
+                              <h4>Importing... {this.statusMessage}</h4>
                             }
                             {this.success &&
                               <h4>Import complete</h4>

@@ -1,21 +1,31 @@
+const moduleUtils = require('../lib/moduleUtils');
 module.exports = function (sequelize, DataTypes) {
-  var YearClassStudents = sequelize.define(
+  const YearClassStudents = sequelize.define(
     'yearClassStudents',
     {
       id: {
         type: DataTypes.BLOB,
         primaryKey: true,
         get: function()  {
-          return this.getDataValue('id').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('id'));
         },
         set: function(val) {
           this.setDataValue('id', new Buffer(val, "hex"));
         }
       },
+      entityId: {
+        type: DataTypes.BLOB,
+        get: function () {
+          return moduleUtils.binToHex(this.getDataValue('entityId'));
+        },
+        set: function (val) {
+          this.setDataValue('entityId', new Buffer(val, 'hex'));
+        },
+      },
       classId:  {
         type: DataTypes.BLOB,
         get: function()  {
-          return this.getDataValue('classId').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('classId'));
         },
         set: function(val) {
           this.setDataValue('classId', new Buffer(val, "hex"));
@@ -24,7 +34,7 @@ module.exports = function (sequelize, DataTypes) {
       yearId:  {
         type: DataTypes.BLOB,
         get: function()  {
-          return this.getDataValue('yearId').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('yearId'));
         },
         set: function(val) {
           this.setDataValue('yearId', new Buffer(val, "hex"));
@@ -33,7 +43,7 @@ module.exports = function (sequelize, DataTypes) {
       peopleId:  {
         type: DataTypes.BLOB,
         get: function()  {
-          return this.getDataValue('peopleId').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('peopleId'));
         },
         set: function(val) {
           this.setDataValue('peopleId', new Buffer(val, "hex"));

@@ -21,19 +21,10 @@ export default class Settings {
   @observable leftNavOpen = false;
   ws;
   events;
-  constructor(websocket, events) {
-    //console.log("settings class");
-    if (websocket) {
-      this.setupWs(websocket);
-    }
-
+  constructor(db, events) {
     if (events) {
       this.setupEvents(events);
     }
-  }
-
-  setupWs(websocket) {
-    this.ws = websocket;
   }
 
   setupEvents(events) {
@@ -41,29 +32,55 @@ export default class Settings {
   }
 
   authenticate(email, password, callback) {
-    let self = this;
+    const self = this;
     api.auth.login(email, password)
-      .then(
-        function(result) {
-          let token = jwtDecode(result.jwt);
-          reactCookie.save(
-            'accessToken',
-            result.jwt,
-            {
-              expires: moment(token.exp, 'X').toDate(),
-              path: '/'
-            }
-          );
-          self.authenticated = true;
-          console.log('user', result.user);
-          self.user = result.user;
-          callback(self.authenticated);
-        },
-        function(err) {
-          console.log('unauthorized', err);
-          callback(self.authenticated);
-        }
-      );
+    .then(
+      (result) => {
+        const token = jwtDecode(result.jwt);
+        reactCookie.save(
+          'accessToken',
+          result.jwt,
+          {
+            expires: moment(token.exp, 'X').toDate(),
+            path: '/',
+          }
+        );
+        self.authenticated = true;
+        console.log('user', result.user);
+        self.user = result.user;
+        callback(self.authenticated);
+      },
+      (err) => {
+        console.log('unauthorized', err);
+        callback(self.authenticated);
+      }
+    );
+  }
+
+  thirdPartyLogin(type, token, callback) {
+    const self = this;
+    api.auth.thirdPartyLogin(type, token)
+    .then(
+      (result) => {
+        const tokn = jwtDecode(result.jwt);
+        reactCookie.save(
+          'accessToken',
+          result.jwt,
+          {
+            expires: moment(tokn.exp, 'X').toDate(),
+            path: '/',
+          }
+        );
+        self.authenticated = true;
+        console.log('user', result.user);
+        self.user = result.user;
+        callback(self.authenticated);
+      },
+      (err) => {
+        console.log('unauthorized', err);
+        callback(self.authenticated);
+      }
+    );
   }
 
   @computed get userFullName() {

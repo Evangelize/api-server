@@ -9,8 +9,7 @@ import DisplayPerson from './DisplayPerson';
 @observer
 class RenderPeople extends Component {
   render() {
-    const { people } = this.props;
-    const { classes } = this.props;
+    const { people, classes, onTap } = this.props;
     let retVal;
     if (people.length > 0) {
       retVal = (
@@ -30,6 +29,7 @@ class RenderPeople extends Component {
                 </div>
               }
               secondaryTextLines={2}
+              onTap={onTap}
             />
           )}
         </List>

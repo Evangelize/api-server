@@ -1,3 +1,4 @@
+const moduleUtils = require('../lib/moduleUtils');
 module.exports = function (sequelize, DataTypes) {
   const People = sequelize.define(
     'people',
@@ -6,17 +7,26 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.BLOB,
         primaryKey: true,
         get() {
-          return this.getDataValue('id').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('id'));
         },
         set(val) {
           this.setDataValue('id', new Buffer(val, 'hex'));
+        },
+      },
+      entityId: {
+        type: DataTypes.BLOB,
+        get: function () {
+          return moduleUtils.binToHex(this.getDataValue('entityId'));
+        },
+        set: function (val) {
+          this.setDataValue('entityId', new Buffer(val, 'hex'));
         },
       },
       familyId: {
         type: DataTypes.BLOB,
         get() {
           if (this.getDataValue('familyId')) {
-            return this.getDataValue('familyId').toString('hex');
+            return moduleUtils.binToHex(this.getDataValue('familyId'));
           } else {
             return null;
           }
@@ -29,11 +39,11 @@ module.exports = function (sequelize, DataTypes) {
           }
         },
       },
-      cohort: {
+      cohortId: {
         type: DataTypes.BLOB,
         get() {
           if (this.getDataValue('cohort')) {
-            return this.getDataValue('cohort').toString('hex');
+            return moduleUtils.binToHex(this.getDataValue('cohort'));
           } else {
             return null;
           }

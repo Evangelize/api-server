@@ -118,7 +118,7 @@ class Member extends Component {
               <Card>
                 <CardHeader
                   title={`${this.member.lastName}, ${this.member.firstName}`}
-                  subtitle={this.family.familyName}
+                  subtitle={(this.family) ? this.family.familyName : null}
                   avatar={<Avatar>{this.member.firstName.charAt(0)}</Avatar>}
                 />
                 <CardMedia>

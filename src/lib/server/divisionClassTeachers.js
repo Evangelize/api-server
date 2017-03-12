@@ -11,15 +11,8 @@ export default {
           ['updatedAt', 'DESC'],
         ],
       }).then(
-        (results) => {
-          resolve(results);
-          return null;
-        },
-        (err) => {
-          console.log(error);
-          reject(error);
-          return null;
-        }
+        (results) => resolve(results),
+        (error) => reject(error)
       );
     });
   },
@@ -32,16 +25,8 @@ export default {
       models.DivisionClassTeachers.create(
         record
       ).then(
-        (result) => {
-          resolve(result);
-        },
-        (err) => {
-          let result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
@@ -54,16 +39,8 @@ export default {
         individualHooks: true,
         hooks: true,
       }).then(
-        (results) => {
-          resolve(record);
-        },
-        (err) => {
-          let result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-        }
+        () => resolve(record),
+        (err) => reject(err)
       );
     });
   },
@@ -81,24 +58,17 @@ export default {
           },
         }
       ).then(
-        (rows) => {
+        () => {
           models.DivisionClassTeachers.findOne({
             where: {
               id: record.id,
             },
           }).then(
-            (result) => {
-              resolve(result);
-            }
+            (result) => resolve(result),
+            (err) => reject(err)
           );
         },
-        (err) => {
-          let result = {
-            error: err,
-            record: null,
-          };
-          reject(result);
-        }
+        (err) => reject(err)
       );
     });
   },
@@ -109,9 +79,8 @@ export default {
           id: new Buffer(id, 'hex'),
         },
       }).then(
-        (result) => {
-          resolve(result);
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
@@ -125,12 +94,12 @@ export default {
         },
       })
       .then(
-        (results) => Promise.map(results, (result) => people.get(result.peopleId))
+        (results) => Promise.map(results, (result) => people.get(result.peopleId)),
+        (err) => reject(err)
       )
       .then(
-        (results) => {
-          resolve(results);
-        }
+        (results) => resolve(results),
+        (err) => reject(err)
       );
     });
   },

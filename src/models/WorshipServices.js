@@ -1,3 +1,4 @@
+const moduleUtils = require('../lib/moduleUtils');
 module.exports = function (sequelize, DataTypes) {
   const WorshipServices = sequelize.define(
     'worshipServices',
@@ -6,10 +7,19 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.BLOB,
         primaryKey: true,
         get() {
-          return this.getDataValue('id').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('id'));
         },
         set(val) {
           this.setDataValue('id', new Buffer(val, 'hex'));
+        },
+      },
+      entityId: {
+        type: DataTypes.BLOB,
+        get: function () {
+          return moduleUtils.binToHex(this.getDataValue('entityId'));
+        },
+        set: function (val) {
+          this.setDataValue('entityId', new Buffer(val, 'hex'));
         },
       },
       title: {
@@ -19,16 +29,11 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
-      time: {
-        type: DataTypes.DATE,
-        get() {
-          const field = 'time';
-          let ret = null;
-          if (this.getDataValue(field)) {
-            ret = this.getDataValue(field).getTime();
-          }
-          return ret;
-        },
+      startTime: {
+        type: DataTypes.TIME,
+      },
+      endTime: {
+        type: DataTypes.TIME,
       },
       createdAt: {
         type: DataTypes.DATE,

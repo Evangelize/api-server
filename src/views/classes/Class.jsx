@@ -41,7 +41,7 @@ class Class extends Component {
     this.divisionClass = classes.getClassCurrentDivision(params.classId);
     this.currentDivision = (this.divisionClass) ? classes.getDivision(this.divisionClass.divisionId) : null;
     this.yearId = (this.currentDivision) ? classes.getClassGroupingYear(this.currentDivision.divisionYear).id : null;
-    this.currentTeachers = (this.currentDivision) ? classes.getClassTeachers(this.cls.id) : null;
+    this.currentTeachers = (this.currentDivision) ? classes.getClassTeachers(this.cls.id) : [];
   }
 
   componentDidMount() {
@@ -129,50 +129,66 @@ class Class extends Component {
             <Col xs={12} sm={12} md={12} lg={12}>
               <Tabs
                 value={this.slideIndex}
-                onChange={this.changeTab}
+                onChange={(...args) => this.changeTab(...args)}
               >
-                <Tab
-                  label="Overview"
-                  value={'overview'}
-                >
-                  <Row>
-                    <Col xs={12} sm={12} md={12} lg={12}>
-                      <div>
-                        <span className="button">{(this.currentDivision) ? this.currentDivision.title : ''}</span> <br />
-                        <span className="caption">
-                          {(this.currentDivision) ? moment(this.currentDivision.start).tz('America/Chicago').format('dddd, MMM DD YYYY') : ''}&nbsp;-
-                          &nbsp;{(this.currentDivision) ? moment(this.currentDivision.end).tz('America/Chicago').format('dddd, MMM DD YYYY') : ''}
-                        </span>
-                      </div>
-                    </Col>
-                  </Row>
-                  <Masonry className={"row"} options={this.masonryOptions}>
-                    {classes.getYearMeetingDays(this.yearId).map((day) =>
-                      <Col xs={12} sm={12} md={6} lg={6} key={day.id}>
-                        <DashboardMediumGraph
-                          title={`${moment().weekday(day.dow).format('dddd')} Attendance`}
-                          subtitle={'Past 8 weeks'}
-                          avatar={<Avatar>A</Avatar>}
-                          lineChartData={classes.getGraphAttendance(day.dow, 8)}
-                          lineChartOptions={lineChartOptions}
-                        />
+                {this.currentDivision &&
+                  <Tab
+                    label="Overview"
+                    value={'overview'}
+                  >
+                    
+                    <Row>
+                      <Col xs={12} sm={12} md={12} lg={12}>
+                        <div>
+                          <span className="button">{(this.currentDivision) ? this.currentDivision.title : ''}</span> <br />
+                          <span className="caption">
+                            {(this.currentDivision) ? moment(this.currentDivision.start).tz('America/Chicago').format('dddd, MMM DD YYYY') : ''}&nbsp;-
+                            &nbsp;{(this.currentDivision) ? moment(this.currentDivision.end).tz('America/Chicago').format('dddd, MMM DD YYYY') : ''}
+                          </span>
+                        </div>
                       </Col>
-                    )}
-
-                    {classes.getYearMeetingDays(this.yearId).map((day) =>
-                      <Col xs={12} sm={12} md={6} lg={6} key={day.id}>
-                        <Card>
-                          <CardHeader
-                            title={'Teachers'}
-                            subtitle={moment().weekday(day.dow).format('dddd')}
-                            avatar={<Avatar>{moment().weekday(day.dow).format('dd')}</Avatar>}
+                    </Row>
+                    <Masonry className={"row"} options={this.masonryOptions}>
+                      {classes.getYearMeetingDays(this.yearId).map((day) =>
+                        <Col xs={12} sm={12} md={6} lg={6} key={day.id}>
+                          <DashboardMediumGraph
+                            title={`${moment().weekday(day.dow).format('dddd')} Attendance`}
+                            subtitle={'Past 8 weeks'}
+                            avatar={<Avatar>A</Avatar>}
+                            lineChartData={classes.getGraphAttendance(day.dow, 8)}
+                            lineChartOptions={lineChartOptions}
                           />
-                          <CardMedia><RenderTeachers divClass={this.divisionClass} day={day.dow} /></CardMedia>
-                        </Card>
+                        </Col>
+                      )}
+
+                      {classes.getYearMeetingDays(this.yearId).map((day) =>
+                        <Col xs={12} sm={12} md={6} lg={6} key={day.id}>
+                          <Card>
+                            <CardHeader
+                              title={'Teachers'}
+                              subtitle={moment().weekday(day.dow).format('dddd')}
+                              avatar={<Avatar>{moment().weekday(day.dow).format('dd')}</Avatar>}
+                            />
+                            <CardMedia><RenderTeachers divClass={this.divisionClass} day={day.dow} /></CardMedia>
+                          </Card>
+                        </Col>
+                      )}
+                    </Masonry>
+                  </Tab>
+                }
+                {!this.currentDivision &&
+                  <Tab
+                    label="Overview"
+                    value={'overview'}
+                  >
+                    
+                    <Row>
+                      <Col xs={12} sm={12} md={12} lg={12}>
+                        This class is not configured for the current quarter.
                       </Col>
-                    )}
-                  </Masonry>
-                </Tab>
+                    </Row>
+                  </Tab>
+                }
                 <Tab
                   label="Teachers"
                   value={'teachers'}

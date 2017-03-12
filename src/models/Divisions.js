@@ -1,3 +1,4 @@
+const moduleUtils = require('../lib/moduleUtils');
 module.exports = function (sequelize, DataTypes) {
   const Divisions = sequelize.define(
     'divisions',
@@ -6,16 +7,25 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.BLOB,
         primaryKey: true,
         get: function()  {
-          return this.getDataValue('id').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('id'));
         },
         set: function(val) {
           this.setDataValue('id', new Buffer(val, 'hex'));
         },
       },
+      entityId: {
+        type: DataTypes.BLOB,
+        get: function () {
+          return moduleUtils.binToHex(this.getDataValue('entityId'));
+        },
+        set: function (val) {
+          this.setDataValue('entityId', new Buffer(val, 'hex'));
+        },
+      },
       divisionConfigId:  {
         type: DataTypes.BLOB,
         get: function()  {
-          return this.getDataValue('divisionConfigId').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('divisionConfigId'));
         },
         set: function(val) {
           this.setDataValue('divisionConfigId', new Buffer(val, 'hex'));
@@ -24,7 +34,7 @@ module.exports = function (sequelize, DataTypes) {
       divisionYear:  {
         type: DataTypes.BLOB,
         get: function()  {
-          return this.getDataValue('divisionYear').toString('hex');
+          return moduleUtils.binToHex(this.getDataValue('divisionYear'));
         },
         set: function(val) {
           this.setDataValue('divisionYear', new Buffer(val, 'hex'));

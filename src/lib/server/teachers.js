@@ -4,134 +4,102 @@ import Promise from 'bluebird';
 
 export default {
   add(personId) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       async.waterfall(
         [
-          function(callback) {
+          (callback) => {
             models.Teachers.findOrCreate(
               {
                 where: {
-                  peopleId: personId
-                }
+                  peopleId: personId,
+                },
               }
             ).spread(
-              function(teacher, created) {
-                callback(null, teacher);
-              },
-              function(err){
-                callback(err);
-              }
+              (teacher) => callback(null, teacher),
+              (err) => callback(err)
             );
           },
-          function(teacher, callback) {
+          (teacher, callback) => {
             models.Teachers.findOne(
               {
                 where: {
-                  id: personId
+                  id: personId,
                 },
                 include: [
                   {
-                    model: models.Teachers
+                    model: models.Teachers,
                   },
                   {
-                    model: models.Students
-                  }
-                ]
+                    model: models.Students,
+                  },
+                ],
               }
             ).then(
-              function(people) {
-                callback(null, people);
-              },
-              function(err){
-                callback(err);
-              }
+              (result) => callback(null, result),
+              (err) => callback(err)
             );
-          }
+          },
         ],
-        function(error, result) {
+        (error, result) => {
           if (error) {
-            let result = {
-              error: err,
-              record: null
-            };
-            reject(result);
-            return null;
+            return reject(error);
           } else {
-            resolve(result);
-            return null;
+            return resolve(result);
           }
         }
       );
     });
   },
   delete(personId) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       async.waterfall(
         [
-          function(callback) {
+          (callback) => {
             models.Teachers.findOne(
               {
                 where: {
-                  peopleId: personId
-                }
+                  peopleId: personId,
+                },
               }
             ).then(
-              function(teacher) {
-                callback(null, teacher);
-              },
-              function(err){
-                callback(err);
-              }
+              (result) => callback(null, result),
+              (err) => callback(err)
             );
           },
-          function(teacher, callback) {
+          (teacher, callback) => {
             teacher
             .destroy()
             .then(
-              function(people) {
-                callback(null, teacher);
-              },
-              function(err){
-                callback(err);
-              }
+              () => callback(null, teacher),
+              (err) => callback(err)
             );
           },
-          function(teacher, callback) {
+          (teacher, callback) => {
             models.People.findOne(
               {
                 where: {
-                  id: personId
+                  id: personId,
                 },
                 include: [
                   {
-                    model: models.Teachers
+                    model: models.Teachers,
                   },
                   {
-                    model: models.Students
-                  }
-                ]
+                    model: models.Students,
+                  },
+                ],
               }
             ).then(
-              function(people) {
-                callback(null, people);
-              },
-              function(err){
-                callback(err);
-              }
+              (result) => callback(null, result),
+              (err) => callback(err)
             );
-          }
+          },
         ],
-        function(error, result) {
+        (error, result) => {
           if (error) {
-            let result = {
-              error: err,
-              record: null
-            };
-            reject(result);
-            return null;
+            return reject(error);
           } else {
-            resolve(result);
-            return null;
+            return resolve(result);
           }
         }
       );
@@ -146,48 +114,34 @@ export default {
           ],
         }
       ).then(
-        (result) => {
-          resolve(result);
-          return null;
-        },
-        (err) => {
-          console.log(err);
-          reject(err);
-          return null;
-        }
+        (result) => resolve(result),
+        (err) => reject(err)
       );
     });
   },
   update(record) {
     console.log(record);
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       record.id = new Buffer(record.id, 'hex');
       models.DivisionClassTeachers.update(
         record,
         {
           where: {
-            id: record.id
-          }
+            id: record.id,
+          },
         }
       ).then(
-        function(rows) {
+        () => {
           models.DivisionClassTeachers.findOne({
             where: {
-              id: record.id
-            }
+              id: record.id,
+            },
           }).then(
-            function(result) {
-              resolve(result);
-            }
+            (result) => resolve(result),
+            (err) => reject(err)
           );
         },
-        function(err){
-          let result = {
-            error: err,
-            record: null
-          };
-          reject(result);
-        }
+        (err) => reject(err)
       );
     });
   },

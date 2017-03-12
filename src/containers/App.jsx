@@ -161,14 +161,38 @@ class App extends Component {
                 ]}
               />
               <ListItem
-                value={"/financial"}
-                primaryText="Financial"
-                onClick={((...args) => this.handleLeftNavChange('/financial', ...args))}
+                primaryText="Worship Management"
+                initiallyOpen
+                primaryTogglesNestedList
+                nestedItems={[
+                  <ListItem
+                    key={1}
+                    onClick={((...args) => this.handleLeftNavChange('/worship/services/list', ...args))}
+                    primaryText="Worship Services"
+                  />,
+                ]}
               />
               <ListItem
-                value={"/people"}
-                primaryText="Members"
-                onClick={((...args) => this.handleLeftNavChange('/members', ...args))}
+                primaryText="Member Management"
+                initiallyOpen
+                primaryTogglesNestedList
+                nestedItems={[
+                  <ListItem
+                    key={1}
+                    onClick={((...args) => this.handleLeftNavChange('/members', ...args))}
+                    primaryText="Search/Browse"
+                  />,
+                  <ListItem
+                    key={2}
+                    onClick={((...args) => this.handleLeftNavChange('/members/families', ...args))}
+                    primaryText="Manage Families"
+                  />,
+                  <ListItem
+                    key={3}
+                    onClick={((...args) => this.handleLeftNavChange('/members/import', ...args))}
+                    primaryText="Import"
+                  />,
+                ]}
               />
               <ListItem
                 value={"/settings"}

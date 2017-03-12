@@ -8,13 +8,12 @@ import { Provider } from 'mobx-react';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import reactCookie from 'react-cookie';
 import Db from './stores/db';
-import Classes from './stores/classes';
-import Settings from './stores/settings';
+import Stores from './stores';
 import Sockets from './stores/sockets';
-import Utils from './stores/Utils';
 import routes from './routes';
 import { browserHistory, Router } from 'react-router';
 import EventEmitter from 'eventemitter3';
+const stores = new Stores();
 
 class Root extends Component {
   render() {
@@ -32,17 +31,12 @@ class Root extends Component {
 }
 
 let db;
-let settings;
-let classes;
-let r;
-let context;
-let utils;
 const events = new EventEmitter();
 const sockets = new Sockets();
 sockets.init(events);
 const rootElement = document.getElementById('root');
 const token = reactCookie.load('accessToken');
-const authenticated = function () {
+const authenticated = () => {
   let retVal;
   // console.log('cookie', token);
   if (token) {
@@ -53,6 +47,19 @@ const authenticated = function () {
   return retVal;
 };
 
+const render = () => {
+  const r = routes(stores.stores.settings);
+  const context = Object.assign(
+    {
+      db,
+      sockets,
+    },
+    stores.stores
+  );
+
+  ReactDOM.render(<Root context={context} history={browserHistory} routes={r} />, rootElement);
+};
+
 // Needed for onTouchTap
 // Can go away when react 1.0 release
 // Check this repo:
@@ -60,32 +67,25 @@ const authenticated = function () {
 injectTapEventPlugin();
 
 if (authenticated()) {
-  db = new Db();
-  db.init(window.dbJson, events);
+  db = new Db(window.dbJson, events);
+  stores.init(db, events).then(
+    (data) => {
+      stores.stores.settings.authenticated = true;
+      stores.stores.settings.user = JSON.parse(window.user);
+      render();
+    }
+  );
   // console.log('db', db);
-  settings = new Settings(null, events);
-  settings.authenticated = true;
-  settings.user = JSON.parse(window.user);
-  classes = new Classes(db, null, events);
-  utils = new Utils(db, null, events);
 } else {
-  db = new Db();
-  db.init(window.dbJson, events);
-  settings = new Settings(null, events);
-  settings.authenticated = false;
-  classes = new Classes(db, null, events);
-  utils = new Utils(db, null, events);
+  db = new Db(window.dbJson, events);
+  stores.init(db, events).then(
+    (data) => {
+      stores.stores.settings.authenticated = false;
+      render();
+    }
+  );
 }
-r = routes(settings);
-context = {
-  db,
-  classes,
-  settings,
-  sockets,
-  utils,
-};
 
-ReactDOM.render(<Root context={context} history={browserHistory} routes={r} />, rootElement);
 
 if (module.hot) {
   /*
