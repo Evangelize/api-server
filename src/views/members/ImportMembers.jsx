@@ -26,7 +26,7 @@ import Dropzone from 'react-dropzone';
 import { readAsText } from 'promise-file-reader';
 import NavToolBar from '../../components/NavToolBar';
 import { Grid, Row, Col } from 'react-bootstrap';
-import neatCsv from 'neat-csv';
+import neatCsv from '../../lib/neat-csv';
 import CircularProgress from 'material-ui/CircularProgress';
 const styles = {
   zone: {
