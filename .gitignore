@@ -8,3 +8,4 @@ config/settings.json
 config/config.json
 /style.js
 private.*
+.vscode/
