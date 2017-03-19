@@ -22,12 +22,6 @@ module.exports = {
   plugins: [
     new webpack.optimize.OccurenceOrderPlugin(),
     new ExtractTextPlugin('bundle.css'),
-    new webpack.optimize.UglifyJsPlugin({
-      compressor: {
-        warnings: true,
-        screw_ie8: true,
-      },
-    }),
     new StatsPlugin('webpack.stats.json', {
       source: false,
       modules: false,
