@@ -22,10 +22,6 @@ module.exports = {
   plugins: [
     new webpack.optimize.OccurenceOrderPlugin(),
     new ExtractTextPlugin('bundle.css'),
-    new StatsPlugin('webpack.stats.json', {
-      source: false,
-      modules: false,
-    }),
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: JSON.stringify('production'),
