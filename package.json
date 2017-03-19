@@ -1,6 +1,6 @@
 {
-  "name": "congregate-classes",
-  "description": "Congregate Classes",
+  "name": "evangelize",
+  "description": "Evangelize API Server",
   "version": "0.1.0",
   "license": "BSD-3",
   "main": "babel.server.js",
@@ -105,7 +105,7 @@
     "react-slick": "^0.12.0",
     "react-sortable-hoc": "^0.0.7",
     "react-sparklines": "^1.4.2",
-    "react-tap-event-plugin": "^1.0.0",
+    "react-tap-event-plugin": "^2.0.1",
     "reconnectable-websocket": "^0.1.9",
     "redis": "^2.6.2",
     "request": "^2.79.0",
