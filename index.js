@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 
 // Register babel to have ES6 support on the server
-require('babel-core/register');
 require('babel-polyfill');
+require('babel-register');
 
 const chalk = require( 'chalk' );
 

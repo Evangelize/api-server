@@ -1,6 +1,13 @@
 {
   "presets": ["es2015", "stage-0", "react"],
   "plugins": [
+    [
+      "transform-runtime", 
+      {
+        "polyfill": false,
+        "regenerator": true
+      }
+    ],
     "fast-async", 
     "add-module-exports", 
     "transform-decorators-legacy"

@@ -12,7 +12,6 @@ const featureFlagsPlugin = new webpack.DefinePlugin({
 module.exports = {
   devtool: 'cheap-module-source-map',
   entry: [
-    'babel-polyfill',
     './src/index.js',
   ],
   output: {
