@@ -12,7 +12,7 @@
     "build-dev": "rimraf ./static/dist && webpack -p --progress --stats --config ./webpack/dev.config.js",
     "watch-client": "node ./node_modules/webpack/bin/webpack.js --verbose --colors --display-error-details --config webpack.client-watch.js && node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.client-watch.js",
     "dev": "NODE_ENV=development npm run start",
-    "prod": "NODE_ENV=development npm run --production start",
+    "prod": "NODE_ENV=production npm run --production start",
     "debug": "node --nolazy --debug-brk=5858 --harmony index.js",
     "deploy": "rimraf ./static/dist && NODE_ENV=production webpack -p --progress --stats --config ./webpack/prod.config.js"
   },
