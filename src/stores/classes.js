@@ -152,7 +152,7 @@ export default class Classes {
     );
   }
 
-  async getDivisionScheduleOrdered(configId, yearId) {
+  getDivisionScheduleOrdered(configId, yearId) {
     configId = configId || this.db.store(
       'divisionConfigs', [
         first,
@@ -183,9 +183,9 @@ export default class Classes {
         past.push(div);
       }
     });
-    future = await sortBy(future)('end');
-    past = await sortBy(past)('end');
-    schedule = await future.concat(past);
+    future = sortBy(future)('end');
+    past = sortBy(past)('end');
+    schedule = future.concat(past);
     //console.log("schedule", schedule);
     return schedule;
   }

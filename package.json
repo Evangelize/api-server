@@ -47,7 +47,7 @@
     "deepcopy": "^0.6.1",
     "etag": "^1.7.0",
     "eventemitter3": "^1.2.0",
-    "fast-async": "^6.0.30",
+    "fast-async": "^6.2.1",
     "from-xml": "^0.1.2",
     "get-stream": "^3.0.0",
     "h2o2": "^4.0.1",

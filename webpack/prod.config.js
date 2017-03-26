@@ -12,6 +12,7 @@ const featureFlagsPlugin = new webpack.DefinePlugin({
 module.exports = {
   devtool: 'cheap-module-source-map',
   entry: [
+    'babel-polyfill',
     './src/index.js',
   ],
   output: {
@@ -42,8 +43,8 @@ module.exports = {
         query: {
           presets: ['es2015', 'stage-0', 'react'],
           plugins: [
-            ['fast-async'],
-            ['transform-decorators-legacy'],
+            'transform-runtime',
+            'transform-decorators-legacy',
           ],
         },
       },

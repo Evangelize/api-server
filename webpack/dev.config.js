@@ -11,16 +11,16 @@ module.exports = {
   context: __dirname,
   debug: true,
   devtool: '#inline-source-map',
-	entry: [
+  entry: [
       'webpack-hot-middleware/client?path=/__webpack_hmr&reload=true',
       path.join(__dirname, '../src/index.js'),
     ],
-	output:  {
-		path:          path.join(__dirname, '../static/dist'),
-		filename:      'client.js',
-		publicPath:    '/hot',
-	},
-	plugins: [
+  output:  {
+    path:          path.join(__dirname, '../static/dist'),
+    filename:      'client.js',
+    publicPath:    '/hot',
+  },
+  plugins: [
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: JSON.stringify(process.env.NODE_ENV),
@@ -28,12 +28,12 @@ module.exports = {
       },
     }),
     featureFlagsPlugin,
-		new webpack.optimize.DedupePlugin(),
-		new webpack.optimize.OccurenceOrderPlugin(),
+    new webpack.optimize.DedupePlugin(),
+    new webpack.optimize.OccurenceOrderPlugin(),
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoErrorsPlugin(),
-	],
-	module:  {
+  ],
+  module:  {
       loaders: [
         {
           test: /\.jsx?$/,
@@ -74,8 +74,8 @@ module.exports = {
           loader: 'worker-loader?inline=true',
         },
       ],
-	},
-	resolve: {
+  },
+  resolve: {
     alias: {
       react: path.join(__dirname, '../node_modules/react'),
     },
@@ -85,15 +85,15 @@ module.exports = {
       'web_modules',
     ],
     extensions: ['', '.json', '.js', '.jsx'],
-	},
-	node: {
+  },
+  node: {
     __dirname: true,
     fs: 'empty',
-	},
+  },
   worker: {
-		output: {
-			filename: "hash.worker.js",
-			chunkFilename: "[id].hash.worker.js"
-		}
-	},
+    output: {
+      filename: "hash.worker.js",
+      chunkFilename: "[id].hash.worker.js"
+    }
+  },
 };

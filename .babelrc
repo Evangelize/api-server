@@ -3,6 +3,7 @@
   "sourceMaps": true,
   "retainLines": true,
   "plugins": [
+    "fast-async",
     "transform-decorators-legacy",
     "transform-class-properties",
     "add-module-exports",

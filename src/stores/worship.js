@@ -64,7 +64,7 @@ export default class Worship {
     );
   }
 
-  @action async updateServiceOrder(id, currentPos, newPos) {
+  @action updateServiceOrder(id, currentPos, newPos) {
     let record = this.db.store(
       'worshipServices', [
         filter((rec) => rec.deletedAt === null && rec.id === id),
