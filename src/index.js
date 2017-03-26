@@ -70,6 +70,7 @@ if (authenticated()) {
   db = new Db(window.dbJson, events);
   stores.init(db, events).then(
     (data) => {
+      console.log(stores);
       stores.stores.settings.authenticated = true;
       stores.stores.settings.user = JSON.parse(window.user);
       render();
@@ -80,6 +81,7 @@ if (authenticated()) {
   db = new Db(window.dbJson, events);
   stores.init(db, events).then(
     (data) => {
+      console.log(stores);
       stores.stores.settings.authenticated = false;
       render();
     }

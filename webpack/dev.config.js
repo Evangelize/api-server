@@ -12,6 +12,7 @@ module.exports = {
   debug: true,
   devtool: '#inline-source-map',
   entry: [
+      'babel-polyfill',
       'webpack-hot-middleware/client?path=/__webpack_hmr&reload=true',
       path.join(__dirname, '../src/index.js'),
     ],

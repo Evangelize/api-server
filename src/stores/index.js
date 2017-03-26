@@ -6,13 +6,28 @@ import worship from './worship';
 import settings from './settings';
 import utils from './utils';
 
-const modules = {
-  classes,
-  Messages,
-  worship,
-  settings,
-  utils,
-};
+const modules = [
+  {
+    name: 'classes',
+    klass: classes,
+  },
+  {
+    name: 'messages',
+    klass: Messages,
+  },
+  {
+    name: 'worship',
+    klass: worship,
+  },
+  {
+    name: 'settings',
+    klass: settings,
+  },
+  {
+    name: 'utils',
+    klass: utils,
+  },
+];
 
 export default class {
   @observable stores = {};
@@ -28,7 +43,7 @@ export default class {
       each(
         modules,
         (Mod, cb) => {
-          self.stores[Mod.name.toLowerCase()] = new Mod(db, events);
+          self.stores[Mod.name.toLowerCase()] = new Mod.klass(db, events);
           cb();
         },
         (err) => {

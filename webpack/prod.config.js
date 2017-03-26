@@ -10,7 +10,7 @@ const featureFlagsPlugin = new webpack.DefinePlugin({
 
 
 module.exports = {
-  devtool: 'cheap-module-source-map',
+  devtool: 'source-map',
   entry: [
     'babel-polyfill',
     './src/index.js',
@@ -18,7 +18,7 @@ module.exports = {
   output: {
     path: path.join(__dirname, '../static/dist'),
     filename: 'client.min.js',
-    publicPath: '/',
+    publicPath: '/'
   },
   plugins: [
     new webpack.optimize.OccurenceOrderPlugin(),
@@ -43,7 +43,6 @@ module.exports = {
         query: {
           presets: ['es2015', 'stage-0', 'react'],
           plugins: [
-            'transform-runtime',
             'transform-decorators-legacy',
           ],
         },
