@@ -906,7 +906,7 @@ module.exports = {
           },
           entityId: Sequelize.BLOB,
           classId: Sequelize.BLOB,
-          type: { 
+          type: {
             type: Sequelize.ENUM('document', 'image'), 
             defaultValue: 'document', 
           },
@@ -919,7 +919,68 @@ module.exports = {
             defaultValue: 0,
           },
         }
-      )
+      ),
+      queryInterface.createTable(
+        'familyCheckingAccounts',
+        {
+          id: {
+            type: Sequelize.STRING.BINARY,
+            primaryKey: true,
+          },
+          entityId: Sequelize.BLOB,
+          familyId: Sequelize.BLOB,
+          account: Sequelize.TEXT,
+          createdAt: Sequelize.DATE,
+          updatedAt: Sequelize.DATE,
+          deletedAt: Sequelize.DATE,
+          revision: {
+            type: Sequelize.INTEGER,
+            defaultValue: 0,
+          },
+        }
+      ),
+      queryInterface.createTable(
+        'familyPayments',
+        {
+          id: {
+            type: Sequelize.STRING.BINARY,
+            primaryKey: true,
+          },
+          entityId: Sequelize.BLOB,
+          familyId: Sequelize.BLOB,
+          accountId: Sequelize.BLOB,
+          batchId: Sequelize.BLOB,
+          number: Sequelize.STRING,
+          amount: Sequelize.DECIMAL(6, 2),
+          effectiveDate: Sequelize.DATE,
+          createdAt: Sequelize.DATE,
+          updatedAt: Sequelize.DATE,
+          deletedAt: Sequelize.DATE,
+          revision: {
+            type: Sequelize.INTEGER,
+            defaultValue: 0,
+          },
+        }
+      ),
+      queryInterface.createTable(
+        'batches',
+        {
+          id: {
+            type: Sequelize.STRING.BINARY,
+            primaryKey: true,
+          },
+          entityId: Sequelize.BLOB,
+          title: Sequelize.STRING(255),
+          open: Sequelize.BOOLEAN,
+          createdAt: Sequelize.DATE,
+          updatedAt: Sequelize.DATE,
+          deletedAt: Sequelize.DATE,
+          revision: {
+            type: Sequelize.INTEGER,
+            defaultValue: 0,
+          },
+        }
+      ),
     ]);
   },
   down: function (queryInterface, Sequelize) {

@@ -382,6 +382,33 @@ module.exports = {
       queryInterface.sequelize.query(
         'ALTER TABLE `classMeetingDays` CHANGE COLUMN `divisionConfigId` `divisionConfigId` BINARY(16)'
       ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `familyCheckingAccounts` CHANGE COLUMN `id` `id` BINARY(16)'
+      ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `familyCheckingAccounts` CHANGE COLUMN `entityId` `entityId` BINARY(16)'
+      ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `familyCheckingAccounts` CHANGE COLUMN `familyId` `familyId` BINARY(16)'
+      ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `familyPayments` CHANGE COLUMN `id` `id` BINARY(16)'
+      ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `familyPayments` CHANGE COLUMN `entityId` `entityId` BINARY(16)'
+      ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `familyPayments` CHANGE COLUMN `accountId` `accountId` BINARY(16)'
+      ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `familyPayments` CHANGE COLUMN `batchId` `batchId` BINARY(16)'
+      ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `batches` CHANGE COLUMN `id` `id` BINARY(16)'
+      ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `batches` CHANGE COLUMN `entityId` `entityId` BINARY(16)'
+      ),
       queryInterface.addIndex('yearMeetingDays', ['yearId']),
       queryInterface.addIndex('divisionClassTeachers', ['dayId']),
       queryInterface.addIndex('divisionClassAttendance', ['dayId']),
