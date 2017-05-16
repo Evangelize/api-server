@@ -19,7 +19,11 @@ module.exports = function (sequelize, DataTypes) {
           return moduleUtils.binToHex(this.getDataValue('entityId'));
         },
         set: function (val) {
-          this.setDataValue('entityId', new Buffer(val, 'hex'));
+          if (val) {
+            this.setDataValue('entityId', new Buffer(val, 'hex'));
+          } else {
+            this.setDataValue('entityId', null);
+          }
         },
       },
       divisionClassId: {

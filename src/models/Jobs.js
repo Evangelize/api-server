@@ -16,10 +16,14 @@ module.exports = function (sequelize, DataTypes) {
       entityId: {
         type: DataTypes.BLOB,
         get: function () {
-          return moduleUtils.binToHex(this.getDataValue('entityId')) ;
+          return moduleUtils.binToHex(this.getDataValue('entityId'));
         },
         set: function (val) {
-          this.setDataValue('entityId', new Buffer(val, 'hex'));
+          if (val) {
+            this.setDataValue('entityId', new Buffer(val, 'hex'));
+          } else {
+            this.setDataValue('entityId', null);
+          }
         },
       },
       title: {
