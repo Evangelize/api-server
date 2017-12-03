@@ -46,17 +46,17 @@ module.exports = function (sequelize, DataTypes) {
       cohortId: {
         type: DataTypes.BLOB,
         get() {
-          if (this.getDataValue('cohort')) {
-            return moduleUtils.binToHex(this.getDataValue('cohort'));
+          if (this.getDataValue('cohortId')) {
+            return moduleUtils.binToHex(this.getDataValue('cohortId'));
           } else {
             return null;
           }
         },
         set(val) {
           if (val) {
-            this.setDataValue('cohort', new Buffer(val, 'hex'));
+            this.setDataValue('cohortId', new Buffer(val, 'hex'));
           } else {
-            this.setDataValue('cohort', null);
+            this.setDataValue('cohortId', null);
           }
         },
       },

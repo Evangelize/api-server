@@ -1,10 +1,11 @@
-import Worker from '../lib/socket-worker';
+import ReconnectableWebSocket from 'reconnectable-websocket';
 import reactCookie from 'react-cookie';
 import 'setimmediate';
 
 export default class Sockets {
-  socketworker;
+  client;
   events;
+  connected = false;
 
   init(events, options) {
     if (options) {
@@ -20,11 +21,20 @@ export default class Sockets {
     const token = reactCookie.load('accessToken');
     if (token) {
       const proto = (window.location.protocol === 'http:') ? 'ws:' : 'wss:';
-      this.socketworker = new Worker();
-      this.socketworker.onmessage = this.onMessage.bind(this);
       let websocketUri = (window.wsUri) ? window.wsUri : '//localhost:3002';
       websocketUri = `${proto}${websocketUri}?token=${token}`;
-      this.socketworker.postMessage({ type: 'connect', payload: { url: websocketUri } });
+      this.client = new ReconnectableWebSocket(
+        websocketUri,
+        undefined,
+        {
+          automaticOpen: false,
+        }
+      );
+      this.client.onmessage = this.onMessage.bind(this);
+      this.client.onopen = this.onMessage.bind(this);
+      this.client.open();
+      console.log('websocket', this.client);
+      this.connected = true;
     }
     return true;
   }
@@ -35,11 +45,9 @@ export default class Sockets {
   }
 
   send(data) {
-    const payload = {
-      type: 'data',
-      payload: data,
-    };
-    this.socketworker.postMessage(payload);
+    if (this.connected) {
+      this.client.send(JSON.stringify(data));
+    }
   }
 
   onMessage(message) {

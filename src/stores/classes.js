@@ -318,7 +318,7 @@ export default class Classes {
     let retVal;
     const attendance = self.db.store(
       'divisionClassAttendance', [
-        filter((rec) => rec.deletedAt === null && rec.attendanceDate >= date && rec.divisionClassId === classId),
+        filter((rec) => rec.deletedAt === null && rec.attendanceDate === date && rec.divisionClassId === classId),
       ]
     );
     if (attendance.length && attendance[0].count) {

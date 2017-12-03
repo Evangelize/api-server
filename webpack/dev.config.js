@@ -67,14 +67,22 @@ module.exports = {
           loader: 'json-loader',
         },
         {
-          test: /\.css$/, // Only .css files
-          loader: 'style-loader!css-loader', // Run both loaders
+          test: /\.css$/,
+          loaders: [
+            'style-loader',
+            'css-loader?sourceMap&modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss?sourceMap&sourceComments',
+          ],
         },
         { 
           test: /worker\.js$/,
           loader: 'worker-loader?inline=true',
         },
       ],
+  },
+  postcss: () => {
+    return [
+      require('postcss-cssnext')(),
+    ]
   },
   resolve: {
     alias: {

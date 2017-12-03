@@ -1,4 +1,4 @@
-import { extendObservable, observable, autorun, isObservable, isObservableMap, map, action, runInAction } from 'mobx';
+import { extendObservable, observable, autorun, isObservable, isObservableMap, map, action, runInAction, toJS } from 'mobx';
 import { filter, pick, sortBy, first, take, remove } from 'lodash/fp';
 import each from 'async/each';
 import waterfall from 'async/waterfall';
@@ -62,6 +62,7 @@ const dbThreads = task.wrap(eqJoin);
 export default class Db {
   @observable store;
   @observable events;
+  @observable entityId;
 
   constructor(data, events) {
     this.init(data, events);
@@ -83,6 +84,10 @@ export default class Db {
 
     this.events.on('db', self.eventHandler.bind(this));
     return true;
+  }
+
+  setEntityId(entityId) {
+    this.entityId = entityId;
   }
 
   collectionChange(collection, type, target) {
@@ -260,6 +265,7 @@ export default class Db {
         record.deletedAt = null;
         console.log('updateStore:pre-guid', moment().unix());
         record.id = iouuid.generate().toLowerCase();
+        record.entityId = this.entityId;
         console.log('updateStore:guid', moment().unix());
         console.log('updateStore:pre-insert', moment().unix());
 
@@ -268,6 +274,7 @@ export default class Db {
         if (!remote) this.sendRemote(record, type, collection);
       }
     }
+    return record;
   }
 
   @action insertDocument(collection, record) {
@@ -284,7 +291,8 @@ export default class Db {
       {
         type,
         collection,
-        record,
+        record: toJS(record),
+        entityId: this.entityId,
       }
     );
     

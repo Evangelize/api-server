@@ -20,8 +20,10 @@ import RaisedButton from 'material-ui/RaisedButton';
 import TextField from 'material-ui/TextField';
 import DatePicker from 'material-ui/DatePicker';
 import Toggle from 'material-ui/Toggle';
+import Slider from 'material-ui/Slider';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import { Grid, Row, Col } from 'react-bootstrap';
+import AvatarEditor from 'react-avatar-editor'
 import NavToolBar from '../../components/NavToolBar';
 import MaskedInput from '../../components/MaskedInput';
 
@@ -53,15 +55,46 @@ class Member extends Component {
   @observable member;
   @observable family;
   @observable slideIndex = 'information';
+  @observable editor;
+  @observable preview;
+  @observable image = {
+    height: 250,
+    width: 250,  
+    border: 50,
+    color: [255, 255, 255, 0.6], // RGBA
+    scale: 1.0,
+    position: {
+      x: 0.5,
+      y: 0.5,
+    },
+    rotate: 0,
+  };
+
+
   componentWillMount() {
     const { classes, params } = this.props;
     this.member = classes.getPerson(params.id);
-    this.family = classes.getFamily(this.member.familyId);
+    this.family = ('familyId' in this.member) ? classes.getFamily(this.member.familyId) : null;
   }
 
   navigate(path, e) {
     browserHistory.push(path);
   }
+
+  handleSave = (data) => {
+    const img = this.editor.getImageScaledToCanvas().toDataURL();
+    const rect = this.editor.getCroppingRect();
+
+    this.preview = {
+      img,
+      rect,
+      scale: this.image.scale,
+      width: this.image.width,
+      height: this.image.height,
+      borderRadius: this.image.border,
+    };
+  }
+
 
   handleChange = (field, e) => {
     const { classes } = this.props;
@@ -102,6 +135,35 @@ class Member extends Component {
     if (typeof index === 'string') this.slideIndex = index;
   }
 
+  changeAvatarSettings = (type, e, value) => {
+    if (type === 'position.x') {
+      this.image.position.x = value;
+    } else if (type === 'position.y') {
+      this.image.position.y = value;
+    } else {
+      this.image[type] = value;
+    }
+  }
+
+  handlePositionChange = position => {
+    console.log('Position set to', position)
+    this.image.position = position;
+  }
+
+  rotate = (type, e) => {
+    e.preventDefault()
+
+    if (type === 'left') {
+      this.image.rotate = this.image.rotate - 90;
+    } else if (type === 'right') {
+      this.image.rotate = this.image.rotate + 90;
+    }
+  }
+
+  setEditorRef = (editor) => {
+    this.editor = editor;
+  }
+
   render() {
     const { classes } = this.props;
     let retVal;
@@ -110,7 +172,7 @@ class Member extends Component {
         <Grid fluid>
           <Row>
             <Col xs={12} sm={12} md={12} lg={12}>
-              <NavToolBar navLabel="Members" goBackTo="/members" />
+              <NavToolBar navLabel="Member" goBackTo="/members/search" />
             </Col>
           </Row>
           <Row>
@@ -219,6 +281,98 @@ class Member extends Component {
                       label="Pictures"
                       value={'pictures'}
                     >
+                      {(this.member.photoUrl || (this.family && this.family.photoUrl)) &&
+                        <div>
+                          <AvatarEditor
+                            ref={this.setEditorRef}
+                            image={(this.member.photoUrl) ? this.member.photoUrl : this.family.photoUrl}
+                            width={this.image.width}
+                            height={this.image.height}
+                            color={this.image.color.toJS()} //RGBA
+                            scale={this.image.scale}
+                            rotate={this.image.rotate}
+                            position={this.image.position}
+                            onSave={this.handleSave}
+                            onPositionChange={this.handlePositionChange}
+                            rotate={parseFloat(this.image.rotate)}
+                            borderRadius={this.image.border}
+                          />
+                          {this.preview && this.preview.img &&
+                            <Avatar
+                              src={this.preview.img}
+                            />
+                          }
+                          <div
+                            style={{
+                              margin: 10,
+                            }}
+                          >
+                            <div>Zoom:</div>
+                            <Slider
+                              step={0.01}
+                              min={1}
+                              max={4}
+                              value={this.image.scale}
+                              onChange={((...args) => this.changeAvatarSettings('scale', ...args))}
+                            />
+                            <div>Border radius:</div>
+                            <Slider
+                              step={1}
+                              min={0}
+                              max={100}
+                              value={this.image.border}
+                              onChange={((...args) => this.changeAvatarSettings('border', ...args))}
+                            />
+                            <div>Avatar Width:</div>
+                            <Slider
+                              step={10}
+                              min={50}
+                              max={600}
+                              value={this.image.width}
+                              onChange={((...args) => this.changeAvatarSettings('width', ...args))}
+                            />
+                            <div>Avatar Height:</div>
+                            <Slider
+                              step={10}
+                              min={50}
+                              max={600}
+                              value={this.image.height}
+                              onChange={((...args) => this.changeAvatarSettings('height', ...args))}
+                            />
+                            <div>X Position:</div>
+                            <Slider
+                              step={0.01}
+                              min={0}
+                              max={1}
+                              value={this.image.position.x}
+                              onChange={((...args) => this.changeAvatarSettings('position.x', ...args))}
+                            />
+                            <div>Y Position:</div>
+                            <Slider
+                              step={0.01}
+                              min={0}
+                              max={1}
+                              value={this.image.position.y}
+                              onChange={((...args) => this.changeAvatarSettings('position.y', ...args))}
+                            />
+                            <div>Rotate:</div>
+                            <RaisedButton
+                              label="Left"
+                              onClick={((...args) => this.rotate('left', ...args))}
+                            />
+                            <RaisedButton
+                              label="Right"
+                              onClick={((...args) => this.rotate('right', ...args))}
+                            />
+                            <br />
+                            <RaisedButton
+                              primary
+                              label="Preview"
+                              onClick={((...args) => this.handleSave(...args))}
+                            />
+                          </div>
+                        </div>
+                      }
                     </Tab>
                   </Tabs>
                 </CardMedia>

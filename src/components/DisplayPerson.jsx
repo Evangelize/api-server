@@ -35,16 +35,17 @@ class DisplayPerson extends Component {
   }
 
   displayPhoto = () => {
-    const { person } = this.props;
+    const { person, badge } = this.props;
     const personPhoto = (person.photoUrl && person.photoUrl.length);
     const familyPhoto = (this.family && this.family.photoUrl && this.family.photoUrl.length);
-    let val = <Avatar>{person.firstName.charAt(0)}</Avatar>;
+    let CustomAvatar = <Avatar>{person.firstName.charAt(0)}</Avatar>;
     if (personPhoto) {
-      val = <Avatar src={person.photoUrl} />;
+      CustomAvatar = <Avatar src={person.photoUrl} />;
     } else if (familyPhoto) {
-      val = <Avatar src={this.family.photoUrl} />;
-    } 
-    return val;
+      CustomAvatar = <Avatar src={this.family.photoUrl} />;
+    }
+    CustomAvatar = (badge) ? badge(person, CustomAvatar) : CustomAvatar;
+    return CustomAvatar;
   }
 
   handleMenuTap = (e) => {
@@ -54,38 +55,42 @@ class DisplayPerson extends Component {
   handleTap = (e, obj) => {
     e.preventDefault();
     const { person, onTap } = this.props;
-    if (obj.props.children === 'Delete') {
-      onTap('delete', person);
-    } else if (obj.props.children === 'Edit') {
-      onTap('edit', person);
-    }
+    onTap(obj.props.children.toLowerCase(), person);
   }
 
   render() {
-    const { person, secondaryText, secondaryTextLines } = this.props;
+    const { 
+      person,
+      secondaryText,
+      secondaryTextLines,
+      rightAvatar,
+      rightMenuItems
+    } = this.props;
     const avatar = this.displayPhoto();
+    const rightIconButton = (rightMenuItems) ? 
+      <IconMenu
+        iconButtonElement={iconButtonElement}
+        onItemTouchTap={this.handleTap}
+        onTouchTap={this.handleMenuTap}
+        anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
+        targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+      >
+        {rightMenuItems.map((item) =>
+          <MenuItem>{item}</MenuItem>
+        )}
+      </IconMenu> : null;
     return (
       <div>
-        <Divider />
         <ListItem
           key={person.id}
           primaryText={`${person.firstName} ${person.lastName}`}
           secondaryText={secondaryText}
           secondaryTextLines={secondaryTextLines}
           leftAvatar={avatar}
-          rightIconButton={
-            <IconMenu
-              iconButtonElement={iconButtonElement}
-              onItemTouchTap={this.handleTap}
-              onTouchTap={this.handleManuTap}
-              anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-              targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-            >
-              <MenuItem>Edit</MenuItem>
-              <MenuItem>Delete</MenuItem>
-            </IconMenu>
-          }
+          rightAvatar={(rightAvatar) ? rightAvatar(person) : null}
+          rightIconButton={rightIconButton}
         />
+        <Divider />
       </div>
     );
   }

@@ -170,6 +170,16 @@ class App extends Component {
                     onClick={((...args) => this.handleLeftNavChange('/worship/services/list', ...args))}
                     primaryText="Worship Services"
                   />,
+                  <ListItem
+                    key={2}
+                    onClick={((...args) => this.handleLeftNavChange('/worship/jobs/list', ...args))}
+                    primaryText="Jobs"
+                  />,
+                  <ListItem
+                    key={3}
+                    onClick={((...args) => this.handleLeftNavChange('/worship/assign', ...args))}
+                    primaryText="Assign Jobs"
+                  />,
                 ]}
               />
               <ListItem
@@ -179,7 +189,7 @@ class App extends Component {
                 nestedItems={[
                   <ListItem
                     key={1}
-                    onClick={((...args) => this.handleLeftNavChange('/members', ...args))}
+                    onClick={((...args) => this.handleLeftNavChange('/members/search', ...args))}
                     primaryText="Search/Browse"
                   />,
                   <ListItem

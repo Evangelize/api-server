@@ -7,6 +7,7 @@ import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import TimePicker from 'material-ui/TimePicker';
 import SelectField from 'material-ui/SelectField';
+import Toggle from 'material-ui/Toggle';
 import MenuItem from 'material-ui/MenuItem';
 
 @observer

@@ -70,9 +70,10 @@ const setSubscription = function () {
   // console.log("Subscribing");
   subClient.on('pmessage', (pattern, channel, message) => {
     const subChannel = channel.split(':')[1];
-    // console.log("channel ", channel, ": ", message);
+    console.log("channel ", channel, ": ", message);
     if (subChannel === 'insert' || subChannel === 'update' || subChannel === 'delete'){
       message = JSON.parse(message);
+      const entityId = message.entityId;
       const record = message.record;
       console.log('pmessage', message);
       switch (message.type) {
@@ -81,6 +82,7 @@ const setSubscription = function () {
         .then(
           (results) => {
             results.error = false;
+            results.entityId = entityId;
             pushResults(message, results);
           },
           (err) => {
@@ -93,6 +95,7 @@ const setSubscription = function () {
         .then(
           (results) => {
             results.error = false;
+            results.entityId = entityId;
             pushResults(message, results);
           },
           (err) => {
@@ -105,6 +108,7 @@ const setSubscription = function () {
         .then(
           (results) => {
             results.error = false;
+            results.entityId = entityId;
             pushResults(message, results);
           },
           (err) => {

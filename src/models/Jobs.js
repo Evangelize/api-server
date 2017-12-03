@@ -29,10 +29,6 @@ module.exports = function (sequelize, DataTypes) {
       title: {
         type: DataTypes.STRING,
       },
-      day: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
       active: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,

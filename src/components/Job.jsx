@@ -22,7 +22,7 @@ const iconButtonElement = (
 );
 
 @observer
-class WorshipService extends Component {
+class Job extends Component {
   navigate(path, e) {
     browserHistory.push(path);
   }
@@ -38,8 +38,8 @@ class WorshipService extends Component {
       onTap('delete', item);
     } else if (obj.props.children === 'Edit') {
       onTap('edit', item);
-    } else if (obj.props.children === 'Select Jobs') {
-      onTap('jobs', item);
+    } else if (obj.props.children === 'Available Members') {
+      onTap('associate', item);
     }
   }
 
@@ -48,7 +48,6 @@ class WorshipService extends Component {
     let Item = (
       <ListItem
         primaryText={item.title}
-        secondaryText={`${moment().weekday(item.day).format('dddd')} ${moment(item.startTime, 'hh:mm:ss').format('h:mm a')} - ${moment(item.endTime, 'hh:mm:ss').format('h:mm a')}`}
         rightIconButton={
           <IconMenu
             iconButtonElement={iconButtonElement}
@@ -58,7 +57,7 @@ class WorshipService extends Component {
             targetOrigin={{ horizontal: 'right', vertical: 'top' }}
           >
             <MenuItem>Edit</MenuItem>
-            <MenuItem>Select Jobs</MenuItem>
+            <MenuItem>Available Members</MenuItem>
             <MenuItem>Delete</MenuItem>
           </IconMenu>
         }
@@ -85,4 +84,4 @@ class WorshipService extends Component {
     );
   }
 }
-export default WorshipService;
+export default Job;

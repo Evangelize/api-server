@@ -16,8 +16,8 @@ import CircularProgress from 'material-ui/CircularProgress';
 import Avatar from 'material-ui/Avatar';
 import { Grid, Row, Col } from 'react-bootstrap';
 
-const colStyle = {display: 'flex', alignItems: 'center', justifyContent: 'center'},
-      divStyle = {width: '85%'};
+const colStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+      divStyle = { width: '85%' };
 
 @inject('classes')
 @observer

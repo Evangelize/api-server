@@ -1,9 +1,9 @@
 import React, { Component, PropTypes } from 'react';
 import moment from 'moment-timezone';
-import { observable } from 'mobx';
+import { observable, extendObservable } from 'mobx';
 import { inject, observer } from 'mobx-react';
 import { browserHistory } from 'react-router';
-import ListWorshipServices from '../../components/ListWorshipServices';
+import ListJobs from '../../components/ListJobs';
 import Card from 'material-ui/Card/Card';
 import CardHeader from 'material-ui/Card/CardHeader';
 import CardMedia from 'material-ui/Card/CardMedia';
@@ -13,7 +13,7 @@ import Toggle from 'material-ui/Toggle';
 import { ToolbarGroup } from 'material-ui/Toolbar';
 import { Grid, Row, Col } from 'react-bootstrap';
 import NavToolBar from '../../components/NavToolBar';
-import DialogWorshipService from '../../components/DialogWorshipService';
+import DialogJob from '../../components/DialogJob';
 import DialogConfirmDelete from '../../components/DialogConfirmDelete';
 
 const styles = {
@@ -28,40 +28,46 @@ const styles = {
   },
 };
 
-@inject('worship')
+@inject('jobs')
 @observer
-class WorshipServices extends Component {
+class Jobs extends Component {
   ts = moment();
   @observable edit = false;
   @observable deleteId = null;
   @observable dialogOpen = false;
   @observable dialogDeleteOpen = false;
   @observable sortable = false;
-  @observable service = {
+  @observable job = {
     id: null,
-    title: null,
-    day: null,
-    startTime: this.ts,
-    endTime: this.ts,
+    title: '',
+    active: true,
+    priority: 100,
+    numPeople: 1,
+    confirm: true,
+    ignore: false,
+    duration: null,
     createdAt: this.ts,
     updatedAt: this.ts,
   };
   handleChange = (type, e, value) => {
     if (type === 'endTime' || type === 'startTime') {
-      this.service[type] = moment(value).format('HH:mm');
+      this.job[type] = moment(value).format('HH:mm');
     } else {
-      this.service[type] = value;
+      this.job[type] = value;
     }
   }
 
   handleOpenDialog = () => {
     const ts = moment();
-    this.service = {
+    this.job = {
       id: null,
-      title: null,
-      day: null,
-      startTime: ts,
-      endTime: ts,
+      title: '',
+      active: true,
+      priority: 100,
+      numPeople: 1,
+      confirm: true,
+      ignore: false,
+      duration: null,
       createdAt: ts,
       updatedAt: ts,
     };
@@ -69,19 +75,19 @@ class WorshipServices extends Component {
   }
 
   handleClose = (type) => {
-    const { worship, params } = this.props;
+    const { jobs, params } = this.props;
     this.dialogOpen = false;
     this.edit = false;
     if (type === 'ok') {
-      worship.updateWorshipService(null, this.service, true);
+      jobs.updateJob(null, this.job, true);
     }
   }
 
   handleDeleteClose = (type) => {
-    const { worship } = this.props;
+    const { jobs } = this.props;
     this.dialogDeleteOpen = false;
     if (type === 'ok') {
-      worship.deleteRecord('worshipServices', this.deleteId);
+      jobs.deleteRecord('jobs', this.deleteId);
     }
     this.deleteId = null;
   }
@@ -96,24 +102,24 @@ class WorshipServices extends Component {
 
   tapItem = (type, item) => {
     if (type === 'edit') {
-      this.service = item;
+      this.job = item;
       this.edit = true;
       this.dialogOpen = true;
     } else if (type === 'delete') {
       this.dialogDeleteOpen = true;
-    } else if (type === 'jobs') {
-      this.navigate(`/worship/services/${item.id}/jobs`);
+    } else if (type === 'associate') {
+      this.navigate(`/worship/jobs/${item.id}/members`);
     }
   }
 
   render() {
-    const { worship } = this.props;
+    const { jobs } = this.props;
     return (
       <div>
         <Grid fluid>
           <Row>
             <Col xs={12} sm={12} md={12} lg={12}>
-              <NavToolBar navLabel="Worship Services" goBackTo="/dashboard">
+              <NavToolBar navLabel="Jobs" goBackTo="/dashboard">
                 <ToolbarGroup key={3} style={{ float: 'right' }} lastChild>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                     <Toggle
@@ -125,7 +131,7 @@ class WorshipServices extends Component {
                     />
                   </div>
                   <RaisedButton
-                    label="Add Service"
+                    label="Add Job"
                     secondary
                     onClick={this.handleOpenDialog}
                   />
@@ -137,21 +143,21 @@ class WorshipServices extends Component {
             <Col xs={12} sm={12} md={12} lg={12}>
               <Card>
                 <CardHeader
-                  title={'Worship Services'}
-                  subtitle={'All Worship Services'}
-                  avatar={<Avatar>{'W'}</Avatar>}
+                  title={'Jobs'}
+                  subtitle={'All Jobs'}
+                  avatar={<Avatar>{'J'}</Avatar>}
                 />
                 <CardMedia>
-                  <ListWorshipServices sortable={this.sortable} onTap={this.tapItem} />
+                  <ListJobs sortable={this.sortable} onTap={this.tapItem} />
                 </CardMedia>
               </Card>
             </Col>
           </Row>
         </Grid>
-        <DialogWorshipService
+        <DialogJob
           open={this.dialogOpen}
           isEdit={this.edit}
-          service={this.service}
+          job={this.job}
           onClose={this.handleClose}
           onChange={this.handleChange}
         />
@@ -164,4 +170,4 @@ class WorshipServices extends Component {
   }
 }
 
-export default WorshipServices;
+export default Jobs;

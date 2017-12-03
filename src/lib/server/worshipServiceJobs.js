@@ -29,6 +29,7 @@ export default {
     const newrecord = Object.assign({}, record);
     newrecord.id = new Buffer(record.id, 'hex');
     newrecord.worshipServiceId = new Buffer(record.worshipServiceId, 'hex');
+    newrecord.jobId = new Buffer(record.jobId, 'hex');
     return new Promise((resolve, reject) => {
       models.WorshipServiceJobs.create(
         newrecord
@@ -43,6 +44,7 @@ export default {
       const newrecord = Object.assign({}, record);
       newrecord.id = new Buffer(record.id, 'hex');
       newrecord.worshipServiceId = new Buffer(record.worshipServiceId, 'hex');
+      newrecord.jobId = new Buffer(record.jobId, 'hex');
       models.WorshipServiceJobs.update(
         newrecord,
         {

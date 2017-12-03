@@ -12,7 +12,7 @@ const loginPayload = (results, cb) => {
     jwt.sign(
       {
         peopleId: results.user.peopleId,
-        entityId: null,
+        entityId: results.user.entityId,
       },
       key,
       {
@@ -110,6 +110,7 @@ const thirdPartyLogin = (request, reply) => {
             user: {
               peopleId: results.id,
               externalId: token.profileObj.googleId,
+              entityId: results.entityId,
               type: 'google',
             },
             person: results,

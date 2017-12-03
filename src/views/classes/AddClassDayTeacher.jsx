@@ -60,6 +60,7 @@ const ListTeachers = inject('classes')(observer(({ classes, teachers, actions })
 class AddClassDayTeacher extends Component {
   @observable divClass;
   @observable division;
+  @observable divisionYear;
   @observable day;
   @observable searchType = 'lastName';
   @observable people = [];
@@ -68,6 +69,7 @@ class AddClassDayTeacher extends Component {
     const { classes, params } = this.props;
     this.divClass = classes.getDivisionClass(params.classId);
     this.division = classes.getDivision(this.divClass.divisionClass.divisionId);
+    this.divisionYear = classes.getClassGroupingYear(this.division.divisionYear);
     this.day = classes.getCurrentDivisionMeetingDays(this.division.divisionYear, params.day);
   }
 
@@ -145,7 +147,7 @@ class AddClassDayTeacher extends Component {
             <Card>
               <CardHeader
                 title={this.divClass.class.title}
-                subtitle={`${moment().weekday(params.day).format('dddd')} ${this.division.title} ${moment(this.division.startDate).format('YYYY')}`}
+                subtitle={`${moment().weekday(params.day).format('dddd')} - ${this.division.title} AY ${moment(this.divisionYear.endDate).format('YYYY')}`}
                 avatar={<Avatar>{moment().weekday(params.day).format('dd')}</Avatar>}
               />
               <CardMedia>

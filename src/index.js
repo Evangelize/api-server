@@ -73,6 +73,7 @@ if (authenticated()) {
       console.log(stores);
       stores.stores.settings.authenticated = true;
       stores.stores.settings.user = JSON.parse(window.user);
+      db.setEntityId(stores.stores.settings.user.entityId);
       render();
     }
   );

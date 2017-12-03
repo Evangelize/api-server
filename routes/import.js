@@ -83,6 +83,7 @@ const importCsv = (req, reply) => {
       _person.nonChristian = (_person.nonChristian === 'Y') ? 1 : 0;
       _person.nonMember = (_person.nonMember === 'Y') ? 1 : 0;
       _person.collegeStudent = (_person.collegeStudent === 'Y') ? 1 : 0;
+      _person.deceased = (_person.deceased === 'Y') ? 1 : 0;
       async.waterfall(
         [
           (cb) => {

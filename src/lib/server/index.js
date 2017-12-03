@@ -9,6 +9,7 @@ import families from './families';
 import memberJobAssignments from './memberJobAssignments';
 import memberJobPreferences from './memberJobPreferences';
 import notes from './notes';
+import jobs from './jobs';
 import people from './people';
 import presentations from './presentations';
 import students from './students';
@@ -29,6 +30,7 @@ module.exports = {
   classes,
   divisions,
   families,
+  jobs,
   memberJobAssignments,
   memberJobPreferences,
   notes,

@@ -5,6 +5,7 @@ import Dashboard from './views/Dashboard';
 import Families from './views/members/Families';
 import Login from './views/Login';
 import Member from './views/members/Member';
+import AddMember from './views/members/AddMember';
 import Members from './views/members/Members';
 import ImportMembers from './views/members/ImportMembers';
 import Schedules from './views/classes/Schedules';
@@ -21,6 +22,10 @@ import DivisionClasses from './views/classes/DivisionClasses';
 import DivisionClassesSelect from './views/classes/DivisionClassesSelect';
 import MeetingDaysSelect from './views/classes/MeetingDaysSelect';
 import WorshipServices from './views/worship/WorshipServices';
+import WorshipJobsSelect from './views/worship/WorshipJobsSelect';
+import Jobs from './views/worship/Jobs';
+import JobMembers from './views/worship/JobMembers';
+import AssignJobs from './views/worship/AssignJobs';
 
 export default (settings) => {
   // console.log('createRoutes', settings.authenticated);
@@ -82,6 +87,11 @@ export default (settings) => {
         onEnter={requireAuth}
       />
       <Route
+        path="members/add/person"
+        component={AddMember}
+        onEnter={requireAuth}
+      />
+      <Route
         path="members/families"
         component={Families}
         onEnter={requireAuth}
@@ -138,6 +148,26 @@ export default (settings) => {
       <Route
         path="worship/services/list"
         component={WorshipServices}
+        onEnter={requireAuth}
+      />
+      <Route
+        path="worship/services/:id/jobs"
+        component={WorshipJobsSelect}
+        onEnter={requireAuth}
+      />
+      <Route
+        path="worship/jobs/list"
+        component={Jobs}
+        onEnter={requireAuth}
+      />
+      <Route
+        path="worship/jobs/:id/members"
+        component={JobMembers}
+        onEnter={requireAuth}
+      />
+      <Route
+        path="worship/assign"
+        component={AssignJobs}
         onEnter={requireAuth}
       />
     </Route>

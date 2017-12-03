@@ -35,12 +35,10 @@ class DisplayTeachers extends Component {
           subtitle={moment().tz('America/Chicago').format('dddd')}
           avatar={<Avatar>T</Avatar>}
         />
+        <Divider />
         <CardMedia>
         {divClasses.map((divClass) =>
-          <div key={divClass.id}>
-            <Divider />
-            <RenderTeachers divClass={divClass} day={today} />
-          </div>
+          <RenderTeachers key={divClass.id} divClass={divClass} day={today} />
         )}
         </CardMedia>
       </Card>

@@ -1,7 +1,9 @@
 import each from 'async/each';
 import { observable } from 'mobx';
 import classes from './classes';
+import Jobs from './jobs';
 import Messages from './messages';
+import People from './people';
 import worship from './worship';
 import settings from './settings';
 import utils from './utils';
@@ -12,8 +14,16 @@ const modules = [
     klass: classes,
   },
   {
+    name: 'jobs',
+    klass: Jobs,
+  },
+  {
     name: 'messages',
     klass: Messages,
+  },
+  {
+    name: 'people',
+    klass: People,
   },
   {
     name: 'worship',

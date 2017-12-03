@@ -86,6 +86,10 @@ export default {
     });
   },
   insert(record) {
+    record.id = new Buffer(record.id, 'hex');
+    record.entityId = (record.entityId) ? new Buffer(record.entityId, 'hex') : null;
+    record.familyId = (record.familyId) ? new Buffer(record.familyId, 'hex') : null;
+    record.cohortId = (record.cohortId) ? new Buffer(record.cohortId, 'hex') : null;
     return new Promise((resolve, reject) => {
       models.People.create(
         record
@@ -98,6 +102,9 @@ export default {
   update(record) {
     return new Promise((resolve, reject) => {
       record.id = new Buffer(record.id, 'hex');
+      record.entityId = (record.entityId) ? new Buffer(record.entityId, 'hex') : null;
+      record.familyid = (record.familyId) ? new Buffer(record.familyId, 'hex') : null;
+      record.cohortId = (record.cohortId) ? new Buffer(record.cohortId, 'hex') : null;
       models.People.update(
         record,
         {

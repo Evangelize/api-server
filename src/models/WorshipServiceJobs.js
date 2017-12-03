@@ -35,6 +35,15 @@ module.exports = function (sequelize, DataTypes) {
           this.setDataValue('worshipServiceId', new Buffer(val, 'hex'));
         },
       },
+      jobId: {
+        type: DataTypes.BLOB,
+        get() {
+          return moduleUtils.binToHex(this.getDataValue('jobId'));
+        },
+        set(val) {
+          this.setDataValue('jobId', new Buffer(val, 'hex'));
+        },
+      },
       title: {
         type: DataTypes.STRING,
       },

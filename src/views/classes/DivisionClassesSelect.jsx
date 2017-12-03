@@ -44,7 +44,7 @@ class DivisionClassesSelect extends Component {
             <Col xs={12} sm={12} md={12} lg={12}>
               <Card>
                 <CardHeader
-                  title={"Select Division Classes"}
+                  title={'Select Division Classes'}
                   subtitle={`${moment(div.start).format('MMM DD YYYY')} - ${moment(div.end).format('MMM DD YYYY')}`}
                   avatar={<Avatar>{`${div.title.charAt(0)}${div.position + 1}`}</Avatar>}
                 />

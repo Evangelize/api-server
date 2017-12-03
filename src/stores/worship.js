@@ -3,7 +3,8 @@ import {
   autorun,
   computed,
   toJS,
-  action
+  action,
+  extendObservable
 } from 'mobx';
 import {
   filter,
@@ -59,7 +60,52 @@ export default class Worship {
     return this.db.store(
       'worshipServices', [
         filter((rec) => rec.deletedAt === null),
-        orderBy(['day', 'time'], ['desc']),
+        orderBy(['day', 'time'], ['asc']),
+      ]
+    );
+  }
+
+  getService(id) {
+    return this.db.store(
+      'worshipServices', [
+        filter((rec) => rec.deletedAt === null && rec.id === id),
+        first,
+      ]
+    );
+  }
+
+  getMonthServiceDays(month, year) {
+    let days = [];
+    const uniqueDays = this.db.store(
+      'worshipServices', [
+        filter((rec) => rec.deletedAt === null),
+        uniqBy('day'),
+        orderBy(['day'], ['asc']),
+      ]
+    );
+
+    uniqueDays.forEach((day) => {
+      let dow = moment(`${year}${month}01`).startOf('month').day(day.day);
+      while (month !== dow.format('MM') || day.day !== dow.day()) {
+        dow = dow.add(1, 'days');
+      }
+
+      while (month === dow.format('MM')) {
+        days.push(dow.valueOf());
+        dow = dow.add(1, 'weeks');
+      }
+    });
+
+    days = days.sort((a, b) => a - b);
+    return days;
+  }
+
+  getServicesByDate(date) {
+    const day = moment(date).day();
+    return this.db.store(
+      'worshipServices', [
+        filter((rec) => rec.deletedAt === null && rec.day === day),
+        orderBy(['day', 'time'], ['asc']),
       ]
     );
   }
