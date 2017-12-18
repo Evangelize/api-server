@@ -252,8 +252,8 @@ export default function (HOST, PORT, callback) {
             const cookie = getToken(request.headers);
             const location = createLocation(request.path);
             const stores = new Stores();
-            console.log(request.headers);
-            const entityId = request.headers['X-Entity-Id'] || null;
+            // headers are lowercase no matter what
+            const entityId = request.headers['x-entity-id'] || null;
             let authenticated = false;
             const retFunc = function (data, person) {
               const newData = Object.assign({}, data);
