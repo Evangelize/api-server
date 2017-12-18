@@ -252,6 +252,7 @@ export default function (HOST, PORT, callback) {
             const cookie = getToken(request.headers);
             const location = createLocation(request.path);
             const stores = new Stores();
+            const entityId = request.get('X-Entity-Id') || null;
             let authenticated = false;
             const retFunc = function (data, person) {
               const newData = Object.assign({}, data);
@@ -298,10 +299,11 @@ export default function (HOST, PORT, callback) {
                           <html lang="en-us">
                             <head>
                               <script>
-                                var wsUri = '${websocketUri}',
-                                    dbJson = ${finalDb},
-                                    mobxStore = ${finalMobx},
-                                    user = '${JSON.stringify({ person })}';
+                                const wsUri = '${websocketUri}';
+                                const dbJson = ${finalDb};
+                                const mobxStore = ${finalMobx};
+                                const entityId = ${entityId};
+                                const user = '${JSON.stringify({ person })}';
                               </script>
                               <meta charset="utf-8">
                               <meta name="viewport" content="width=device-width, minimum-scale=1.0">
