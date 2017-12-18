@@ -67,7 +67,7 @@ const render = () => {
 injectTapEventPlugin();
 
 if (authenticated()) {
-  db = new Db(dbJson, events);
+  db = new Db(window.dbJson, events);
   stores.init(db, events).then(
     (data) => {
       console.log(stores);
@@ -79,7 +79,7 @@ if (authenticated()) {
   );
   // console.log('db', db);
 } else {
-  db = new Db(dbJson, events);
+  db = new Db(window.dbJson, events);
   stores.init(db, events).then(
     (data) => {
       console.log(stores);
