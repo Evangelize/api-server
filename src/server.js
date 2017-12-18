@@ -73,7 +73,7 @@ const setSubscription = function () {
     console.log("channel ", channel, ": ", message);
     if (subChannel === 'insert' || subChannel === 'update' || subChannel === 'delete'){
       message = JSON.parse(message);
-      const entityId = message.entityId;
+      const entityId = message.record.entityId;
       const record = message.record;
       console.log('pmessage', message);
       switch (message.type) {
