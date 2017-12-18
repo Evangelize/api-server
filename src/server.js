@@ -252,7 +252,7 @@ export default function (HOST, PORT, callback) {
             const cookie = getToken(request.headers);
             const location = createLocation(request.path);
             const stores = new Stores();
-            const entityId = request.headers('X-Entity-Id') || null;
+            const entityId = request.headers['X-Entity-Id'] || null;
             let authenticated = false;
             const retFunc = function (data, person) {
               const newData = Object.assign({}, data);
