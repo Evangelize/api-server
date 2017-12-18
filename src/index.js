@@ -67,19 +67,19 @@ const render = () => {
 injectTapEventPlugin();
 
 if (authenticated()) {
-  db = new Db(window.dbJson, events);
+  db = new Db(dbJson, events);
   stores.init(db, events).then(
     (data) => {
       console.log(stores);
       stores.stores.settings.authenticated = true;
-      stores.stores.settings.user = JSON.parse(window.user);
+      stores.stores.settings.user = JSON.parse(user);
       db.setEntityId(stores.stores.settings.user.entityId);
       render();
     }
   );
   // console.log('db', db);
 } else {
-  db = new Db(window.dbJson, events);
+  db = new Db(dbJson, events);
   stores.init(db, events).then(
     (data) => {
       console.log(stores);

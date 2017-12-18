@@ -21,7 +21,7 @@ export default class Sockets {
     const token = reactCookie.load('accessToken');
     if (token) {
       const proto = (window.location.protocol === 'http:') ? 'ws:' : 'wss:';
-      let websocketUri = (window.wsUri) ? window.wsUri : '//localhost:3002';
+      let websocketUri = (wsUri) ? wsUri : '//localhost:3002';
       websocketUri = `${proto}${websocketUri}?token=${token}`;
       this.client = new ReconnectableWebSocket(
         websocketUri,
