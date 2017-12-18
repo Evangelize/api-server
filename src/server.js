@@ -303,7 +303,7 @@ export default function (HOST, PORT, callback) {
                                 var wsUri = '${websocketUri}';
                                 var dbJson = ${finalDb};
                                 var mobxStore = ${finalMobx};
-                                var entityId = ${entityId};
+                                var entityId = '${entityId}';
                                 var user = '${JSON.stringify({ person })}';
                               </script>
                               <meta charset="utf-8">
