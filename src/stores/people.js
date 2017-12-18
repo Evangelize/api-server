@@ -22,6 +22,33 @@ import waterfall from 'async/waterfall';
 import change from 'percent-change';
 import Promise from 'bluebird';
 
+const personModel = {
+  entityId: null,
+  familyId: null,
+  cohortId: null,
+  lastName: null,
+  firstName: null,
+  familyPosition: null,
+  gender: null,
+  homePhoneNumber: null,
+  workPhoneNumber: null,
+  cellPhoneNumber: null,
+  emailAddress: null,
+  birthday: null,
+  nonChristian: 'n',
+  nonMember: 'n',
+  membershipStatus: null,
+  deceased: 'n',
+  collegeStudent: 'n',
+  photoUrl: null,
+  employer: null,
+  occupation: null,
+  createdAt: null,
+  updatedAt: null,
+  deletedAt: null,
+};
+
+
 export default class People {
   @observable db;
   @observable events;

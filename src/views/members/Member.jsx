@@ -49,7 +49,7 @@ const toggleStyle = Object.assign(
   },
 );
 
-@inject('classes')
+@inject('people')
 @observer
 class Member extends Component {
   @observable member;
@@ -72,9 +72,9 @@ class Member extends Component {
 
 
   componentWillMount() {
-    const { classes, params } = this.props;
-    this.member = classes.getPerson(params.id);
-    this.family = ('familyId' in this.member) ? classes.getFamily(this.member.familyId) : null;
+    const { people, params } = this.props;
+    this.member = people.getPerson(params.id);
+    this.family = ('familyId' in this.member) ? people.getFamily(this.member.familyId) : null;
   }
 
   navigate(path, e) {
@@ -97,38 +97,38 @@ class Member extends Component {
 
 
   handleChange = (field, e) => {
-    const { classes } = this.props;
+    const { people } = this.props;
     let record = {};
     record[field] = e.target.value;
-    classes.db.updateCollectionFields('people', this.member.id, record);
+    people.db.updateCollectionFields('people', this.member.id, record);
   }
 
   handleChangeSelect = (field, e, key, payload) => {
-    const { classes } = this.props;
+    const { people } = this.props;
     let record = {};
     record[field] = payload;
-    classes.db.updateCollectionFields('people', this.member.id, record);
+    people.db.updateCollectionFields('people', this.member.id, record);
   }
 
   handleChangeDate = (field, ...args) => {
-    const { classes } = this.props;
+    const { people } = this.props;
     let record = {};
     record[field] = moment(args[1]).valueOf();
-    classes.db.updateCollectionFields('people', this.member.id, record);
+    people.db.updateCollectionFields('people', this.member.id, record);
   }
 
   handleChangeToggle = (field, ...args) => {
-    const { classes } = this.props;
+    const { people } = this.props;
     let record = {};
     console.log(args);
     record[field] = (args[1]);
-    classes.db.updateCollectionFields('people', this.member.id, record);
+    people.db.updateCollectionFields('people', this.member.id, record);
   }
 
   updateTitle(e) {
-    const { classes } = this.props;
+    const { people } = this.props;
     const { params } = this.props;
-    classes.db.updateCollectionFields('classes', params.classId, { title: e.target.value });
+    people.db.updateCollectionFields('people', params.classId, { title: e.target.value });
   }
 
   changeTab = (index) => {
@@ -165,7 +165,7 @@ class Member extends Component {
   }
 
   render() {
-    const { classes } = this.props;
+    const { people } = this.props;
     let retVal;
     if (this.member) {
       retVal = (

@@ -63,7 +63,7 @@ module.exports = function (sequelize, DataTypes) {
       
       lastName: DataTypes.STRING,
       firstName: DataTypes.STRING,
-      familyPosition: DataTypes.STRING(1),
+      familyPosition: { type: DataTypes.STRING(1), defaultValue: null },
       gender: DataTypes.STRING(1),
       homePhoneNumber: DataTypes.STRING,
       workPhoneNumber: DataTypes.STRING,
@@ -80,10 +80,11 @@ module.exports = function (sequelize, DataTypes) {
           }
         },
       },
-      nonChristian: { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
-      nonMember: { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
+      deceased: { type: DataTypes.BOOLEAN, defaultValue: false },
+      nonChristian: { type: DataTypes.BOOLEAN, defaultValue: false },
+      nonMember: { type: DataTypes.BOOLEAN, defaultValue: false },
       membershipStatus: DataTypes.STRING(1),
-      collegeStudent: { type: DataTypes.ENUM('y', 'n'), defaultValue: 'n' },
+      collegeStudent: { type: DataTypes.BOOLEAN, defaultValue: false },
       photoUrl: DataTypes.STRING,
       createdAt: {
         type: DataTypes.DATE,
