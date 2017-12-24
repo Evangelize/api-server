@@ -6,6 +6,7 @@ import divisionClassTeachers from './divisionClassTeachers';
 import divisionConfigs from './divisionConfigs';
 import divisionYears from './divisionYears';
 import families from './families';
+import memberAttendance from './memberAttendance';
 import memberJobAssignments from './memberJobAssignments';
 import memberJobPreferences from './memberJobPreferences';
 import notes from './notes';
@@ -31,6 +32,7 @@ module.exports = {
   divisions,
   families,
   jobs,
+  memberAttendance,
   memberJobAssignments,
   memberJobPreferences,
   notes,

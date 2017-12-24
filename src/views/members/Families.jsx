@@ -103,7 +103,7 @@ class Families extends Component {
 
   tapItem = (type, item) => {
     if (type === 'edit') {
-      this.navigate(`/member/family/${item.id}`);
+      this.navigate(`/members/family/${item.id}`);
     } else if (type === 'delete') {
       this.deleteId = item.id;
       this.dialogDeleteOpen = true;

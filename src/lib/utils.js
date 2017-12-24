@@ -3,13 +3,12 @@ import async from 'async';
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import nconf from 'nconf';
+import * as admin from 'firebase-admin';
+import settings from '../../config/settings.json';
 import { createClient } from './redisClient';
 import api from './server';
 let pubClient;
 let jwtCert;
-const config = nconf.argv()
-    .env()
-    .file({ file: path.join(__dirname, '../../config/settings.json') });
 
 createClient().then(
   (client) => {
@@ -133,7 +132,16 @@ export default {
       );
     });
   },
+  getFirebaseUser(uid) {
+    return admin.auth().getUser(uid);
+  },
   validateJwt(token, callback) {
+    const payload = {
+      decoded: null,
+      person: null,
+      firebase: null,
+    };
+
     console.log('validateJwt');
     jwt.verify(
       token,
@@ -143,23 +151,31 @@ export default {
       },
       (err, decoded) => {
         console.log('jwt', decoded);
+        payload.decoded = decoded;
         if (err) {
           console.log(decoded);
           return callback(err, false, decoded);
         }
-        api
-        .people
-        .get(decoded.peopleId)
+        const uid = decoded.uid;
+        this.getFirebaseUser(uid)
+        .then(
+          (firebase) => {
+            if (firebase) {
+              payload.firebase = firebase;
+            }
+            return api.people.get(decoded.peopleId);
+          }
+        )
         .then(
           (results) => {
             if (results) {
-              return callback(null, true, results.toJSON());
-            } else {
-              return callback(null, false, null);
+              payload.person = results.toJSON(); 
             }
+
+            return callback(null, true, payload);
           },
-          (error) => callback(error, false, null)
-        );
+        )
+        .catch((error) => callback(error, false, null));
       }
     );
   },

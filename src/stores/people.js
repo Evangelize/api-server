@@ -21,6 +21,7 @@ import moment from 'moment-timezone';
 import waterfall from 'async/waterfall';
 import change from 'percent-change';
 import Promise from 'bluebird';
+import { people, utils } from '../api';
 
 const personModel = {
   entityId: null,
@@ -52,6 +53,7 @@ const personModel = {
 export default class People {
   @observable db;
   @observable events;
+  @observable peopleFilter;
 
   constructor(db, events) {
     if (db) {
@@ -111,6 +113,15 @@ export default class People {
     );
   }
 
+  getFamilyMembers(familyId) {
+    return this.db.store(
+      'people', [
+        filter((rec) => rec.deletedAt === null && rec.familyId === familyId),
+        sortBy(['firstName']),
+      ]
+    );
+  }
+
   getPerson(id) {
     return this.db.store(
       'people', [
@@ -123,4 +134,65 @@ export default class People {
   @action addPerson(person) {
     return this.db.updateStore('people', person, false, false);
   }
+
+  @action createFamily() {
+    return {
+      id: null,
+      entityId: window.entityId,
+      name: null,
+      familyName: null,
+      address1: null,
+      address2: null,
+      city: null,
+      state: null,
+      zipCode: null,
+      createdAt: moment().unix(),
+      updatedAt: moment().unix(),
+      deletedAt: null,
+    }
+  }
+
+  @action async updatePersonAvatar(person, file, fileName, mimeType) {
+    let retVal;
+    try {
+      const { data } = await utils.uploadAvatar(person.id, 'person', file, fileName, mimeType, this.db.entityId);
+      person.photoUrl = data.photoUrl;
+      retVal = data;
+    } catch (e) {
+      retVal = e;
+    }
+
+    return retVal;
+  }
+
+  @action async updateFamilyAvatar(family, file, fileName, mimeType) {
+    let retVal;
+    try {
+      const { data } = await utils.uploadAvatar(family.id, 'family', file, fileName, mimeType, this.db.entityId);
+      family.photoUrl = data.photoUrl;
+      retVal = data;
+    } catch (e) {
+      retVal = e;
+    }
+
+    return retVal;
+  }
+
+  @action deletePersonFromFamily(person) {
+    return this.updateCollectionFields('people', person.id, { familyId: null });
+  }
+
+  @action addPersonToFamily(person, familyId) {
+    return this.updateCollectionFields('people', person.id, { familyId });
+  }
+
+  getCurrentMembers() {
+    return this.db.store(
+      'people', [
+        filter((rec) => rec.deletedAt === null && rec.membershipStatus === 'C'),
+        sortBy(['lastName', 'firstName']),
+      ]
+    );
+  }
+
 }

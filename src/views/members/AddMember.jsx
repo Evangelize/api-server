@@ -182,6 +182,18 @@ class AddMember extends Component {
                   style={toggleStyle}
                   labelPosition="right"
                 />
+                <Divider />
+                <SelectField
+                  floatingLabelText="Family Position"
+                  value={this.member.familyPosition}
+                  onChange={((...args) => this.handleChangeSelect('familyPosition', ...args))}
+                  style={dropDownStyle}
+                  underlineStyle={{ display: 'none' }}
+                >
+                  <MenuItem value={'H'} primaryText="Head of Household" />
+                  <MenuItem value={'S'} primaryText="Spouse" />
+                  <MenuItem value={'C'} primaryText="Child" />
+                </SelectField>
               </CardText>
               <CardActions>
                 <RaisedButton

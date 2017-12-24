@@ -75,14 +75,13 @@ class DisplayPerson extends Component {
         anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
         targetOrigin={{ horizontal: 'right', vertical: 'top' }}
       >
-        {rightMenuItems.map((item) =>
-          <MenuItem>{item}</MenuItem>
+        {rightMenuItems.map((item, index) =>
+          <MenuItem key={index}>{item}</MenuItem>
         )}
       </IconMenu> : null;
     return (
-      <div>
+      <div key={person.id}>
         <ListItem
-          key={person.id}
           primaryText={`${person.firstName} ${person.lastName}`}
           secondaryText={secondaryText}
           secondaryTextLines={secondaryTextLines}

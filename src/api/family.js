@@ -2,13 +2,13 @@
 import axios from 'axios';
 import _ from 'lodash';
 
-const prefix = '/api/people';
+const prefix = '/api/family';
 const TIMEOUT = 100;
 
 export default {
   get(key, filter) {
-    return axios.get('/api/people/search/'+key+'/'+filter)
-    .then(function (response) {
+    return axios.get(`${prefix}/search/${key}/${filter}`)
+    .then((response) => {
       //console.log(response);
       return Promise.resolve({
         key: key,
@@ -16,7 +16,7 @@ export default {
         data: response.data
       });
     })
-    .catch(function (response) {
+    .catch((response) => {
       return Promise.resolve({
         key: key,
         filter: filter,
@@ -32,7 +32,7 @@ export default {
           peopleId: id
         }
       )
-      .then(function (response) {
+      .then((response) => {
         return Promise.resolve({
           id: id,
           index: index,
@@ -41,7 +41,7 @@ export default {
           data: response.data
         });
       })
-      .catch(function (response) {
+      .catch((response) => {
         return Promise.resolve({
           key: key,
           filter: filter,
@@ -52,7 +52,7 @@ export default {
       return axios.delete(
         '/api/'+key+'s/'+id
       )
-      .then(function (response) {
+      .then((response) => {
         return Promise.resolve({
           id: id,
           index: index,
@@ -61,7 +61,7 @@ export default {
           data: response.data
         });
       })
-      .catch(function (response) {
+      .catch((response) => {
         return Promise.resolve({
           key: key,
           filter: filter,
@@ -69,5 +69,17 @@ export default {
         });
       });
     }
+  },
+  uploadAvatar(id, type, file, fileName, mimeType, entityId) {
+    return axios.post(
+      `${prefix}/${id}/avatar`,
+      {
+        file,
+        type,
+        fileName,
+        mimeType,
+        entityId,
+      }
+    );
   },
 }

@@ -8,7 +8,7 @@ export default {
       async.waterfall(
         [
           (callback) => {
-            models.DivisionClassAttendance.findAll(
+            models.MemberAttendance.findAll(
               {
                 group: ['attendanceDate'],
                 order: 'attendanceDate DESC',
@@ -44,7 +44,7 @@ export default {
         `
           SELECT AVG(t1.attendance) as attendance
           FROM (
-            SELECT SUM(count) as attendance FROM divisionClassAttendance GROUP BY attendanceDate
+            SELECT SUM(count) as attendance FROM memberAttendance GROUP BY attendanceDate
           ) as t1
         `,
         {
@@ -59,7 +59,7 @@ export default {
   },
   all() {
     return new Promise((resolve, reject) => {
-      models.DivisionClassAttendance.findAll(
+      models.MemberAttendance.findAll(
         {
           order: 'id ASC',
         }
@@ -71,19 +71,20 @@ export default {
   },
   insert(record) {
     record.id = new Buffer(record.id, 'hex');
-    record.divisionClassId = new Buffer(record.divisionClassId, 'hex');
+    record.entityId = new Buffer(record.entityId, 'hex');
+    record.worshipServiceId = new Buffer(record.worshipServiceId, 'hex');
+    record.personId = new Buffer(record.personId, 'hex');
+    record.attendanceTypeId = new Buffer(record.attendanceTypeId, 'hex');
     return new Promise((resolve, reject) => {
-      models.DivisionClassAttendance.create(
+      models.MemberAttendance.create(
         record
       ).then(
         (result) => resolve(result),
         () => {
-          models.DivisionClassAttendance.findOne(
+          models.MemberAttendance.findOne(
             {
               where: {
-                divisionClassId: record.divisionClassId,
-                day: 0,
-                attendanceDate: '2016-05-01 00:00:00',
+                id: record.id,
               },
             }
           ).then(
@@ -97,7 +98,11 @@ export default {
   update(record) {
     return new Promise((resolve, reject) => {
       record.id = new Buffer(record.id, 'hex');
-      models.DivisionClassAttendance.update(
+      record.entityId = new Buffer(record.entityId, 'hex');
+      record.worshipServiceId = new Buffer(record.worshipServiceId, 'hex');
+      record.personId = new Buffer(record.personId, 'hex');
+      record.attendanceTypeId = new Buffer(record.attendanceTypeId, 'hex');
+      models.MemberAttendance.update(
         record,
         {
           where: {
@@ -106,7 +111,7 @@ export default {
         }
       ).then(
         () => {
-          models.DivisionClassAttendance.findOne({
+          models.MemberAttendance.findOne({
             where: {
               id: record.id,
             },
@@ -121,7 +126,7 @@ export default {
   },
   delete(record) {
     return new Promise((resolve, reject) => {
-      models.DivisionClassAttendance.destroy({
+      models.MemberAttendance.destroy({
         where: {
           id: new Buffer(record.id, 'hex'),
         },

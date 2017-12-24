@@ -48,7 +48,7 @@ const authenticated = () => {
 };
 
 const render = () => {
-  const r = routes(stores.stores.settings);
+  const r = routes(stores.stores.auth);
   const context = Object.assign(
     {
       db,
@@ -71,10 +71,12 @@ if (authenticated()) {
   stores.init(db, events).then(
     (data) => {
       console.log(stores);
-      stores.stores.settings.authenticated = true;
-      stores.stores.settings.user = JSON.parse(user);
-      db.setEntityId(stores.stores.settings.user.entityId);
+      const user = JSON.parse(window.user);
+      stores.stores.auth.setupAuth(authenticated(), user);
+      db.setEntityId(window.entityId);
       render();
+      // stores.stores.auth.authenticated = true;
+      // stores.stores.auth.user = JSON.parse(user);
     }
   );
   // console.log('db', db);
@@ -83,7 +85,7 @@ if (authenticated()) {
   stores.init(db, events).then(
     (data) => {
       console.log(stores);
-      stores.stores.settings.authenticated = false;
+      stores.stores.auth.authenticated = false;
       render();
     }
   );

@@ -1,19 +1,18 @@
-import utils from '../src/lib/utils';
-import api from '../src/lib/server';
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import Promise from 'bluebird';
+import * as admin from 'firebase-admin';
 import settings from '../config/settings.json';
+import utils from '../src/lib/utils';
+import api from '../src/lib/server';
 const key = fs.readFileSync(settings.jwtKey);
+const serviceAccount = (settings.firebase.key) ? require(settings.firebase.key) : null;
 const prefix = '/api/auth';
 
 const loginPayload = (results, cb) => {
   if (results) {
     jwt.sign(
-      {
-        peopleId: results.user.peopleId,
-        entityId: results.user.entityId,
-      },
+      results.user,
       key,
       {
         expiresIn: '7d',
@@ -73,29 +72,43 @@ const login = (request, reply) => {
   );
 };
 
+const getName = (token) => {
+  const payload = {
+    firstName: null,
+    lastName: null,
+  };
+  if (token.user) {
+    payload.firstName = token.additionalUserInfo.profile.given_name;
+    payload.lastName = token.additionalUserInfo.profile.family_name;
+  } else {
+    const name = token.displayName.split(' ');
+    payload.firstName = name[0];
+    payload.lastName = name[name.length - 1];
+  }
+  return payload;
+};
 
 const getGoogleLogin = (token) => {
-  const id = token.profileObj.googleId;
-  return new Promise((resolve, reject) => {
-    api.thirdPartyLogins.search(
-      'google',
-      id,
-      token.profileObj.givenName,
-      token.profileObj.familyName,
-    )
-    .then(
-      (results) => {
-        return resolve(results);
-      },
-      (err) => reject(err)
-    );
-  });
+  const uid = (token.user) ? token.user.uid : token.uid;
+  const { firstName, lastName } = getName(token);
+  return api.thirdPartyLogins.search(
+    'google',
+    uid,
+    firstName,
+    lastName,
+  );
 };
+
 
 const thirdPartyLogin = (request, reply) => {
   console.log(request.payload);
   const type = request.payload.type;
   const token = request.payload.token;
+  const uid = (token.user) ? token.user.uid : token.uid;
+  let result = {
+    user: null,
+    person: null,
+  };
   if (type === 'google') {
     getGoogleLogin(token)
     .then(
@@ -106,15 +119,19 @@ const thirdPartyLogin = (request, reply) => {
           user.username = `${user.firstName} ${user.lastName}`;
           sendResponse(reply, user, null, 200);
         } else {
-          const result = {
-            user: {
-              peopleId: results.id,
-              externalId: token.profileObj.googleId,
-              entityId: results.entityId,
-              type: 'google',
-            },
-            person: results,
-          }
+          result = Object.assign(
+            {},
+            result,
+            {
+              user: {
+                peopleId: results.id,
+                uid,
+                entityId: results.entityId,
+                type: 'google',
+              },
+              person: results,
+            }
+          );
           loginPayload(
             result,
             (payload) => {
@@ -131,6 +148,8 @@ const thirdPartyLogin = (request, reply) => {
           );
         }
       },
+    )
+    .catch(
       (err) => {
         console.log(err);
         sendResponse(reply, err, null, 401);

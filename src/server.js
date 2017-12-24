@@ -8,6 +8,7 @@ import nconf from 'nconf';
 import etag from 'etag';
 import Cron from 'cron';
 import mobxstore from 'mobx-store';
+import * as admin from 'firebase-admin';
 
 
 // Hapi server imports
@@ -43,6 +44,7 @@ const getToken = (headers) => {
   let jwt = null;
   const authorization = headers.authorization;
   const cookie = parseCookies(headers, 'accessToken');
+  const userId = parseCookies(headers, 'evangelize-user-id');
   if (authorization) {
     parts = authorization.split(/\s+/);
   }
@@ -70,7 +72,7 @@ const setSubscription = function () {
   // console.log("Subscribing");
   subClient.on('pmessage', (pattern, channel, message) => {
     const subChannel = channel.split(':')[1];
-    console.log("channel ", channel, ": ", message);
+    console.log('channel ', channel, ': ', message);
     if (subChannel === 'insert' || subChannel === 'update' || subChannel === 'delete'){
       message = JSON.parse(message);
       const entityId = message.record.entityId;
@@ -177,6 +179,13 @@ export default function (HOST, PORT, callback) {
       port: settings.get('port') || PORT,
     }
   );
+  const serviceAccount = settings.get('firebase:key');
+  if (serviceAccount) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: settings.get('firebase:databaseUri'),
+    });
+  }
 
   if (env === 'development') {
     const webpack = require('webpack');
@@ -255,7 +264,7 @@ export default function (HOST, PORT, callback) {
             // headers are lowercase no matter what
             const entityId = request.headers['x-entity-id'] || null;
             let authenticated = false;
-            const retFunc = function (data, person) {
+            const retFunc = function (data, payload) {
               const newData = Object.assign({}, data);
               const finalDb = JSON.stringify(newData);
               const store = mobxstore(newData);
@@ -268,9 +277,14 @@ export default function (HOST, PORT, callback) {
               process.nextTick(() => {
                 stores.init(db, null).then(
                   () => {
-                    stores.stores.settings.authenticated = authenticated;
-                    stores.stores.settings.user = { person };
-                    routes = createRoutes(stores.stores.settings);
+                    const firebase = (payload && payload.firebase) ? payload.firebase : null;
+                    const person = (payload && payload.person) ? payload.person : null;
+                    stores.stores.auth.authenticated = (firebase) ? true : false;
+                    stores.stores.auth.user = {
+                      firebase,
+                      db: person,
+                    };
+                    routes = createRoutes(stores.stores.auth);
                     context = Object.assign(
                       {
                         db,
@@ -304,7 +318,7 @@ export default function (HOST, PORT, callback) {
                                 var dbJson = ${finalDb};
                                 var mobxStore = ${finalMobx};
                                 var entityId = '${entityId}';
-                                var user = '${JSON.stringify({ person })}';
+                                var user = '${JSON.stringify({ payload })}';
                               </script>
                               <meta charset="utf-8">
                               <meta name="viewport" content="width=device-width, minimum-scale=1.0">
@@ -331,14 +345,14 @@ export default function (HOST, PORT, callback) {
                 );
               });
             };
-            const processRequest = (person) => {
-              const newPerson = person || null;
+            const processRequest = (payload) => {
+              const newPerson = payload || null;
               try {
                 if (typeof request.response.statusCode !== 'undefined') {
                   return reply.continue();
                 }
 
-                if (!authenticated && request.path !== '/login') {
+                if (!authenticated && (request.path !== '/login' && request.path.indexOf('/api/auth') === -1)) {
                   console.log(request.headers);
                   throw new NotAuthorizedException('/login');
                 } else if (authenticated && request.path === '/login') {

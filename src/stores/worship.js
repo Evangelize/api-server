@@ -155,4 +155,50 @@ export default class Worship {
     }
     return retVal;
   }
+
+  getAttendanceByService(startMonth, endMonth) {
+    startMonth = startMonth || moment(moment().format('MM/01/YYYY') + ' 00:00:00').subtract(3, 'month');
+    endMonth = endMonth || moment(moment().format('MM/01/YYYY') + ' 00:00:00').valueOf();
+    let dailyAttendance = [];
+    let latest = this.db.store(
+      'memberAttendance', [
+        filter((rec) => rec.deletedAt === null && rec.attendanceDate >= startMonth && rec.attendanceDate <= endMonth),
+        sortBy('attendanceDate'),
+        reverse,
+      ]
+    );
+    latest = latest.reduce(
+      (map, d) => {
+        map[`${d.attendanceDate}|${d.worshipServiceId}`] = (map[`${d.attendanceDate}|${d.worshipServiceId}`] || 0) + d.count;
+        return map;
+      },
+      Object.create(null)
+    );
+    Object.keys(latest).forEach((day) => {
+      dailyAttendance.push({
+        date: day,
+        count: latest[day],
+      });
+    });
+    /*
+    dailyAttendance = _.sortBy(dailyAttendance, function(day){
+        return day.date * -1;
+    });
+    */
+    //console.log(dailyAttendance);
+    return dailyAttendance;
+  }
+
+  getPersonWorshipAttendance(worshipDate, type, worshipServiceId, personId) {
+    return this.db.store(
+      'memberAttendance', [
+        find((rec) => rec.deletedAt === null && 
+          rec.attendanceDate === worshipDate && 
+          rec.attendanceTypeId <= type &&
+          rec.worshipServiceId === worshipServiceId &&
+          rec.personId === personId
+        ),
+      ]
+    );
+  }
 }

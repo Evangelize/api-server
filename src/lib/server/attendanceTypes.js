@@ -1,12 +1,13 @@
 import models from '../../models';
+import async from 'async';
 import Promise from 'bluebird';
 
 export default {
   all() {
     return new Promise((resolve, reject) => {
-      models.Families.findAll({
+      models.AttendanceTypes.findAll({
         order: [
-          ['updatedAt', 'DESC'],
+          ['title', 'ASC'],
         ],
       }).then(
         (results) => resolve(results),
@@ -14,26 +15,11 @@ export default {
       );
     });
   },
-  get(id) {
-    return new Promise((resolve, reject) => {
-      const newId = new Buffer(id, 'hex');
-      models.Families.findOne(
-        {
-          where: {
-            id: newId,
-          },
-        }
-      ).then(
-        (result) => resolve(result),
-        (err) => reject(err)
-      );
-    });
-  },
   insert(record) {
     record.id = new Buffer(record.id, 'hex');
-    record.entityId = (record.entityId) ? new Buffer(record.entityId, 'hex') : null;
+    record.entityId = new Buffer(record.entityId, 'hex');
     return new Promise((resolve, reject) => {
-      models.Families.create(
+      models.AttendanceTypes.create(
         record
       ).then(
         (result) => resolve(result),
@@ -42,22 +28,23 @@ export default {
     });
   },
   update(record) {
-    console.log(record);
+    record.id = new Buffer(record.id, 'hex');
+    record.entityId = new Buffer(record.entityId, 'hex');
     return new Promise((resolve, reject) => {
-      record.id = new Buffer(record.id, 'hex');
-      record.entityId = (record.entityId) ? new Buffer(record.entityId, 'hex') : null;
-      models.Families.update(
-        record,
+      const newrecord = Object.assign({}, record);
+      newrecord.id = new Buffer(record.id, 'hex');
+      models.AttendanceTypes.update(
+        newrecord,
         {
           where: {
-            id: record.id,
+            id: newrecord.id,
           },
         }
       ).then(
         () => {
-          models.Families.findOne({
+          models.AttendanceTypes.findOne({
             where: {
-              id: record.id,
+              id: newrecord.id,
             },
           }).then(
             (result) => resolve(result),
@@ -70,9 +57,21 @@ export default {
   },
   delete(record) {
     return new Promise((resolve, reject) => {
-      models.Families.destroy({
+      models.AttendanceTypes.destroy({
         where: {
           id: new Buffer(record.id, 'hex'),
+        },
+      }).then(
+        () => resolve(record),
+        (err) => reject(err)
+      );
+    });
+  },
+  get(id) {
+    return new Promise((resolve, reject) => {
+      models.AttendanceTypes.findOne({
+        where: {
+          id: new Buffer(id, 'hex'),
         },
       }).then(
         (result) => resolve(result),
@@ -81,3 +80,6 @@ export default {
     });
   },
 };
+
+
+

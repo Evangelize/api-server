@@ -14,6 +14,7 @@ import ListItem from 'material-ui/List/ListItem';
 import Divider from 'material-ui/Divider';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import SelectField from 'material-ui/SelectField';
+import Snackbar from 'material-ui/Snackbar';
 import MenuItem from 'material-ui/MenuItem';
 import ToolbarGroup from 'material-ui/Toolbar/ToolbarGroup';
 import RaisedButton from 'material-ui/RaisedButton';
@@ -23,9 +24,25 @@ import Toggle from 'material-ui/Toggle';
 import Slider from 'material-ui/Slider';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import { Grid, Row, Col } from 'react-bootstrap';
-import AvatarEditor from 'react-avatar-editor'
+import AvatarEditor from 'react-avatar-editor';
 import NavToolBar from '../../components/NavToolBar';
 import MaskedInput from '../../components/MaskedInput';
+
+const styles = {
+  button: {
+    margin: 12,
+  },
+  exampleImageInput: {
+    cursor: 'pointer',
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    left: 0,
+    width: '100%',
+    opacity: 0,
+  },
+};
 
 const style = {
   marginLeft: 20,
@@ -53,6 +70,8 @@ const toggleStyle = Object.assign(
 @observer
 class Member extends Component {
   @observable member;
+  @observable photo;
+  @observable mimeType = 'image/jpeg';
   @observable family;
   @observable slideIndex = 'information';
   @observable editor;
@@ -68,20 +87,51 @@ class Member extends Component {
       y: 0.5,
     },
     rotate: 0,
-  };
+  }
+  @observable showNotification = false;
+  @observable notificationMsg = 'Photo uploaded';
 
 
   componentWillMount() {
     const { people, params } = this.props;
     this.member = people.getPerson(params.id);
     this.family = ('familyId' in this.member) ? people.getFamily(this.member.familyId) : null;
+    if (this.member.photoUrl) {
+      this.photo = this.member.photoUrl;
+    } else if (this.family.photoUrl) {
+      this.photo = this.family.photoUrl;
+    }
   }
 
   navigate(path, e) {
     browserHistory.push(path);
   }
 
-  handleSave = (data) => {
+  handleSave = async () => {
+    const { people } = this.props;
+    this.renderPreview();
+    if (this.editor) {
+      // This returns a HTMLCanvasElement, it can be made into a data URL or a blob,
+      // drawn on another canvas, or added to the DOM.
+      const canvas = this.editor.getImage();
+
+      // If you want the image resized to the canvas size (also a HTMLCanvasElement)
+      const canvasScaled = this.editor.getImageScaledToCanvas();
+
+      const blob = canvas.toDataURL(this.mimeType);
+      const results = await people.updatePersonAvatar(
+        this.member,
+        blob,
+        `person-${this.member.id}.jpg`,
+        this.mimeType
+      );
+      this.notificationMsg = 'Photo uploaded';
+      this.showNotification = true;
+      console.log('saved blob', results);
+    }
+  }
+
+  renderPreview = () => {
     const img = this.editor.getImageScaledToCanvas().toDataURL();
     const rect = this.editor.getCroppingRect();
 
@@ -95,6 +145,10 @@ class Member extends Component {
     };
   }
 
+  handleNewImage = e => {
+    this.photo = e.target.files[0];
+    this.mimeType = this.photo.type;
+  }
 
   handleChange = (field, e) => {
     const { people } = this.props;
@@ -143,11 +197,14 @@ class Member extends Component {
     } else {
       this.image[type] = value;
     }
+
+    this.renderPreview();
   }
 
   handlePositionChange = position => {
-    console.log('Position set to', position)
+    // console.log('Position set to', position)
     this.image.position = position;
+    this.renderPreview();
   }
 
   rotate = (type, e) => {
@@ -158,11 +215,17 @@ class Member extends Component {
     } else if (type === 'right') {
       this.image.rotate = this.image.rotate + 90;
     }
+
+    this.renderPreview();
   }
 
   setEditorRef = (editor) => {
     this.editor = editor;
   }
+
+  handleNotificationClose = () => {
+    this.showNotification = false;
+  };
 
   render() {
     const { people } = this.props;
@@ -276,107 +339,156 @@ class Member extends Component {
                         style={toggleStyle}
                         labelPosition="right"
                       />
+                      <Divider />
+                      <SelectField
+                        floatingLabelText="Family Position"
+                        value={this.member.familyPosition}
+                        onChange={((...args) => this.handleChangeSelect('familyPosition', ...args))}
+                        style={dropDownStyle}
+                        underlineStyle={{ display: 'none' }}
+                      >
+                        <MenuItem value={'H'} primaryText="Head of Household" />
+                        <MenuItem value={'S'} primaryText="Spouse" />
+                        <MenuItem value={'C'} primaryText="Child" />
+                      </SelectField>
                     </Tab>
                     <Tab
                       label="Pictures"
                       value={'pictures'}
                     >
-                      {(this.member.photoUrl || (this.family && this.family.photoUrl)) &&
+                      {this.photo ?
                         <div>
-                          <AvatarEditor
-                            ref={this.setEditorRef}
-                            image={(this.member.photoUrl) ? this.member.photoUrl : this.family.photoUrl}
-                            width={this.image.width}
-                            height={this.image.height}
-                            color={this.image.color.toJS()} //RGBA
-                            scale={this.image.scale}
-                            rotate={this.image.rotate}
-                            position={this.image.position}
-                            onSave={this.handleSave}
-                            onPositionChange={this.handlePositionChange}
-                            rotate={parseFloat(this.image.rotate)}
-                            borderRadius={this.image.border}
+                          <Row>
+                            <Col xs={12} sm={12} md={6} lg={6}>
+                              <AvatarEditor
+                                ref={this.setEditorRef}
+                                image={this.photo}
+                                width={this.image.width}
+                                height={this.image.height}
+                                color={this.image.color.toJS()} //RGBA
+                                scale={this.image.scale}
+                                rotate={this.image.rotate}
+                                position={this.image.position}
+                                onSave={this.handleSave}
+                                onPositionChange={this.handlePositionChange}
+                                rotate={parseFloat(this.image.rotate)}
+                                borderRadius={this.image.border}
+                              />
+                            </Col>
+                            <Col xs={12} sm={12} md={6} lg={6}>
+                              {this.preview && this.preview.img &&
+                                <Avatar
+                                  src={this.preview.img}
+                                />
+                              }
+                            </Col>
+                          </Row>
+                          <Row>
+                            <Col xs={12} sm={12} md={12} lg={12}>
+                              <RaisedButton
+                                label="Choose an Image"
+                                labelPosition="before"
+                                style={styles.button}
+                                containerElement="label"
+                              >
+                                <input
+                                  type="file"
+                                  style={styles.exampleImageInput}
+                                  onChange={this.handleNewImage}
+                                />
+                              </RaisedButton>
+                              <div>Zoom:</div>
+                              <Slider
+                                step={0.01}
+                                min={1}
+                                max={4}
+                                value={this.image.scale}
+                                onChange={((...args) => this.changeAvatarSettings('scale', ...args))}
+                              />
+                              <div>Border radius:</div>
+                              <Slider
+                                step={1}
+                                min={0}
+                                max={100}
+                                value={this.image.border}
+                                onChange={((...args) => this.changeAvatarSettings('border', ...args))}
+                              />
+                              <div>Avatar Width:</div>
+                              <Slider
+                                step={10}
+                                min={50}
+                                max={600}
+                                value={this.image.width}
+                                onChange={((...args) => this.changeAvatarSettings('width', ...args))}
+                              />
+                              <div>Avatar Height:</div>
+                              <Slider
+                                step={10}
+                                min={50}
+                                max={600}
+                                value={this.image.height}
+                                onChange={((...args) => this.changeAvatarSettings('height', ...args))}
+                              />
+                              <div>X Position:</div>
+                              <Slider
+                                step={0.01}
+                                min={0}
+                                max={1}
+                                value={this.image.position.x}
+                                onChange={((...args) => this.changeAvatarSettings('position.x', ...args))}
+                              />
+                              <div>Y Position:</div>
+                              <Slider
+                                step={0.01}
+                                min={0}
+                                max={1}
+                                value={this.image.position.y}
+                                onChange={((...args) => this.changeAvatarSettings('position.y', ...args))}
+                              />
+                              <div>Rotate:</div>
+                              <RaisedButton
+                                label="Left"
+                                onClick={((...args) => this.rotate('left', ...args))}
+                              />
+                              <RaisedButton
+                                label="Right"
+                                onClick={((...args) => this.rotate('right', ...args))}
+                              />
+                            </Col>
+                          </Row>
+                          <Row>
+                            <Col xs={12} sm={12} md={12} lg={12}>
+                              <RaisedButton
+                                primary
+                                label="Save"
+                                onClick={((...args) => this.handleSave(...args))}
+                              />
+                            </Col>
+                          </Row>
+                        </div> :
+                        <RaisedButton
+                          label="Choose an Image"
+                          labelPosition="before"
+                          style={styles.button}
+                          containerElement="label"
+                        >
+                          <input
+                            type="file"
+                            style={styles.exampleImageInput}
+                            onChange={this.handleNewImage}
                           />
-                          {this.preview && this.preview.img &&
-                            <Avatar
-                              src={this.preview.img}
-                            />
-                          }
-                          <div
-                            style={{
-                              margin: 10,
-                            }}
-                          >
-                            <div>Zoom:</div>
-                            <Slider
-                              step={0.01}
-                              min={1}
-                              max={4}
-                              value={this.image.scale}
-                              onChange={((...args) => this.changeAvatarSettings('scale', ...args))}
-                            />
-                            <div>Border radius:</div>
-                            <Slider
-                              step={1}
-                              min={0}
-                              max={100}
-                              value={this.image.border}
-                              onChange={((...args) => this.changeAvatarSettings('border', ...args))}
-                            />
-                            <div>Avatar Width:</div>
-                            <Slider
-                              step={10}
-                              min={50}
-                              max={600}
-                              value={this.image.width}
-                              onChange={((...args) => this.changeAvatarSettings('width', ...args))}
-                            />
-                            <div>Avatar Height:</div>
-                            <Slider
-                              step={10}
-                              min={50}
-                              max={600}
-                              value={this.image.height}
-                              onChange={((...args) => this.changeAvatarSettings('height', ...args))}
-                            />
-                            <div>X Position:</div>
-                            <Slider
-                              step={0.01}
-                              min={0}
-                              max={1}
-                              value={this.image.position.x}
-                              onChange={((...args) => this.changeAvatarSettings('position.x', ...args))}
-                            />
-                            <div>Y Position:</div>
-                            <Slider
-                              step={0.01}
-                              min={0}
-                              max={1}
-                              value={this.image.position.y}
-                              onChange={((...args) => this.changeAvatarSettings('position.y', ...args))}
-                            />
-                            <div>Rotate:</div>
-                            <RaisedButton
-                              label="Left"
-                              onClick={((...args) => this.rotate('left', ...args))}
-                            />
-                            <RaisedButton
-                              label="Right"
-                              onClick={((...args) => this.rotate('right', ...args))}
-                            />
-                            <br />
-                            <RaisedButton
-                              primary
-                              label="Preview"
-                              onClick={((...args) => this.handleSave(...args))}
-                            />
-                          </div>
-                        </div>
+                        </RaisedButton>
                       }
                     </Tab>
                   </Tabs>
                 </CardMedia>
               </Card>
+              <Snackbar
+                open={this.showNotification}
+                message={this.notificationMsg}
+                autoHideDuration={4000}
+                onRequestClose={this.handleNotificationClose}
+              />
             </Col>
           </Row>
         </Grid>

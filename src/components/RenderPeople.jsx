@@ -16,6 +16,7 @@ class RenderPeople extends Component {
         <List>
           {people.map((person) =>
             <DisplayPerson
+              key={person.id}
               person={person}
               badge={badge}
               key={person.id}

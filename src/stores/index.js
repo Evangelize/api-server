@@ -1,5 +1,6 @@
 import each from 'async/each';
 import { observable } from 'mobx';
+import auth from './auth';
 import classes from './classes';
 import Jobs from './jobs';
 import Messages from './messages';
@@ -9,6 +10,10 @@ import settings from './settings';
 import utils from './utils';
 
 const modules = [
+  {
+    name: 'auth',
+    klass: auth,
+  },
   {
     name: 'classes',
     klass: classes,
@@ -42,8 +47,12 @@ const modules = [
 export default class {
   @observable stores = {};
   constructor(db, events) {
+    const self = this;
     if (db && events) {
-      this.init(events);
+      this.init(events)
+      .then((data) => {
+        self.stores.auth.setupAuth(window.user);
+      });
     }
   }
 

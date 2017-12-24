@@ -1,24 +1,24 @@
 const moduleUtils = require('../lib/moduleUtils');
 module.exports = function (sequelize, DataTypes) {
-  const Families = sequelize.define(
-    'families',
+  const MemberAttendance = sequelize.define(
+    'memberAttendance',
     {
       id: {
         type: DataTypes.BLOB,
         primaryKey: true,
-        get: function()  {
+        get() {
           return moduleUtils.binToHex(this.getDataValue('id'));
         },
-        set: function(val) {
-          this.setDataValue('id', new Buffer(val, "hex"));
-        }
+        set(val) {
+          this.setDataValue('id', new Buffer(val, 'hex'));
+        },
       },
       entityId: {
         type: DataTypes.BLOB,
-        get: function () {
+        get() {
           return moduleUtils.binToHex(this.getDataValue('entityId'));
         },
-        set: function (val) {
+        set(val) {
           if (val) {
             this.setDataValue('entityId', new Buffer(val, 'hex'));
           } else {
@@ -26,14 +26,46 @@ module.exports = function (sequelize, DataTypes) {
           }
         },
       },
-      name: DataTypes.STRING(255),
-      familyName: DataTypes.STRING,
-      address1: DataTypes.STRING,
-      address2: DataTypes.STRING,
-      city: DataTypes.STRING,
-      state: DataTypes.STRING(2),
-      zipCode: DataTypes.STRING(20),
-      photoUrl: DataTypes.STRING,
+      worshipServiceId: {
+        type: DataTypes.BLOB,
+        get() {
+          return moduleUtils.binToHex(this.getDataValue('worshipServiceId'));
+        },
+        set(val) {
+          this.setDataValue('worshipServiceId', new Buffer(val, 'hex'));
+        },
+      },
+      day: DataTypes.INTEGER,
+      personId: {
+        type: DataTypes.BLOB,
+        primaryKey: true,
+        get()  {
+          return moduleUtils.binToHex(this.getDataValue('personId'));
+        },
+        set(val) {
+          this.setDataValue('personId', new Buffer(val, 'hex'));
+        },
+      },
+      attendanceDate: {
+        type: DataTypes.DATE,
+        get() {
+          if (this.getDataValue('attendanceDate')) {
+            return this.getDataValue('attendanceDate').getTime();
+          } else {
+            return null;
+          }
+        },
+      },
+      attendanceTypeId: {
+        type: DataTypes.BLOB,
+        primaryKey: true,
+        get()  {
+          return moduleUtils.binToHex(this.getDataValue('attendanceTypeId'));
+        },
+        set(val) {
+          this.setDataValue('attendanceTypeId', new Buffer(val, 'hex'));
+        },
+      },
       createdAt: {
         type: DataTypes.DATE,
         get() {
@@ -70,9 +102,10 @@ module.exports = function (sequelize, DataTypes) {
       },
     },
     {
-      paranoid: true
+      freezeTableName: true,
+      paranoid: true,
     }
   );
 
-  return Families;
+  return MemberAttendance;
 };

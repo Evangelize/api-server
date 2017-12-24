@@ -1,3 +1,6 @@
+const isBrowser = typeof window !== 'undefined';
+const ReactSocialLoginButtons = isBrowser ? require('react-social-login-buttons') : undefined;
+const GoogleLoginButton = isBrowser ? ReactSocialLoginButtons.GoogleLoginButton : undefined;
 import React, { Component } from 'react';
 import { inject, observer } from 'mobx-react';
 import { browserHistory } from 'react-router';
@@ -5,9 +8,10 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import CustomColors from '../components/CustomColors';
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
-import GoogleLogin from 'react-google-login';
 
-@inject('settings', 'sockets')
+
+
+@inject('auth', 'settings', 'sockets')
 @observer
 class Login extends Component {
   constructor(props, context) {
@@ -24,11 +28,32 @@ class Login extends Component {
 
   }
 
+  async socialLogin(type) {
+    let link;
+    this.error = null;
+    const { auth, sockets, settings } = this.props;
+    const result = await auth.login(type);
+    if (result.error && result.error.code === 'auth/account-exists-with-different-credential') {
+      link = await result.results.user.linkWithCredential(result.error.credential);
+      this.providers = result.providers;
+    } else if (result.error) {
+      this.error = result.error;
+      this.providers = result.providers;
+      this.loginButtonText = `Login with ${result.result.providers[0]}`;
+      this.open = true;
+    }
+    console.log(result.result);
+    if (!result.error) {
+      sockets.setupWs();
+      browserHistory.push('/dashboard');
+    }
+  }
+
   login() {
-    const { sockets, settings } = this.props;
+    const { auth, sockets, settings } = this.props;
     const self = this;
     self.setState({ error: null });
-    settings.authenticate(
+    auth.authenticate(
       this.state.email,
       this.state.password,
       (authenticated) => {
@@ -55,9 +80,9 @@ class Login extends Component {
   }
 
   responseGoogle = (response) => {
-    const { sockets, settings } = this.props;
+    const { auth, sockets, settings } = this.props;
     console.log(response);
-    settings.thirdPartyLogin(
+    auth.thirdPartyLogin(
       'google',
       response,
       (authenticated) => {
@@ -85,12 +110,11 @@ class Login extends Component {
             >
             </div>
             <div className="login-body">
-              <GoogleLogin
-                clientId="642847737907-diod4bhvk18nfn5dg7bjm6di0kpict2k.apps.googleusercontent.com"
-                buttonText="Login with GOOGLE"
-                onSuccess={this.responseGoogle}
-                onFailure={this.responseGoogle}
-              />
+              {isBrowser ?
+                <GoogleLoginButton
+                  onClick={((...args) => this.socialLogin('google', ...args))}
+                /> : null
+              }
               <TextField
                 hintText="Email"
                 floatingLabelText="Email"

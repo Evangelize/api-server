@@ -1,7 +1,7 @@
 const moduleUtils = require('../lib/moduleUtils');
 module.exports = function (sequelize, DataTypes) {
-  const Families = sequelize.define(
-    'families',
+  const AttendanceTypes = sequelize.define(
+    'attendanceTypes',
     {
       id: {
         type: DataTypes.BLOB,
@@ -26,14 +26,8 @@ module.exports = function (sequelize, DataTypes) {
           }
         },
       },
-      name: DataTypes.STRING(255),
-      familyName: DataTypes.STRING,
-      address1: DataTypes.STRING,
-      address2: DataTypes.STRING,
-      city: DataTypes.STRING,
-      state: DataTypes.STRING(2),
-      zipCode: DataTypes.STRING(20),
-      photoUrl: DataTypes.STRING,
+      title: DataTypes.STRING,
+      day: DataTypes.BOOLEAN,
       createdAt: {
         type: DataTypes.DATE,
         get() {
@@ -74,5 +68,5 @@ module.exports = function (sequelize, DataTypes) {
     }
   );
 
-  return Families;
+  return AttendanceTypes;
 };

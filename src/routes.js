@@ -1,8 +1,10 @@
 import React from 'react';
 import { Route, IndexRoute } from 'react-router';
 import App from './containers/App';
+import AddFamilyMember from './views/members/AddFamilyMember';
 import Dashboard from './views/Dashboard';
 import Families from './views/members/Families';
+import Family from './views/members/Family';
 import Login from './views/Login';
 import Member from './views/members/Member';
 import AddMember from './views/members/AddMember';
@@ -13,6 +15,7 @@ import Attendance from './views/classes/Attendance';
 import AddClassDayTeacher from './views/classes/AddClassDayTeacher';
 import AddClassStudents from './views/classes/AddClassStudents';
 import EditDayAttendance from './views/classes/EditDayAttendance';
+import EditWorshipAttendance from './views/worship/EditWorshipAttendance';
 import Classes from './views/classes/Classes';
 import Class from './views/classes/Class';
 import ClassGroupings from './views/classes/ClassGroupings';
@@ -22,23 +25,21 @@ import DivisionClasses from './views/classes/DivisionClasses';
 import DivisionClassesSelect from './views/classes/DivisionClassesSelect';
 import MeetingDaysSelect from './views/classes/MeetingDaysSelect';
 import WorshipServices from './views/worship/WorshipServices';
+import WorshipAttendance from './views/worship/WorshipAttendance';
 import WorshipJobsSelect from './views/worship/WorshipJobsSelect';
 import Jobs from './views/worship/Jobs';
 import JobMembers from './views/worship/JobMembers';
 import AssignJobs from './views/worship/AssignJobs';
 
-export default (settings) => {
-  // console.log('createRoutes', settings.authenticated);
+export default (auth) => {
   const requireAuth = (nextState, replace, callback) => {
-    // console.log('authenticated', settings.authenticated);
-    if (!settings.authenticated) {
+    if (!auth.authenticated) {
       replace('/login');
     }
     callback();
   };
   const redirect = (nextState, replace, callback) => {
-    // console.log('authenticated', settings.authenticated);
-    if (settings.authenticated) {
+    if (auth.authenticated) {
       replace('/dashboard');
     }
     callback();
@@ -48,6 +49,7 @@ export default (settings) => {
       <IndexRoute component={Dashboard} onEnter={requireAuth} />
       <Route
         path="login"
+        exact
         component={Login}
         onEnter={redirect}
       />
@@ -92,8 +94,23 @@ export default (settings) => {
         onEnter={requireAuth}
       />
       <Route
+        path="members/add/family"
+        component={Family}
+        onEnter={requireAuth}
+      />
+      <Route
         path="members/families"
         component={Families}
+        onEnter={requireAuth}
+      />
+      <Route
+        path="members/family/:id"
+        component={Family}
+        onEnter={requireAuth}
+      />
+      <Route
+        path="members/family/:id/add"
+        component={AddFamilyMember}
         onEnter={requireAuth}
       />
       <Route
@@ -168,6 +185,18 @@ export default (settings) => {
       <Route
         path="worship/assign"
         component={AssignJobs}
+        onEnter={requireAuth}
+      />
+      <Route
+        path="worship/attendance"
+        exact
+        component={WorshipAttendance}
+        onEnter={requireAuth}
+      />
+      <Route
+        path="worship/attendance/:date/:id"
+        exact
+        component={EditWorshipAttendance}
         onEnter={requireAuth}
       />
     </Route>

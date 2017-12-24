@@ -12,17 +12,17 @@ import Drawer from 'material-ui/Drawer';
 import { Modal } from 'react-overlays';
 import MediaQuery from 'react-responsive';
 
-@inject('classes', 'settings')
+@inject('auth', 'classes', 'settings')
 @observer
 class App extends Component {
   constructor(props, context) {
     super(props, context);
     console.log('App', context);
-    const { classes, settings } = props;
+    const { classes, auth, settings } = props;
     this.state = {
       muiTheme: getMuiTheme(CustomColors),
       open: false,
-      name: (settings.user) ? settings.user.firstName + ' ' + settings.user.lastName : '',
+      name: (auth.user) ? auth.userFullName : '',
       modal: classes.isUpdating,
     };
   }
@@ -61,7 +61,7 @@ class App extends Component {
   }
 
   render() {
-    const { settings } = this.props;
+    const { auth, settings } = this.props;
     const modalStyle = {
       position: 'fixed',
       zIndex: 1040,
@@ -106,7 +106,7 @@ class App extends Component {
         >
           <div />
         </Modal>
-        <div style={{ display: (settings.authenticated) ? 'block' : 'none' }}>
+        <div style={{ display: (auth.authenticated) ? 'block' : 'none' }}>
           <AppBar
             title="Evangelize"
             iconElementLeft={<IconButton onClick={this.showLeftNavClick}><NavigationMenu /></IconButton>}
@@ -129,7 +129,7 @@ class App extends Component {
               style={navHeader}
             >
               <div className="navName">
-                {settings.userFullName}
+                {auth.userFullName}
               </div>
             </div>
 
@@ -180,6 +180,11 @@ class App extends Component {
                     onClick={((...args) => this.handleLeftNavChange('/worship/assign', ...args))}
                     primaryText="Assign Jobs"
                   />,
+                  <ListItem
+                    key={4}
+                    onClick={((...args) => this.handleLeftNavChange('/worship/attendance', ...args))}
+                    primaryText="Attendance"
+                  />,
                 ]}
               />
               <ListItem
@@ -190,12 +195,12 @@ class App extends Component {
                   <ListItem
                     key={1}
                     onClick={((...args) => this.handleLeftNavChange('/members/search', ...args))}
-                    primaryText="Search/Browse"
+                    primaryText="Members"
                   />,
                   <ListItem
                     key={2}
                     onClick={((...args) => this.handleLeftNavChange('/members/families', ...args))}
-                    primaryText="Manage Families"
+                    primaryText="Families"
                   />,
                   <ListItem
                     key={3}
@@ -209,6 +214,7 @@ class App extends Component {
                 primaryText="Settings"
                 onClick={((...args) => this.handleLeftNavChange('/settings', ...args))}
               />
+              +
             </List>
           </Drawer>
         </div>
