@@ -2,11 +2,10 @@ import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import Promise from 'bluebird';
 import * as admin from 'firebase-admin';
-import settings from '../config/settings.json';
+import settings from '../config';
 import utils from '../src/lib/utils';
 import api from '../src/lib/server';
-const key = fs.readFileSync(settings.jwtKey);
-const serviceAccount = (settings.firebase.key) ? require(settings.firebase.key) : null;
+const key = fs.readFileSync(settings.tokenKey.private);
 const prefix = '/api/auth';
 
 const loginPayload = (results, cb) => {

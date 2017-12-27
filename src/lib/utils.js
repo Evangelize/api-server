@@ -1,10 +1,8 @@
 import Promise from 'bluebird';
 import async from 'async';
 import jwt from 'jsonwebtoken';
-import path from 'path';
-import nconf from 'nconf';
 import * as admin from 'firebase-admin';
-import settings from '../../config/settings.json';
+import settings from '../../config';
 import { createClient } from './redisClient';
 import api from './server';
 let pubClient;

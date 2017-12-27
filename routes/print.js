@@ -9,7 +9,6 @@ import utils from '../src/lib/utils';
 import fs from 'fs';
 import path from 'path';
 import PdfPrinter from 'pdfmake/src/printer';
-import settings from '../config/settings.json';
 const prefix = '/api/print';
 
 module.exports = [

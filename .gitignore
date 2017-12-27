@@ -4,6 +4,7 @@ dist/
 *.log
 *.map
 *.dist
+config/settings.js
 config/settings.json
 config/config.json
 /style.js

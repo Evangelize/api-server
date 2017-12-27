@@ -4,7 +4,6 @@ const env = process.env.NODE_ENV || 'development';
 import fs from 'fs';
 import path from 'path';
 import async from 'async';
-import nconf from 'nconf';
 import etag from 'etag';
 import Cron from 'cron';
 import mobxstore from 'mobx-store';
@@ -35,6 +34,7 @@ import parseCookies from '../src/lib/parseCookies';
 import createLocation from 'history/lib/createLocation';
 import { createClient } from './lib/redisClient';
 import { NotAuthorizedException, RedirectException } from './lib/errors';
+import settings from '../config/';
 
 let subClient;
 let cert;
@@ -165,25 +165,22 @@ export default function (HOST, PORT, callback) {
       register: AuthBearer,
     },
   ];
-  const settings = nconf.argv()
-       .env()
-       .file({ file: path.join(__dirname, '../config/settings.json') });
   // console.log("jwtCert", settings.get("jwtCert"));
-  cert = fs.readFileSync(settings.get('jwtCert'));
+  cert = fs.readFileSync(settings.tokenKey.public);
   utils.setCert(cert);
   // console.log("mysql", settings.get("mysql"));
   const server = new Hapi.Server();
   server.connection(
     {
-      host: settings.get('host') || HOST,
-      port: settings.get('port') || PORT,
+      host: settings.host || HOST,
+      port: settings.port || PORT,
     }
   );
-  const serviceAccount = settings.get('firebase:key');
+  const serviceAccount = settings.firebase.key;
   if (serviceAccount) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      databaseURL: settings.get('firebase:databaseUri'),
+      databaseURL: settings.firebase.databaseUri,
     });
   }
 
@@ -304,11 +301,8 @@ export default function (HOST, PORT, callback) {
                           <Provider {...context}><RouterContext {...renderProps} /></Provider>
                         );
                         console.log('ReactDOM: end render to string');
-                        const config = nconf.argv()
-                          .env()
-                          .file({ file: path.join(__dirname, '../config/settings.json') });
                         const script = process.env.NODE_ENV === 'production' ? '/dist/client.min.js' : '/hot/client.js';
-                        const websocketUri = `//${config.get('websocket:host')}:${settings.get('websocket:port')}`;
+                        const websocketUri = `//${settings.websocket.host}:${settings.websocket.port}`;
                         const output = (
                           `<!doctype html>
                           <html lang="en-us">

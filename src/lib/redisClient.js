@@ -1,23 +1,18 @@
 import redis from 'redis';
-import path from 'path';
-import nconf from 'nconf';
 import Promise from 'bluebird';
-const config = nconf.argv()
-    .env()
-    .file({ file: path.join(__dirname, '../../config/settings.json') });
-
+import settings from '../../config';
 export default {
   createClient(cb) {
-    return new Promise(function(resolve, reject){
+    return new Promise((resolve, reject) => {
       let client;
       client = redis.createClient(
-        config.get("redis:port"),
-        config.get("redis:host")
+        settings.redis.port,
+        settings.redis.host
       );
-      if (config.get("redis:db") >= 0) {
+      if (settings.redis.db >= 0) {
         client.select(
-          config.get("redis:db"),
-          function() {
+          settings.redis.db,
+          () => {
             resolve(client);
           }
         );

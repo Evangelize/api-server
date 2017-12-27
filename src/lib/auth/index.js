@@ -1,7 +1,7 @@
-const config = require('../../../config/settings.json');
+import settings from '../../../config';
 import firebase from 'firebase';
-
-firebase.initializeApp(config.firebase);
+console.log(settings.firebase);
+firebase.initializeApp(settings.firebase);
 
 export const ref = firebase.database().ref();
 export const firebaseAuth = firebase.auth;

@@ -11,7 +11,7 @@ import path from 'path';
 const Minio = require('minio');
 import stream from 'stream';
 import http from 'http';
-import settings from '../config/settings.json';
+import settings from '../config';
 const pushMessage = (message) => {
   utils.pushMessage(`import.${message.type}`, message);
 };

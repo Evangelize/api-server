@@ -2,7 +2,7 @@ import Promise from 'bluebird';
 import path from 'path';
 import nconf from 'nconf';
 const Minio = require('minio');
-const settings = require(path.join(__dirname, '../../config/settings.json'));
+import settings from '../../config';
 let minioClient;
 
 if (settings.s3) {
