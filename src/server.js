@@ -180,7 +180,7 @@ export default function (HOST, PORT, callback) {
   if (serviceAccount) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      databaseURL: settings.firebase.databaseUri,
+      databaseURL: settings.firebase.databaseURL,
     });
   }
 

@@ -47,6 +47,12 @@ module.exports = {
   firebase: {
     serviceAccount: process.env.FIREBASE_SERVICE_ACCOUNT_JSON || settings.firebase.serviceAccount || null,
     databaseURL: process.env.FIREBASE_DATABASE_URL || settings.firebase.databaseURL || 'https://xxxx.firebaseio.com',
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN || settings.firebase.authDomain || 'evangelize-75f29.firebaseapp.com',
+    projectId: process.env.FIREBASE_PROJECT_ID || settings.firebase.projectId || 'project Id',
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || settings.firebase.storageBucket || 'xxxx.appspot.com',
+    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || settings.firebase.messagingSenderId || 'messaging sender id',
+    fbAppId: process.env.FIREBASE_FB_APP_ID || settings.firebase.fbAppId || 'fb app id',
+    webClientId: process.env.FIREBASE_WEB_CLIENT_ID || settings.firebase.webClientId || 'webclient id',
   },
   s3: {
     endPoint: process.env.S3_ENDPOINT || settings.s3.endpoint || 'minio-eu1.evangelize.io',
