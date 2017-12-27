@@ -1,4 +1,4 @@
-import settings from '../../../config';
+const settings = (window) ? window.serverSettings : require('../../../config');
 import firebase from 'firebase';
 console.log(settings.firebase);
 firebase.initializeApp(settings.firebase);

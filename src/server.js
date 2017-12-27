@@ -312,6 +312,7 @@ export default function (HOST, PORT, callback) {
                                 var dbJson = ${finalDb};
                                 var mobxStore = ${finalMobx};
                                 var entityId = '${entityId}';
+                                var serverSettings = '${settings}';
                                 var user = '${JSON.stringify({ payload })}';
                               </script>
                               <meta charset="utf-8">
