@@ -1,4 +1,4 @@
-const settings = (window) ? window.serverSettings : require('../../../config');
+const settings = (typeof window !== 'undefined') ? window.serverSettings : require('../../../config');
 import firebase from 'firebase';
 console.log(settings.firebase);
 firebase.initializeApp(settings.firebase);
