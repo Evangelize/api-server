@@ -52,7 +52,7 @@ module.exports = {
     storageBucket: process.env.FIREBASE_STORAGE_BUCKET || settings.firebase.storageBucket || 'xxxx.appspot.com',
     messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || settings.firebase.messagingSenderId || 'messaging sender id',
     fbAppId: process.env.FIREBASE_FB_APP_ID || settings.firebase.fbAppId || 'fb app id',
-    webClientId: process.env.FIREBASE_WEB_CLIENT_ID || settings.firebase.webClientId || 'webclient id',
+    apiKey: process.env.FIREBASE_API_KEY || settings.firebase.apiKey || 'api key',
   },
   s3: {
     endPoint: process.env.S3_ENDPOINT || settings.s3.endpoint || 'minio-eu1.evangelize.io',
