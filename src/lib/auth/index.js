@@ -1,4 +1,4 @@
-const settings = (typeof process.env.BROWSER !== 'undefined') ? require('../../../config/webSettings') : require('../../../config');
+const settings = (typeof window === 'object') ? require('../../../config/webSettings') : require('../../../config');
 import firebase from 'firebase';
 console.log(settings.firebase);
 firebase.initializeApp(settings.firebase);
