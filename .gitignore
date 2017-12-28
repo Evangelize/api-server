@@ -5,6 +5,7 @@ dist/
 *.map
 *.dist
 config/settings.js
+config/webSettings.js
 config/settings.json
 config/config.json
 /style.js
