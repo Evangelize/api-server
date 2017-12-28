@@ -27,8 +27,8 @@ module.exports = {
       'process.env': {
         NODE_ENV: JSON.stringify('production'),
         BROWSER: 1,
-        'typeof window': JSON.stringify('object'),
       },
+      'typeof window': JSON.stringify('object'),
     }),
     featureFlagsPlugin,
     new webpack.optimize.DedupePlugin(),
