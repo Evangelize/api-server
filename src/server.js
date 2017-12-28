@@ -7,7 +7,6 @@ import async from 'async';
 import etag from 'etag';
 import Cron from 'cron';
 import mobxstore from 'mobx-store';
-import * as admin from 'firebase-admin';
 
 
 // Hapi server imports
@@ -176,13 +175,6 @@ export default function (HOST, PORT, callback) {
       port: settings.port || PORT,
     }
   );
-  const serviceAccount = settings.firebase.key;
-  if (serviceAccount) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      databaseURL: settings.firebase.databaseURL,
-    });
-  }
 
   if (env === 'development') {
     const webpack = require('webpack');

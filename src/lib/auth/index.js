@@ -1,4 +1,4 @@
-const settings = (typeof window === 'object') ? require('../../../config/webSettings') : require('../../../config');
+import settings from '../../../config/webSettings';
 import firebase from 'firebase';
 console.log(settings.firebase);
 firebase.initializeApp(settings.firebase);

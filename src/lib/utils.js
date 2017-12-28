@@ -1,7 +1,7 @@
 import Promise from 'bluebird';
 import async from 'async';
 import jwt from 'jsonwebtoken';
-import * as admin from 'firebase-admin';
+import { getUser } from './firebase-admin';
 import settings from '../../config';
 import { createClient } from './redisClient';
 import api from './server';
@@ -130,9 +130,6 @@ export default {
       );
     });
   },
-  getFirebaseUser(uid) {
-    return admin.auth().getUser(uid);
-  },
   validateJwt(token, callback) {
     const payload = {
       decoded: null,
@@ -155,7 +152,7 @@ export default {
           return callback(err, false, decoded);
         }
         const uid = decoded.uid;
-        this.getFirebaseUser(uid)
+        getUser(uid)
         .then(
           (firebase) => {
             if (firebase) {
