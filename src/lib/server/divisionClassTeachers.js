@@ -4,9 +4,15 @@ import Promise from 'bluebird';
 import people from './people';
 
 export default {
-  all() {
+  all(lastUpdate) {
+    const where = (lastUpdate) ? {
+      updatedAt: {
+        $gte: lastUpdate,
+      },
+    } : {};
     return new Promise((resolve, reject) => {
       models.DivisionClassTeachers.findAll({
+        where,
         order: [
           ['updatedAt', 'DESC'],
         ],

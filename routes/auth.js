@@ -9,8 +9,13 @@ const key = fs.readFileSync(settings.tokenKey.private);
 const prefix = '/api/auth';
 
 const loginPayload = (results, cb) => {
+  let retVal;
   if (results) {
-    jwt.sign(
+    retVal = {
+      user: results,
+      jwt: null,
+    };
+    retVal.jwt = jwt.sign(
       results.user,
       key,
       {
@@ -18,24 +23,18 @@ const loginPayload = (results, cb) => {
         issuer: 'evangelizeIo',
         algorithm: 'RS256',
       },
-      (err, token) => {
-        const payload = {
-          user: results,
-          jwt: token,
-        };
-        cb(payload);
-      }
     );
-  } else {
-    cb();
   }
+
+  return retVal;
 };
 
-const sendResponse = (reply, payload, state, code) => {
+const sendResponse = (h, payload, state, code) => {
   if (state) {
-    reply(payload).state(state.type, state.payload).code(code);
+    // reply(payload).state(state.type, state.payload).code(code);
   } else {
-    reply(payload).code(code);
+    return h.response(payload)
+    .code(code);
   }
 };
 
@@ -51,7 +50,8 @@ const login = (request, reply) => {
         results,
         (payload) => {
           if (payload) {
-            sendResponse(reply, payload, null, 200);
+            //sendResponse(reply, payload, null, 200);
+            return payload;
           } else {
             const state = {
               type: 'data',
@@ -59,14 +59,16 @@ const login = (request, reply) => {
                 firstVisit: false,
               },
             };
-            sendResponse(reply, results, state, 401);
+            sendResponse(h, results, state, 401);
+            //return results;
           }
         }
       );
     },
     (err) => {
       console.log(err);
-      sendResponse(reply, err, null, 401);
+      //sendResponse(reply, err, null, 401);
+      return err;
     }
   );
 };
@@ -99,7 +101,7 @@ const getGoogleLogin = (token) => {
 };
 
 
-const thirdPartyLogin = (request, reply) => {
+const thirdPartyLogin = (request, h) => {
   console.log(request.payload);
   const type = request.payload.type;
   const token = request.payload.token;
@@ -109,14 +111,15 @@ const thirdPartyLogin = (request, reply) => {
     person: null,
   };
   if (type === 'google') {
-    getGoogleLogin(token)
+    return getGoogleLogin(token)
     .then(
       (results) => {
+        let retVal;
         console.log(results);
         if (results && request.payload.username) {
           const user = results;
           user.username = `${user.firstName} ${user.lastName}`;
-          sendResponse(reply, user, null, 200);
+          retVal = user;
         } else {
           result = Object.assign(
             {},
@@ -131,27 +134,17 @@ const thirdPartyLogin = (request, reply) => {
               person: results,
             }
           );
-          loginPayload(
-            result,
-            (payload) => {
-              if (payload) {
-                sendResponse(reply, payload, null, 200);
-              } else {
-                const state = {
-                  type: 'data',
-                  payload: { firstVisit: false },
-                };
-                sendResponse(reply, results, state, 401);
-              }
-            }
-          );
+          retVal = loginPayload(result);
         }
+
+        return retVal;
       },
     )
     .catch(
       (err) => {
         console.log(err);
-        sendResponse(reply, err, null, 401);
+        //sendResponse(reply, err, null, 401);
+        return err;
       }
     );
   }

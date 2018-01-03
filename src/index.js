@@ -1,34 +1,21 @@
+import * as OfflinePluginRuntime from 'offline-plugin/runtime';
+OfflinePluginRuntime.install();
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import DevTools from 'mobx-react-devtools';
-import { Provider } from 'mobx-react';
+import { browserHistory, Router } from 'react-router';
+import EventEmitter from 'eventemitter3';
 // import waterfall from 'async/waterfall';
 // import Promise from 'bluebird';
 // import moment from 'moment';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import reactCookie from 'react-cookie';
+import Root from './components/Root';
 import Db from './stores/db';
 import Stores from './stores';
 import Sockets from './stores/sockets';
 import routes from './routes';
-import { browserHistory, Router } from 'react-router';
-import EventEmitter from 'eventemitter3';
-const stores = new Stores();
 
-class Root extends Component {
-  render() {
-    return (
-      <div>
-        <Provider {...this.props.context}>
-          <Router history={this.props.history} routes={this.props.routes}></Router>
-        </Provider>
-        {__DEV__ &&
-          <DevTools />
-        }
-      </div>
-    );
-  }
-}
+const stores = new Stores();
 
 let db;
 const events = new EventEmitter();

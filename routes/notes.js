@@ -15,11 +15,13 @@ module.exports = [
       .then(
         function(results) {
           utils.pushMessage("notes.ADD_NOTE_FULFILLED", results);
-          reply( results ).code( 200 );
+          //reply( results ).code( 200 );
+          return results;
         },
         function(err) {
           console.log(err);
-          reply( err ).code( 200 );
+          //reply( err ).code( 200 );
+          return err;
         }
       );
     }
@@ -37,11 +39,13 @@ module.exports = [
       .then(
         function(results) {
           utils.pushMessage("notes.UPDATE_NOTE_FULFILLED", results);
-          reply( results ).code( 200 );
+          //reply( results ).code( 200 );
+          return results;
         },
         function(err) {
           console.log(err);
-          reply( err ).code( 200 );
+          //reply( err ).code( 200 );
+          return err;
         }
       );
     }

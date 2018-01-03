@@ -16,11 +16,13 @@ module.exports = [
       )
       .then(
         (results) => {
-          reply(results).code(200);
+          //reply(results).code(200);
+          return results;
         },
         (err) => {
           console.log(err);
-          reply(err).code(200);
+          //reply(err).code(200);
+          return err;
         }
       );
     },
@@ -37,10 +39,12 @@ module.exports = [
         )
         .then(
           (results) => {
-            reply(results).code(200);
+            //reply(results).code(200);
+            return results;
           },
           (err) => {
-            reply(err).code(500);
+            //reply(err).code(500);
+            return err;
           }
         );
       };
@@ -53,7 +57,7 @@ module.exports = [
         (results) => {
           const img = Buffer.from(request.payload.file.split(',')[1], 'base64');
           const url = `https://minio-eu1.evangelize.io/${request.payload.entityId}/${request.payload.fileName}`;
-          upload.photo(
+          return upload.photo(
             request.payload.entityId,
             request.payload.fileName,
             request.payload.mimeType,
@@ -67,13 +71,15 @@ module.exports = [
           ).catch(
             (err) => {
               console.log(err);
-              reply(err).code(500);
+              //reply(err).code(500);
+              return err;
             }
           );
         },
         (err) => {
           console.log(err);
-          reply(err).code(500);
+          //reply(err).code(500);
+          return err;
         }
       );
     },

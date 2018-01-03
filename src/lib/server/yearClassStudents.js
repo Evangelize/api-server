@@ -3,9 +3,19 @@ import Promise from 'bluebird';
 import people from './people';
 
 export default {
-  all() {
+  all(lastUpdate) {
+    const where = (lastUpdate) ? {
+      updatedAt: {
+        $gte: lastUpdate,
+      },
+    } : {};
     return new Promise((resolve, reject) => {
-      models.YearClassStudents.findAll().then(
+      models.YearClassStudents.findAll({
+        where,
+        order: [
+          ['updatedAt', 'DESC'],
+        ],
+      }).then(
         (result) => resolve(result),
         (err) => reject(err)
       );

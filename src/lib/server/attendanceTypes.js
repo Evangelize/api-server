@@ -3,9 +3,15 @@ import async from 'async';
 import Promise from 'bluebird';
 
 export default {
-  all() {
+  all(lastUpdate) {
+    const where = (lastUpdate) ? {
+      updatedAt: {
+        $gte: lastUpdate,
+      },
+    } : {};
     return new Promise((resolve, reject) => {
       models.AttendanceTypes.findAll({
+        where,
         order: [
           ['title', 'ASC'],
         ],

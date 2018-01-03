@@ -17,11 +17,13 @@ module.exports = [
       .then(
         function(results) {
           utils.pushMessage("classes.UPDATE_DIVISION_CLASS_TEACHER_FULFILLED", results);
-          reply( results ).code( 200 );
+          //reply( results ).code( 200 );
+          return results;
         },
         function(err) {
           console.log(err);
-          reply( err ).code( 200 );
+          //reply( err ).code( 200 );
+          return err;
         }
       );
     }
@@ -39,11 +41,13 @@ module.exports = [
       .then(
         function(results) {
           utils.pushMessage("classes.UPDATE_DIVISION_CLASS_TEACHER_FULFILLED", results);
-          reply( results ).code( 200 );
+          //reply( results ).code( 200 );
+          return results;
         },
         function(err) {
           console.log(err);
-          reply( err ).code( 200 );
+          //reply( err ).code( 200 );
+          return err;
         }
       );
     }
@@ -53,19 +57,10 @@ module.exports = [
     path: prefix + '/{classId}/teacher/{classTeacherId}',
     handler: function (request, reply) {
       //console.log(request.params);
-      api
+      return api
       .classes
       .deleteTeacher(
         request.params.classTeacherId
-      )
-      .then(
-        function(results) {
-          reply( results ).code( 200 );
-        },
-        function(err) {
-          console.log(err);
-          reply( err ).code( 200 );
-        }
       );
     }
   },
@@ -100,11 +95,13 @@ module.exports = [
               console.log(err);
             }
           );
-          reply( results ).code( 200 );
+          //reply( results ).code( 200 );
+          return results;
         },
         function(err) {
           console.log(err);
-          reply( err ).code( 200 );
+          //reply( err ).code( 200 );
+          return err;
         }
       );
     }

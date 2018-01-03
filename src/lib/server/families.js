@@ -2,9 +2,15 @@ import models from '../../models';
 import Promise from 'bluebird';
 
 export default {
-  all() {
+  all(lastUpdate) {
+    const where = (lastUpdate) ? {
+      updatedAt: {
+        $gte: lastUpdate,
+      },
+    } : {};
     return new Promise((resolve, reject) => {
       models.Families.findAll({
+        where,
         order: [
           ['updatedAt', 'DESC'],
         ],

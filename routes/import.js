@@ -340,7 +340,8 @@ module.exports = [
           }
         }
       );
-      reply({ processing: true }).code(200);
+      //reply({ processing: true }).code(200);
+      return { processing: true };
     },
   },
 ];

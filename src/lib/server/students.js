@@ -105,10 +105,16 @@ export default {
       );
     });
   },
-  all() {
+  all(lastUpdate) {
+    const where = (lastUpdate) ? {
+      updatedAt: {
+        $gte: lastUpdate,
+      },
+    } : {};
     return new Promise((resolve, reject) => {
       models.Students.findAll(
         {
+          where,
           order: [
             ['updatedAt', 'DESC'],
           ],

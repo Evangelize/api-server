@@ -3,9 +3,15 @@ import Promise from 'bluebird';
 import async from 'async';
 
 export default {
-  all() {
+  all(lastUpdate) {
+    const where = (lastUpdate) ? {
+      updatedAt: {
+        $gte: lastUpdate,
+      },
+    } : {};
     return new Promise((resolve, reject) => {
       models.Notes.findAll({
+        where,
         order: [
           ['updatedAt', 'DESC'],
         ],

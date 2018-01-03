@@ -6,9 +6,6 @@ module.exports = [
   {
     method: 'POST',
     path: `${prefix}/presentations`,
-    config: {
-      auth: 'authBearer',
-    },
     handler: (request, reply) => {
       const user = request.auth.credentials;
       const presentation = Object.assign(
@@ -20,23 +17,12 @@ module.exports = [
           entityId: user.entityId,
         }
       );
-      api.presentations
-      .insert(presentation)
-      .then(
-        (results) => reply({ results }).code(200),
-        (err) => reply({ err }).code(500)
-      )
-      .catch(
-        (err) => reply({ err }).code(500)
-      );
+      return api.presentations.insert(presentation);
     },
   },
   {
     method: 'PATCH',
     path: `${prefix}/presentations/{id}`,
-    config: {
-      auth: 'authBearer',
-    },
     handler: (request, reply) => {
       const user = request.auth.credentials;
       const presentation = Object.assign(
@@ -48,47 +34,27 @@ module.exports = [
           entityId: user.entityId,
         }
       );
-      api.presentations
-      .update(presentation)
-      .then(
-        (results) => reply(results).code(200),
-        (err) => reply({ err }).code(500)
-      )
-      .catch(
-        (err) => reply({ err }).code(500)
-      );
+      return api.presentations.update(presentation);
     },
   },
   {
     method: 'GET',
     path: `${prefix}/presentations`,
-    config: {
-      auth: 'authBearer',
-    },
-    handler: (request, reply) => {
+    handler: (request, h) => {
       const peopleId = request.auth.credentials.id;
-      api.presentations
-      .getAllByUser(peopleId)
-      .then(
-        (results) => reply({ results }).code(200),
-        (err) => reply({ err }).code(500)
-      );
+      if (peopleId) {
+        return api.presentations.getAllByUser(peopleId);
+      } else {
+        return { success: false };
+      }
     },
   },
   {
     method: 'GET',
     path: `${prefix}/presentations/{id}`,
-    config: {
-      auth: 'authBearer',
-    },
     handler: (request, reply) => {
       const id = request.params.id;
-      api.presentations
-      .get(id)
-      .then(
-        (results) => reply(results).code(200),
-        (err) => reply({ err }).code(500)
-      );
+      return api.presentations.get(id);
     },
   },
 ];

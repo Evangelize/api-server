@@ -57,10 +57,16 @@ export default {
       );
     });
   },
-  all() {
+  all(lastUpdate) {
+    const where = (lastUpdate) ? {
+      updatedAt: {
+        $gte: lastUpdate,
+      },
+    } : {};
     return new Promise((resolve, reject) => {
       models.DivisionClassAttendance.findAll(
         {
+          where,
           order: 'id ASC',
         }
       ).then(

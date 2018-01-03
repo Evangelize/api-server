@@ -5,37 +5,19 @@ module.exports = [
   {
     method: 'POST',
     path: prefix,
-    handler: function (request, reply) {
-      api
+    handler: function (request, h) {
+      return api
       .students
-      .add(request.payload.peopleId)
-      .then(
-        function(results) {
-          reply( results ).code( 200 );
-        },
-        function(err) {
-          console.log(err);
-          reply( err ).code( 200 );
-        }
-      );
-    }
+      .add(request.payload.peopleId);
+    },
   },
    {
     method: 'DELETE',
-    path: prefix + "/{peopleId}",
-    handler: function (request, reply) {
-      api
+    path: `${prefix}/{peopleId}`,
+    handler: function (request, h) {
+      return api
       .students
-      .delete(request.params.peopleId)
-      .then(
-        function(results) {
-          reply( results ).code( 200 );
-        },
-        function(err) {
-          console.log(err);
-          reply( err ).code( 200 );
-        }
-      );
-    }
-  }
+      .delete(request.params.peopleId);
+    },
+  },
 ];

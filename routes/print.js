@@ -1,5 +1,3 @@
-import Joi from 'joi';
-import _ from 'lodash';
 import moment from 'moment-timezone';
 import async from 'async';
 import iouuid from 'innodb-optimized-uuid';
@@ -8,14 +6,14 @@ import models from '../src/models';
 import utils from '../src/lib/utils';
 import fs from 'fs';
 import path from 'path';
-import PdfPrinter from 'pdfmake/src/printer';
+import pdfmake from 'pdfmake';
 const prefix = '/api/print';
 
 module.exports = [
   {
     method: 'GET',
     path: `${prefix}/division/{id}/placards`,
-    handler: (request, reply) => {
+    handler: (request, h) => {
       const divPlacard = {
         division: null,
         meetingDays: null,
@@ -74,7 +72,7 @@ module.exports = [
         },
       };
       const finish = (pdf) => {
-        reply(pdf)
+        h.response(pdf)
         .type('application/pdf')
         .header('Content-Disposition', 'attachment; filename="placard.pdf"')
         .header('Content-Length', pdf.length)

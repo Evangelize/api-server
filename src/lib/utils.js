@@ -1,6 +1,7 @@
 import Promise from 'bluebird';
 import async from 'async';
 import jwt from 'jsonwebtoken';
+import moment from 'moment';
 import { getUser } from './firebase-admin';
 import settings from '../../config';
 import { createClient } from './redisClient';
@@ -92,14 +93,15 @@ export default {
       );
     });
   },
-  getAllTables() {
+  getAllTables(lastUpdate) {
+    const update = (lastUpdate) ? moment(lastUpdate, 'X').format('YYYY-MM-DD HH:mm:ss') : lastUpdate;
     return new Promise((resolve, reject) => {
       let retVal = {};
       async.each(
         Object.keys(api), 
         (prop, callback) => {
           console.log('Get table:', prop);
-          api[prop].all()
+          api[prop].all(update)
           .then(
             (items) => {
               async.map(
