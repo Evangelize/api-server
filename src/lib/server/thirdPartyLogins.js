@@ -71,16 +71,18 @@ export default {
       },
     });
   },
-  findPerson(first, last) {
+  findPerson(first, last, email) {
     return people.fuzzySearch(
       first,
       last,
+      email,
     );
   },
-  addLoginRecord(type, externalId, firstName, lastName) {
+  addLoginRecord(type, externalId, firstName, lastName, email) {
     return this.findPerson(
       firstName,
       lastName,
+      email,
     )
     .then(
       (results) => {

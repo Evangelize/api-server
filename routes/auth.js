@@ -77,7 +77,9 @@ const getName = (token) => {
   const payload = {
     firstName: null,
     lastName: null,
+    email: null,
   };
+  payload.email = token.email;
   if (token.user) {
     payload.firstName = token.additionalUserInfo.profile.given_name;
     payload.lastName = token.additionalUserInfo.profile.family_name;
@@ -91,12 +93,13 @@ const getName = (token) => {
 
 const getGoogleLogin = (token) => {
   const uid = (token.user) ? token.user.uid : token.uid;
-  const { firstName, lastName } = getName(token);
+  const { firstName, lastName, email } = getName(token);
   return api.thirdPartyLogins.search(
     'google',
     uid,
     firstName,
     lastName,
+    email,
   );
 };
 
