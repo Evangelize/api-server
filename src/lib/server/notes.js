@@ -3,12 +3,15 @@ import Promise from 'bluebird';
 import async from 'async';
 
 export default {
-  all(lastUpdate) {
+  all(entityId, lastUpdate) {
     const where = (lastUpdate) ? {
       updatedAt: {
         $gte: lastUpdate,
       },
     } : {};
+    if (entityId) {
+      where.entityId = entityId;
+    }
     return new Promise((resolve, reject) => {
       models.Notes.findAll({
         where,

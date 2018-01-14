@@ -12,24 +12,24 @@ export default {
       where.entityId = entityId;
     }
     return new Promise((resolve, reject) => {
-      models.WorshipServices.findAll({
+      models.Groups.findAll({
         where,
         order: [
           ['updatedAt', 'DESC'],
         ],
       }).then(
-        (result) => resolve(result),
+        (results) => resolve(results),
         (err) => reject(err)
       );
     });
   },
   get(id) {
     return new Promise((resolve, reject) => {
-      const recordId = new Buffer(id, 'hex');
-      models.WorshipServices.findOne(
+      const newId = new Buffer(id, 'hex');
+      models.Groups.findOne(
         {
           where: {
-            id: recordId,
+            id: newId,
           },
         }
       ).then(
@@ -39,11 +39,11 @@ export default {
     });
   },
   insert(record) {
-    const newrecord = Object.assign({}, record);
-    newrecord.id = new Buffer(record.id, 'hex');
+    record.id = new Buffer(record.id, 'hex');
+    record.entityId = (record.entityId) ? new Buffer(record.entityId, 'hex') : null;
     return new Promise((resolve, reject) => {
-      models.WorshipServices.create(
-        newrecord
+      models.Groups.create(
+        record
       ).then(
         (result) => resolve(result),
         (err) => reject(err)
@@ -51,21 +51,22 @@ export default {
     });
   },
   update(record) {
+    console.log(record);
     return new Promise((resolve, reject) => {
-      const newrecord = Object.assign({}, record);
-      newrecord.id = new Buffer(record.id, 'hex');
-      models.WorshipServices.update(
-        newrecord,
+      record.id = new Buffer(record.id, 'hex');
+      record.entityId = (record.entityId) ? new Buffer(record.entityId, 'hex') : null;
+      models.Groups.update(
+        record,
         {
           where: {
-            id: newrecord.id,
+            id: record.id,
           },
         }
       ).then(
         () => {
-          models.WorshipServices.findOne({
+          models.Groups.findOne({
             where: {
-              id: newrecord.id,
+              id: record.id,
             },
           }).then(
             (result) => resolve(result),
@@ -78,12 +79,12 @@ export default {
   },
   delete(record) {
     return new Promise((resolve, reject) => {
-      models.WorshipServices.destroy({
+      models.Groups.destroy({
         where: {
           id: new Buffer(record.id, 'hex'),
         },
       }).then(
-        () => resolve(record),
+        (result) => resolve(result),
         (err) => reject(err)
       );
     });

@@ -2,12 +2,15 @@ import models from '../../models';
 import Promise from 'bluebird';
 
 export default {
-  all(lastUpdate) {
+  all(entityId, lastUpdate) {
     const where = (lastUpdate) ? {
       updatedAt: {
         $gte: lastUpdate,
       },
     } : {};
+    if (entityId) {
+      where.entityId = entityId;
+    }
     return new Promise((resolve, reject) => {
       models.Users.findAll({
         where,

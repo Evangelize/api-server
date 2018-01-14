@@ -5,12 +5,15 @@ import iouuid from 'innodb-optimized-uuid';
 import moment from 'moment-timezone';
 
 export default {
-  all(lastUpdate) {
+  all(entityId, lastUpdate) {
     const where = (lastUpdate) ? {
       updatedAt: {
         $gte: lastUpdate,
       },
     } : {};
+    if (entityId) {
+      where.entityId = entityId;
+    }
     return models.ThirdPartyLogins.findAll({
       where,
       order: [
@@ -86,51 +89,45 @@ export default {
     )
     .then(
       (results) => {
-        if (results.length) {
-          const id = iouuid.generate().toLowerCase();
-          const ts = moment.utc().format('YYYY-MM-DDTHH:mm:ss.sssZ');
-          return this.insert({
-            id,
-            peopleId: results[0].id.toString('hex'),
-            type,
-            externalId,
-            createdAt: ts,
-            updatedAt: ts,
-            deletedAt: null,
-          })
-          .then(
-            () => this.search(type, externalId, firstName, lastName),
-            (err) => Promise.reject(err)
-          );
-        } else {
-          return Promise.reject({
-            success: false,
-            reason: 'No user could be found',
-          });
-        }
-      },
+        const id = iouuid.generate().toLowerCase();
+        const ts = moment.utc().format('YYYY-MM-DDTHH:mm:ss.sssZ');
+        const peopleId = (results.length) ? results[0].id.toString('hex') : null;
+        const entityId = (results.length) ? results[0].entityId.toString('hex') : null;
+        return this.insert({
+          id,
+          peopleId,
+          entityId,
+          type,
+          externalId,
+          createdAt: ts,
+          updatedAt: ts,
+          deletedAt: null,
+        }).then(
+          () => this.search(type, externalId, firstName, lastName),
+          (err) => Promise.reject(err)
+        );
+      }
+    ).catch(
       (err) => Promise.reject(err)
-    );
+    )
   },
   search(type, id, firstName, lastName) {
     return this
     .get('google', id)
     .then(
       (results) => {
+        let retVal;
         if (results.length) {
-          return people.get(results[0].peopleId)
-          .then(
-            (result) => Promise.resolve(result),
-            (err) => Promise.reject(err)
-          );
+          retVal = (results[0].peopleId) ? people.get(results[0].peopleId) : null;
         } else {
-          return this.addLoginRecord(
+          retVal = this.addLoginRecord(
             type,
             id,
             firstName,
             lastName,
           );
         }
+        return retVal;
       }
     );
   },

@@ -40,7 +40,8 @@ module.exports = [
     method: 'POST',
     path: `${prefix}getAllTables`,
     handler(request, h) {
-      return utils.getAllTables(request.payload.lastUpdate);
+      const entityId = request.auth.artifacts.user.entityId;
+      return utils.getAllTables(entityId, request.payload.lastUpdate);
     },
   },
 ];

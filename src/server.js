@@ -173,7 +173,6 @@ const start = async () => {
             isValid = true;
           }
         }
-
         return { isValid, credentials, artifacts };
       },
     },

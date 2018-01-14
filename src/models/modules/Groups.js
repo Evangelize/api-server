@@ -1,7 +1,7 @@
 const moduleUtils = require('../../lib/moduleUtils');
 module.exports = function (sequelize, DataTypes) {
-  const AttendanceTypes = sequelize.define(
-    'attendanceTypes',
+  const Groups = sequelize.define(
+    'groups',
     {
       id: {
         type: DataTypes.BLOB,
@@ -10,7 +10,7 @@ module.exports = function (sequelize, DataTypes) {
           return moduleUtils.binToHex(this.getDataValue('id'));
         },
         set: function(val) {
-          this.setDataValue('id', new Buffer(val, "hex"));
+          this.setDataValue('id', new Buffer(val, 'hex'));
         }
       },
       entityId: {
@@ -26,9 +26,7 @@ module.exports = function (sequelize, DataTypes) {
           }
         },
       },
-      title: DataTypes.STRING,
-      absent: DataTypes.BOOLEAN,
-      defaultType: DataTypes.BOOLEAN,
+      title: DataTypes.STRING(255),
       createdAt: {
         type: DataTypes.DATE,
         get() {
@@ -69,5 +67,5 @@ module.exports = function (sequelize, DataTypes) {
     }
   );
 
-  return AttendanceTypes;
+  return Groups;
 };

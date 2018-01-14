@@ -93,44 +93,33 @@ export default {
       );
     });
   },
-  getAllTables(lastUpdate) {
+  getAllTables(entityId, lastUpdate) {
     const update = (lastUpdate) ? moment(lastUpdate, 'X').format('YYYY-MM-DD HH:mm:ss') : lastUpdate;
-    return new Promise((resolve, reject) => {
-      let retVal = {};
-      async.each(
-        Object.keys(api), 
-        (prop, callback) => {
-          console.log('Get table:', prop);
-          api[prop].all(update)
-          .then(
-            (items) => {
-              async.map(
-                items,
-                (item, cb) => {
-                  cb(null, item.get({ plain: true }));
-                },
-                (err, result) => {
-                  retVal[prop] = result;
-                  callback(null);
-                }
-              );
-            },
-            (err) => {
-              callback(err);
-            }
-          );
-        },
-        (err) => {
-          if (err) {
-            console.log(err);
-            reject(err);
-          } else {
-            resolve(retVal);
-          }
-          return null;
-        }
-      );
-    });
+    const bEntityId = (entityId) ? new Buffer(entityId, 'hex') : null;
+    const exclude = [
+      'thirdPartyLogins',
+    ];
+    const keys = Object.keys(api).filter(k => !exclude.includes(k));
+    const getTable = async (key) => {
+      const table = await api[key].all(bEntityId, update);
+      const values = table.map(t => t.get());
+      return {
+        key,
+        values,
+      };
+    };
+    return Promise.map(keys, getTable).then(
+      (values) => {
+        const retVal = values.reduce(
+          (m, v) => {
+            m[v.key] = v.values;
+            return m;
+          },
+          {}
+        );
+        return retVal;
+      }
+    ).catch(e => e);
   },
   validateJwt(token, callback) {
     const payload = {

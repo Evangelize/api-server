@@ -3,18 +3,13 @@ import Promise from 'bluebird';
 
 export default {
   get(id) {
-    return new Promise((resolve, reject) => {
-      models.People.findOne(
-        {
-          where: {
-            id: new Buffer(id, 'hex'),
-          },
-        }
-      ).then(
-        (result) => resolve(result),
-        (err) => reject(err)
-      );
-    });
+    return models.People.findOne(
+      {
+        where: {
+          id: new Buffer(id, 'hex'),
+        },
+      }
+    );
   },
   find(field, term) {
     return new Promise((resolve, reject) => {
@@ -73,12 +68,15 @@ export default {
       );
     });
   },
-  all(lastUpdate) {
+  all(entityId, lastUpdate) {
     const where = (lastUpdate) ? {
       updatedAt: {
         $gte: lastUpdate,
       },
     } : {};
+    if (entityId) {
+      where.entityId = entityId;
+    }
     return new Promise((resolve, reject) => {
       models.People.findAll({
         where,

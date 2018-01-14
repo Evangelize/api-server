@@ -1,4 +1,5 @@
 import models from '../../models';
+import async from 'async';
 import Promise from 'bluebird';
 
 export default {
@@ -12,50 +13,49 @@ export default {
       where.entityId = entityId;
     }
     return new Promise((resolve, reject) => {
-      models.Families.findAll({
-        where,
-        order: [
-          ['updatedAt', 'DESC'],
-        ],
-      }).then(
-        (results) => resolve(results),
-        (err) => reject(err)
-      );
-    });
-  },
-  get(id) {
-    return new Promise((resolve, reject) => {
-      const newId = new Buffer(id, 'hex');
-      models.Families.findOne(
+      models.MemberGroups.findAll(
         {
-          where: {
-            id: newId,
-          },
+          where,
+          order: 'id ASC',
         }
       ).then(
-        (result) => resolve(result),
+        (attendance) => resolve(attendance),
         (err) => reject(err)
       );
     });
   },
   insert(record) {
     record.id = new Buffer(record.id, 'hex');
-    record.entityId = (record.entityId) ? new Buffer(record.entityId, 'hex') : null;
+    record.entityId = new Buffer(record.entityId, 'hex');
+    record.personId = new Buffer(record.personId, 'hex');
+    record.groupId = new Buffer(record.groupId, 'hex');
     return new Promise((resolve, reject) => {
-      models.Families.create(
+      models.MemberGroups.create(
         record
       ).then(
         (result) => resolve(result),
-        (err) => reject(err)
+        () => {
+          models.MemberGroups.findOne(
+            {
+              where: {
+                id: record.id,
+              },
+            }
+          ).then(
+            (result) => resolve(result),
+            (error) => reject(error)
+          );
+        }
       );
     });
   },
   update(record) {
-    console.log(record);
     return new Promise((resolve, reject) => {
       record.id = new Buffer(record.id, 'hex');
-      record.entityId = (record.entityId) ? new Buffer(record.entityId, 'hex') : null;
-      models.Families.update(
+      record.entityId = new Buffer(record.entityId, 'hex');
+      record.personId = new Buffer(record.personId, 'hex');
+      record.groupId = new Buffer(record.groupId, 'hex');
+      models.MemberGroups.update(
         record,
         {
           where: {
@@ -64,13 +64,13 @@ export default {
         }
       ).then(
         () => {
-          models.Families.findOne({
+          models.MemberGroups.findOne({
             where: {
               id: record.id,
             },
           }).then(
             (result) => resolve(result),
-            (err) => reject(err)
+            (error) => reject(error)
           );
         },
         (err) => reject(err)
@@ -79,12 +79,12 @@ export default {
   },
   delete(record) {
     return new Promise((resolve, reject) => {
-      models.Families.destroy({
+      models.MemberGroups.destroy({
         where: {
           id: new Buffer(record.id, 'hex'),
         },
       }).then(
-        (result) => resolve(result),
+        () => resolve(record),
         (err) => reject(err)
       );
     });

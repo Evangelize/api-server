@@ -409,10 +409,34 @@ module.exports = {
       queryInterface.sequelize.query(
         'ALTER TABLE `batches` CHANGE COLUMN `entityId` `entityId` BINARY(16)'
       ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `posts` CHANGE COLUMN `id` `id` BINARY(16)'
+      ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `posts` CHANGE COLUMN `entityId` `entityId` BINARY(16)'
+      ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `posts` CHANGE COLUMN `authorId` `authorId` BINARY(16)'
+      ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `memberSettings` CHANGE COLUMN `id` `id` BINARY(16)'
+      ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `memberSettings` CHANGE COLUMN `entityId` `entityId` BINARY(16)'
+      ),
+      queryInterface.sequelize.query(
+        'ALTER TABLE `memberSettings` CHANGE COLUMN `personId` `personId` BINARY(16)'
+      ),
       queryInterface.addIndex('yearMeetingDays', ['yearId']),
       queryInterface.addIndex('divisionClassTeachers', ['dayId']),
       queryInterface.addIndex('divisionClassAttendance', ['dayId']),
       queryInterface.addIndex('yearClassStudents', ['yearId']),
+      queryInterface.addIndex('posts', ['id']),
+      queryInterface.addIndex('posts', ['entityId']),
+      queryInterface.addIndex('posts', ['authorId']),
+      queryInterface.addIndex('memberSettings', ['id']),
+      queryInterface.addIndex('memberSettings', ['entityId']),
+      queryInterface.addIndex('memberSettings', ['personId']),
     ]);
   },
 

@@ -413,10 +413,11 @@ module.exports = {
         {
           id: {
             type: Sequelize.STRING.BINARY,
-            primaryKey: true, 
+            primaryKey: true,
           },
           entityId: Sequelize.BLOB,
           absent: Sequelize.BOOLEAN,
+          defaultType: Sequelize.BOOLEAN,
           title: Sequelize.STRING(255),
           createdAt: Sequelize.DATE,
           updatedAt: Sequelize.DATE,
@@ -982,6 +983,51 @@ module.exports = {
           },
         }
       ),
+      queryInterface.createTable(
+        'posts',
+        {
+          id: {
+            type: Sequelize.STRING.BINARY,
+            primaryKey: true,
+          },
+          entityId: Sequelize.BLOB,
+          authorId: Sequelize.BLOB,
+          title: { type: Sequelize.STRING(255), defaultValue: 'Title' },
+          description: { type: Sequelize.TEXT, defaultValue: null },
+          body: { type: Sequelize.TEXT, defaultValue: null },
+          state: { type: Sequelize.ENUM('draft', 'published'), defaultValue: 'draft' },
+          featuredImage: { type: Sequelize.STRING, defaultValue: null },
+          shared: Sequelize.BOOLEAN,
+          createdAt: Sequelize.DATE,
+          updatedAt: Sequelize.DATE,
+          deletedAt: Sequelize.DATE,
+          revision: {
+            type: Sequelize.INTEGER,
+            defaultValue: 0,
+          },
+        }
+      ),
+      queryInterface.createTable(
+        'memberSettings',
+        {
+          id: {
+            type: Sequelize.STRING.BINARY,
+            primaryKey: true, 
+          },
+          entityId: Sequelize.BLOB,
+          personId: Sequelize.BLOB,
+          settings: Sequelize.TEXT,
+          platform: { type: Sequelize.ENUM('web', 'android', 'ios'), defaultValue: 'web' },
+          platformId: Sequelize.STRING(255),
+          createdAt: Sequelize.DATE,
+          updatedAt: Sequelize.DATE,
+          deletedAt: Sequelize.DATE,
+          revision: {
+            type: Sequelize.INTEGER,
+            defaultValue: 0,
+          },
+        }
+      ),
     ]);
   },
   down: function (queryInterface, Sequelize) {
@@ -1032,6 +1078,7 @@ module.exports = {
       queryInterface.dropTable('presentations'),
       queryInterface.dropTable('files'),
       queryInterface.dropTable('classFiles'),
+      queryInterface.dropTable('posts'),
     ]);
   },
 };

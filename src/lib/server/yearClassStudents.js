@@ -3,12 +3,15 @@ import Promise from 'bluebird';
 import people from './people';
 
 export default {
-  all(lastUpdate) {
+  all(entityId, lastUpdate) {
     const where = (lastUpdate) ? {
       updatedAt: {
         $gte: lastUpdate,
       },
     } : {};
+    if (entityId) {
+      where.entityId = entityId;
+    }
     return new Promise((resolve, reject) => {
       models.YearClassStudents.findAll({
         where,
@@ -93,21 +96,14 @@ export default {
     });
   },
   getByClassYear(yearId, classId) {
-    return new Promise((resolve, reject) => {
-      models.YearClassStudents.findAll({
-        where: {
-          yearId: new Buffer(yearId, 'hex'),
-          classId: new Buffer(classId, 'hex'),
-        },
-      })
-      .then(
-        (results) => Promise.map(results, (result) => people.get(result.peopleId)),
-        (err) => reject(err)
-      )
-      .then(
-        (result) => resolve(result),
-        (err) => reject(err)
-      );
-    });
+    return models.YearClassStudents.findAll({
+      where: {
+        yearId: new Buffer(yearId, 'hex'),
+        classId: new Buffer(classId, 'hex'),
+      },
+    })
+    .then(
+      (results) => Promise.map(results, (result) => people.get(result.peopleId)),
+    );
   },
 };

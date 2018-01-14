@@ -1,6 +1,18 @@
+import Promise from 'bluebird';
 import moment from 'moment-timezone';
 import async from 'async';
 import iouuid from 'innodb-optimized-uuid';
+import React from 'react';
+import {
+  Text,
+  Document,
+  Font,
+  Page,
+  StyleSheet,
+  Image,
+  View,
+} from '@react-pdf/core';
+import ReactPDF from '@react-pdf/node';
 import api from '../src/lib/server';
 import models from '../src/models';
 import utils from '../src/lib/utils';
@@ -13,12 +25,13 @@ module.exports = [
   {
     method: 'GET',
     path: `${prefix}/division/{id}/placards`,
-    handler: (request, h) => {
+    handler: async (request, h) => {
       const divPlacard = {
         division: null,
         meetingDays: null,
         classes: null,
       };
+
       const id = request.params.id;
       const fonts = {
         NotoSans: {
@@ -27,248 +40,189 @@ module.exports = [
         },
       };
 
-      const printer = new PdfPrinter(fonts);
-      const docDefinition = {
-        pageSize: 'LETTER',
-        pageOrientation: 'landscape',
-        pageMargins: [20, 40, 20, 40],
-        content: [],
-        styles: {
-          classTitle: {
-            alignment: 'center',
-            fontSize: 24,
-            bold: true,
-            margin: [0, 0, 0, 10],
-          },
-          day: {
-            alignment: 'center',
-            fontSize: 14,
-            bold: true,
-            margin: [0, 10, 0, 5],
-          },
-          student: {
-            alignment: 'center',
-            fontSize: 16,
-            bold: true,
-            margin: [0, 10, 0, 5],
-          },
-          std: {
-            alignment: 'center',
-          },
-          students: {
-            margin: [0, 10, 0, 0],
-          },
-          tablePlacard: {
-            margin: [0, 0, 0, 0],
-          },
-          tableHeader: {
-            bold: true,
-            fontSize: 13,
-            color: 'black',
-          },
-        },
-        defaultStyle: {
-          font: 'NotoSans',
-        },
-      };
-      const finish = (pdf) => {
-        h.response(pdf)
-        .type('application/pdf')
-        .header('Content-Disposition', 'attachment; filename="placard.pdf"')
-        .header('Content-Length', pdf.length)
-        .encoding('binary');
-      };
-      const genPdf = () => {
-        const pdfDoc = printer.createPdfKitDocument(docDefinition);
-        let chunks = [];
-        let result;
+      Font.register(path.join(__dirname, '../vendors/fonts/NotoSans.ttf'), {
+        family: 'NotoSans',
+      });
+      Font.register(path.join(__dirname, '../vendors/fonts/NotoSans-Bold.ttf'), {
+        family: 'NotoSans Bold',
+      });
 
-        pdfDoc.on('data', (chunk) => {
-          chunks.push(chunk);
-        });
-        pdfDoc.on('end', () => {
-          result = Buffer.concat(chunks);
-          finish(result);
-        });
-        pdfDoc.end();
+      const styles = StyleSheet.create({
+        page: {
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        container: {
+          flexDirection: 'column',
+          alignItems: 'center',
+          borderWidth: 3,
+          borderColor: 'black',
+          borderStyle: 'solid',
+          width: 375,
+          height: 500,
+        },
+        image: {
+          marginBottom: 10,
+        },
+        header: {
+          marginTop: 10,
+          marginBottom: 8,
+          fontSize: 15,
+          fontFamily: 'NotoSans Bold',
+          textAlign: 'center',
+          textDecoration: 'underline',
+          textTransform: 'uppercase',
+        },
+        list: {
+          flexDirection: 'column',
+          alignItems: 'center',
+          fontSize: 12,
+          fontFamily: 'NotoSans',
+          textAlign: 'center',
+        },
+        listItem: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          fontSize: 12,
+          fontFamily: 'NotoSans',
+          textAlign: 'center',
+        },
+        rightColumn: {
+          flexDirection: 'column',
+          flexGrow: 1,
+          marginLeft: 15,
+          marginRight: 30,
+          marginTop: 20,
+        },
+        footer: {
+          fontSize: 12,
+          fontFamily: 'NotoSans Bold',
+          align: 'center',
+          marginTop: 25,
+          marginHorizontal: 30,
+          paddingVertical: 10,
+          borderWidth: 3,
+          borderColor: 'gray',
+          borderStyle: 'dashed',
+        },
+        classTitle: {
+          fontSize: 24,
+          fontFamily: 'NotoSans Bold',
+          marginBottom: 10,
+        },
+        teachers: {
+          flexDirection: 'column',
+          alignItems: 'center',
+          marginBottom: 4,
+        },
+        students: {
+          flexDirection: 'column',
+          alignItems: 'center',
+          marginTop: 5,
+        },
+      });
+
+      const getClassStudents = async (cls) => {
+        const students = await api.yearClassStudents.getByClassYear(divPlacard.division.divisionYear, cls.classId);
+        cls.students = students.map(s => s.get());
+        return cls;
+      };
+
+      const getClassTeachersByDay = async (day) => {
+        const teachers = await api.divisionClassTeachers.getByDivisionClassDay(day.class.id, day.dow);
+        day.teachers = teachers;
+        return day;
+      };
+
+      const getClassTeachers = async (cls) => {
+        const days = await Promise.each(cls.days, getClassTeachersByDay);
+        cls.days = days;
+        return cls;
+      };
+
+      const getClass = async (cls) => {
+        const classInfo = await api.classes.get(cls.classId);
+        cls.class = classInfo.get();
+        return cls;
       };
 
       // getByDivisionClassDay(divisionId, classId, day)
-
-      const printClasses = () => {
-        const numClasses = divPlacard.classes.length;
-        let placard = 1;
-        let page = {
-          columns: [],
-        };
-        async.eachSeries(
-          divPlacard.classes,
-          (cls, callback) => {
-            const fragment = {
-              width: '50%',
-              style: 'tablePlacard',
-              layout: {
-                hLineWidth: (i, node) => (i === 0 || i === node.table.body.length) ? 2 : 1,
-                vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length) ? 2 : 1,
-                hLineColor: (i, node) => (i === 0 || i === node.table.body.length) ? 'black' : 'white',
-                vLineColor: (i, node) => (i === 0 || i === node.table.widths.length) ? 'black' : 'white',
-              },
-              table: {
-                widths: ['97%'],
-                height: (i) => {
-                  let height = 1;
-                  if (i === 0) {
-                    height = 40;
-                  } else if (i === 1 || i === 2) {
-                    height = 80;
-                  } else if (i === 3) {
-                    height = 280;
-                  }
-                  console.log('row', i, height);
-                  return height;
-                },
-                body: [
-                ],
-              },
-            };
-            async.waterfall(
-              [
-                (cb) => {
-                  api.classes.get(cls.classId)
-                  .then((result) => {
-                    fragment.table.body.push(
-                      [
-                        {
-                          style: 'classTitle',
-                          text: result.title,
-                        },
-                      ]
-                    );
-                    cb(null, result);
-                  });
-                },
-                (data, cb) => {
-                  async.eachSeries(
-                    divPlacard.meetingDays,
-                    (day, cback) => {
-                      let stack = [
-                        {
-                          stack: [],
-                        },
-                      ];
-                      stack[0].stack.push(
-                        {
-                          style: 'day',
-                          decoration: 'underline',
-                          text: moment()
-                                .weekday(day.dow)
-                                .format('dddd')
-                                .toUpperCase() + ' TEACHER',
-                        }
-                      );
-                      api.divisionClassTeachers
-                      .getByDivisionClassDay(cls.id, day.dow)
-                      .then((teachers) => {
-                        async.each(
-                          teachers,
-                          (teacher, cback1) => {
-                            stack[0].stack.push(
-                              {
-                                style: 'std',
-                                text: `${teacher.firstName} ${teacher.lastName}`,
-                              }
-                            );
-                            cback1(null);
-                          },
-                          (err) => {
-                            fragment.table.body.push(stack);
-                            cback(null);
-                          }
-                        );
-                      });
-                    },
-                    (err) => {
-                      cb(null, data);
-                    }
-                  );
-                },
-                (data, cb) => {
-                  let stack = [
-                    {
-                      style: 'students',
-                      stack: [],
-                    },
-                  ];
-                  stack[0].stack.push(
-                    {
-                      style: 'student',
-                      text: 'STUDENTS',
-                    }
-                  );
-                  api.yearClassStudents
-                  .getByClassYear(divPlacard.division.divisionYear, data.id)
-                  .then((students) => {
-                    async.each(
-                      students,
-                      (student, cback) => {
-                        stack[0].stack.push(
-                          {
-                            style: 'std',
-                            text: `${student.firstName} ${student.lastName}`,
-                          }
-                        );
-                        cback(null);
-                      },
-                      (err) => {
-                        fragment.table.body.push(stack);
-                        cb(null);
-                      }
-                    );
-                  });
-                },
-              ],
-              (result, err) => {
-                if (placard % 2 === 0) {
-                  // console.log('page:', placard / 2, ' column:', placard);
-                  if (placard < numClasses) {
-                    page.pageBreak = 'after';
-                  }
-                  page.columns.push(fragment);
-                  docDefinition.content.push(page);
-                  page = {
-                    columns: [],
-                  };
-                } else {
-                  // console.log('column:', placard);
-                  page.columns.push(fragment);
-                }
-                placard = placard + 1;
-                callback();
-              }
-            );
+      divPlacard.division = await api.divisions.get(id);
+      divPlacard.classes = await api.divisionClasses.getByDivision(id);
+      divPlacard.meetingDays = await api.yearMeetingDays.getByYear(divPlacard.division.divisionYear);
+      divPlacard.meetingDays = divPlacard.meetingDays.map(day => day.get()); 
+      divPlacard.classes = divPlacard.classes.map(cls =>
+        Object.assign(
+          {},
+          cls.get(),
+          {
+            days: divPlacard.meetingDays.map(d => Object.assign({}, d, { class: cls.get() })),
           },
-          (err) => {
-            genPdf();
-          }
-        );
-      };
+        )
+      );
+      divPlacard.classes = await Promise.each(divPlacard.classes, getClass);
+      divPlacard.classes = await Promise.each(divPlacard.classes, getClassTeachers);
+      divPlacard.classes = await Promise.each(divPlacard.classes, getClassStudents);
 
-      api.divisions.get(id)
-      .then((division) => {
-        divPlacard.division = division;
-        return api.divisionClasses.getByDivision(id);
-      })
-      .then((classes) => {
-        divPlacard.classes = classes;
-        return api.yearMeetingDays.getByYear(divPlacard.division.divisionYear);
-      })
-      .then((days) => {
-        divPlacard.meetingDays = days;
-        return;
-      })
-      .finally(() => {
-        printClasses();
-      });
+      const Teachers = ({ cls, day }) => (
+        <View style={styles.teachers}>
+          <Text style={styles.header}>
+            {moment().weekday(day.dow).format('dddd')} TEACHERS
+          </Text>
+          <View style={styles.list}>
+            {day.teachers.map((teacher) => <Text style={styles.listItem} key={teacher.id}>{teacher.firstName} {teacher.lastName}</Text>)}
+          </View>
+        </View>
+      );
+
+      const Students = ({ students }) => (
+        <View style={styles.students}>
+          <Text style={styles.header}>
+            STUDENTS
+          </Text>
+          <View style={styles.list}>
+            {students.map((student) => <Text style={styles.listItem} key={student.id}>{student.firstName} {student.lastName}</Text>)}
+          </View>
+        </View>
+      );
+
+      const DocPage = ({ cls }) => (
+        <Page size="LETTER" style={styles.page}>
+          <View style={styles.container}>
+            <Text style={styles.classTitle}>{cls.class.title}</Text>
+            {cls.days.map((day) => <Teachers key={day.id} cls={cls} day={day} />)}
+            <Students students={cls.students} />
+          </View>
+        </Page>
+      );
+
+      const PdfDocument = () => (
+        <Document
+          author="Evangelize"
+          keywords="evangelize, placard, classes"
+          subject="Class Placards"
+          title="Class Placards"
+        >
+          {divPlacard.classes.map((cls) => <DocPage key={cls.id} cls={cls} />)}
+        </Document>
+      );
+      
+      try {
+        const buffers = [];
+        const stream = await ReactPDF.renderToStream(<PdfDocument />);
+        return new Promise((resolve, reject) => {
+          stream.on('data', (chunk) => { buffers.push(chunk); });
+          stream.once('end', () => {
+            const buffer = Buffer.concat(buffers);
+            resolve(buffer.toString('base64'));
+          });
+          stream.once('error', (err) => {
+            reject(err);
+          });
+        });
+      } catch (e) {
+        console.log(e);
+      }
     },
   },
 ];

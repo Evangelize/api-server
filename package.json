@@ -18,6 +18,8 @@
     "package": "pkg -t node8-linux-x64 --output app src/server.js"
   },
   "dependencies": {
+    "@react-pdf/core": "^0.5.1",
+    "@react-pdf/node": "^0.5.1",
     "async": "^2.6.0",
     "axios": "^0.17.1",
     "babel-core": "^6.26.0",
@@ -80,6 +82,9 @@
     "pem": "^1.8.1",
     "percent-change": "^1.0.1",
     "promise-file-reader": "^0.3.1",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "react-reconciler": "^0.7.0",
     "redis": "^2.6.2",
     "request": "^2.79.0",
     "sequelize": "3.23.4",

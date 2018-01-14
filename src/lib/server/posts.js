@@ -12,7 +12,7 @@ export default {
       where.entityId = entityId;
     }
     return new Promise((resolve, reject) => {
-      models.WorshipServices.findAll({
+      models.Posts.findAll({
         where,
         order: [
           ['updatedAt', 'DESC'],
@@ -23,14 +23,15 @@ export default {
       );
     });
   },
-  get(id) {
+  get(id, entityId) {
     return new Promise((resolve, reject) => {
       const recordId = new Buffer(id, 'hex');
-      models.WorshipServices.findOne(
+      models.Posts.findOne(
         {
           where: {
             id: recordId,
           },
+          entityId: new Buffer(entityId, 'hex'),
         }
       ).then(
         (result) => resolve(result),
@@ -41,8 +42,10 @@ export default {
   insert(record) {
     const newrecord = Object.assign({}, record);
     newrecord.id = new Buffer(record.id, 'hex');
+    newrecord.entityId = (record.entityId) ? new Buffer(record.entityId, 'hex') : null;
+    newrecord.authorId = (record.authorId) ? new Buffer(record.authorId, 'hex') : null;
     return new Promise((resolve, reject) => {
-      models.WorshipServices.create(
+      models.Posts.create(
         newrecord
       ).then(
         (result) => resolve(result),
@@ -54,7 +57,9 @@ export default {
     return new Promise((resolve, reject) => {
       const newrecord = Object.assign({}, record);
       newrecord.id = new Buffer(record.id, 'hex');
-      models.WorshipServices.update(
+      newrecord.entityId = (record.entityId) ? new Buffer(record.entityId, 'hex') : null;
+      newrecord.authorId = (record.authorId) ? new Buffer(record.authorId, 'hex') : null;
+      models.Posts.update(
         newrecord,
         {
           where: {
@@ -63,7 +68,7 @@ export default {
         }
       ).then(
         () => {
-          models.WorshipServices.findOne({
+          models.Posts.findOne({
             where: {
               id: newrecord.id,
             },
@@ -78,7 +83,7 @@ export default {
   },
   delete(record) {
     return new Promise((resolve, reject) => {
-      models.WorshipServices.destroy({
+      models.Posts.destroy({
         where: {
           id: new Buffer(record.id, 'hex'),
         },
