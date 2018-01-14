@@ -48,11 +48,11 @@ export default {
         nameQuery = `${nameQuery})`;
       }
       if (email) {
-        nameQuery = (nameQuery) ? `${nameQuery} AND` : nameQuery;
+        nameQuery = (nameQuery) ? `${nameQuery} OR` : nameQuery;
         nameQuery = `${nameQuery} emailAddress LIKE CONCAT('%','${email}','%')`;
       }
       if (gender) {
-        nameQuery = (nameQuery) ? `${nameQuery} AND` : nameQuery;
+        nameQuery = (nameQuery) ? `${nameQuery} OR` : nameQuery;
         nameQuery = `${nameQuery} gender = '${gender}'`;
       }
       query = `${query} ${nameQuery}`;

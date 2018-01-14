@@ -82,12 +82,11 @@ export default {
     );
   },
   addLoginRecord(type, externalId, firstName, lastName, email) {
-    return this.findPerson(
+    return people.fuzzySearch(
       firstName,
       lastName,
       email,
-    )
-    .then(
+    ).then(
       (results) => {
         const id = iouuid.generate().toLowerCase();
         const ts = moment.utc().format('YYYY-MM-DDTHH:mm:ss.sssZ');
@@ -111,7 +110,7 @@ export default {
       (err) => Promise.reject(err)
     )
   },
-  search(type, id, firstName, lastName) {
+  search(type, id, firstName, lastName, email) {
     return this
     .get('google', id)
     .then(
@@ -125,6 +124,7 @@ export default {
             id,
             firstName,
             lastName,
+            email
           );
         }
         return retVal;
