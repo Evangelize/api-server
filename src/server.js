@@ -164,11 +164,15 @@ const start = async () => {
         let isValid = false;
         const credentials = { token };
         const artifacts = { user: null };
+        let person;
         if (paths.includes(req.path)) {
           isValid = true;
         } else {
           const results = await api.thirdPartyLogins.get('google', token);
-          if (results) {
+          if (results && results[0].peopleId) {
+            person = await api.people.get(results[0].peopleId);
+          }
+          if (results && results[0].entityId) {
             artifacts.user = results[0];
             isValid = true;
           }

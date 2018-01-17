@@ -14,7 +14,7 @@
     "stage-0",
     "es2015"
   ],
-  "sourceMaps": true,
+  "sourceMaps": "inline",
   "retainLines": true,
   "plugins": [
     "fast-async",

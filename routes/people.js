@@ -84,4 +84,33 @@ module.exports = [
       );
     },
   },
+  {
+    method: 'GET',
+    path: `${prefix}{peopleId}/logins`,
+    handler(request, reply) {
+      return api
+      .thirdPartyLogins
+      .getPersonLogins(
+        request.params.peopleId,
+      );
+    },
+  },
+  {
+    method: 'GET',
+    path: `${prefix}getUnconnectedLogins`,
+    handler(request, reply) {
+      return api.thirdPartyLogins.getUnconnectedLogins();
+    },
+  },
+  {
+    method: 'POST',
+    path: `${prefix}connectLogin/{personId}`,
+    handler(request, reply) {
+      return api.thirdPartyLogins.connectLogin(
+        request.params.personId,
+        request.payload.entityId,
+        request.payload.loginId,
+      );
+    },
+  },
 ];

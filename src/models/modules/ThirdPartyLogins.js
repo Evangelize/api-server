@@ -32,7 +32,11 @@ module.exports = function (sequelize, DataTypes) {
           return moduleUtils.binToHex(this.getDataValue('peopleId'));
         },
         set(val) {
-          this.setDataValue('peopleId', new Buffer(val, "hex"));
+          if (val) {
+            this.setDataValue('peopleId', new Buffer(val, 'hex'));
+          } else {
+            this.setDataValue('peopleId', null);
+          }
         }
       },
       type: DataTypes.STRING,
@@ -40,31 +44,43 @@ module.exports = function (sequelize, DataTypes) {
       createdAt: {
         type: DataTypes.DATE,
         get() {
-          if (this.getDataValue('createdAt')) {
-            return this.getDataValue('createdAt').getTime();
+          let retVal;
+          const time = this.getDataValue('createdAt');
+          if (time) {
+            retVal = (typeof time.getMonth === 'function') ? time.getTime() : time;
           } else {
-            return null;
+            retVal = null;
           }
+
+          return retVal;
         },
       },
       updatedAt: {
         type: DataTypes.DATE,
         get() {
-          if (this.getDataValue('updatedAt')) {
-            return this.getDataValue('updatedAt').getTime();
+          let retVal;
+          const time = this.getDataValue('updatedAt');
+          if (time) {
+            retVal = (typeof time.getMonth === 'function') ? time.getTime() : time;
           } else {
-            return null;
+            retVal = null;
           }
+
+          return retVal;
         },
       },
       deletedAt: {
         type: DataTypes.DATE,
         get() {
-          if (this.getDataValue('deletedAt')) {
-            return this.getDataValue('deletedAt').getTime();
+          let retVal;
+          const time = this.getDataValue('deletedAt');
+          if (time) {
+            retVal = (typeof time.getMonth === 'function') ? time.getTime() : time;
           } else {
-            return null;
+            retVal = null;
           }
+
+          return retVal;
         },
       },
       revision: {

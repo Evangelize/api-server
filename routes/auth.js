@@ -129,9 +129,9 @@ const thirdPartyLogin = (request, h) => {
             result,
             {
               user: {
-                peopleId: results.id,
+                peopleId: null,
                 uid,
-                entityId: results.entityId,
+                entityId: null,
                 type: 'google',
               },
               person: results,

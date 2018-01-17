@@ -1,8 +1,9 @@
-import models from '../../models';
-import people from './people';
 import Promise from 'bluebird';
 import iouuid from 'innodb-optimized-uuid';
 import moment from 'moment-timezone';
+import models from '../../models';
+import people from './people';
+import { getUser } from '../firebase-admin';
 
 export default {
   all(entityId, lastUpdate) {
@@ -42,29 +43,115 @@ export default {
       }
     );
   },
-  insert(record) {
-    return models.ThirdPartyLogins.create(
-      record
-    );
-  },
-  update(record) {
-    console.log(record);
-    const id = new Buffer(record.id, 'hex');
-    return models.ThirdPartyLogins.update(
-      record,
+  getById(id) {
+    id = new Buffer(id, 'hex');
+    return models.ThirdPartyLogins.find(
       {
         where: {
           id,
         },
       }
-    ).then(
-      () => {
-        return models.ThirdPartyLogins.findOne({
-          where: {
-            id,
-          },
-        });
+    );
+  },
+  insert(record) {
+    return models.ThirdPartyLogins.create(
+      record
+    );
+  },
+  connectLogin(peopleId, entityId, loginId) {
+    const self = this;
+    return this.getById(loginId).then(
+      (data) => {
+        const record = Object.assign(
+          {},
+          data.get(),
+          {
+            peopleId,
+            entityId,
+          }
+        );
+        return self.update(record);
       }
+    );
+  },
+  getPersonLogins(id) {
+    const peopleId = new Buffer(id, 'hex');
+    const getEUser = (login) => {
+      return getUser(login.externalId).then(
+        (person) => {
+          console.log(person);
+          const retVal = Object.assign(
+            {},
+            login.get(),
+            {
+              person,
+            },
+          );
+
+          return retVal;
+        } 
+      );
+    };
+    return models.ThirdPartyLogins.findAll(
+      {
+        where: {
+          peopleId,
+        },
+      }
+    ).then(
+      (logins) => {
+        return Promise.map(logins, getEUser);
+      }
+    )
+  },
+  getUnconnectedLogins() {
+    const getEUser = (login) => {
+      return getUser(login.externalId).then(
+        (person) => {
+          console.log(person);
+          const retVal = Object.assign(
+            {},
+            login.get(),
+            {
+              person,
+            },
+          );
+
+          return retVal;
+        } 
+      );
+    };
+
+    return models.ThirdPartyLogins.findAll(
+      {
+        where: {
+          peopleId: null,
+        },
+      }
+    ).then(
+      (logins) => {
+        return Promise.map(logins, getEUser);
+      }
+    );
+  },
+  update(record) {
+    console.log(record);
+    record.id = new Buffer(record.id, 'hex');
+    record.entityId = record.entityId ? new Buffer(record.entityId, 'hex') : null;
+    record.peopleId = record.peopleId ? new Buffer(record.peopleId, 'hex') : null;
+    return models.ThirdPartyLogins.update(
+      record,
+      {
+        where: {
+          id: record.id,
+        },
+      }
+    ).then(
+      () => models.ThirdPartyLogins.findOne({
+        where: {
+          id: record.id,
+        },
+      })
     );
   },
   delete(record) {
@@ -108,27 +195,47 @@ export default {
       }
     ).catch(
       (err) => Promise.reject(err)
-    )
-  },
-  search(type, id, firstName, lastName, email) {
-    return this
-    .get('google', id)
-    .then(
-      (results) => {
-        let retVal;
-        if (results.length) {
-          retVal = (results[0].peopleId) ? people.get(results[0].peopleId) : null;
-        } else {
-          retVal = this.addLoginRecord(
-            type,
-            id,
-            firstName,
-            lastName,
-            email
-          );
-        }
-        return retVal;
-      }
     );
+  },
+  async search(type, id, firstName, lastName, email) {
+    let retVal;
+    const login = await this.get('google', id);
+    if (login.length) {
+      retVal = (login[0].peopleId) ? await people.get(login[0].peopleId) : null;
+    } else {
+      retVal = this.addLoginRecord(
+        type,
+        id,
+        firstName,
+        lastName,
+        email
+      );
+    }
+
+    if (!retVal && login.length) {
+      const person = await people.fuzzySearch(
+        firstName,
+        lastName,
+        email,
+      );
+
+      if (person.length) {
+        const ts = moment.utc().format('YYYY-MM-DDTHH:mm:ss.sssZ');
+        const peopleId = (person.length) ? person[0].id.toString('hex') : null;
+        const entityId = (person.length) ? person[0].entityId.toString('hex') : null;
+        const newRecord = Object.assign(
+          login[0].get(),
+          {
+            peopleId,
+            entityId,
+            updatedAt: ts,
+          }
+        );
+        await this.update(newRecord);
+        retVal = await people.get(newRecord.peopleId);
+      }
+    }
+
+    return retVal;
   },
 };
