@@ -122,7 +122,7 @@ const thirdPartyLogin = (request, h) => {
         if (results && request.payload.username) {
           const user = results;
           user.username = `${user.firstName} ${user.lastName}`;
-          retVal = user;
+          retVal = loginPayload(result);
         } else {
           result = Object.assign(
             {},
