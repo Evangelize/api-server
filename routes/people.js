@@ -92,6 +92,10 @@ module.exports = [
       .thirdPartyLogins
       .getPersonLogins(
         request.params.peopleId,
+      ).then(
+       (data) => {
+         return data;
+       } 
       );
     },
   },

@@ -74,35 +74,39 @@ export default {
       }
     );
   },
-  getPersonLogins(id) {
+  async getPersonLogins(id) {
     const peopleId = new Buffer(id, 'hex');
-    const getEUser = (login) => {
-      return getUser(login.externalId).then(
-        (person) => {
-          console.log(person);
-          const retVal = Object.assign(
-            {},
-            login.get(),
-            {
-              person,
-            },
-          );
-
-          return retVal;
-        } 
-      );
-    };
-    return models.ThirdPartyLogins.findAll(
-      {
-        where: {
-          peopleId,
+    const getEUser = async (login) => {
+      let person;
+      try {
+        person = await getUser(login.externalId);
+      } catch (e) {
+        console.log(e);
+        person = null;
+      }
+      const retVal = Object.assign(
+        {},
+        login.get(),
+        {
+          person,
         },
-      }
-    ).then(
-      (logins) => {
-        return Promise.map(logins, getEUser);
-      }
-    )
+      );
+      return retVal;
+    };
+    try {
+      const logins = await models.ThirdPartyLogins.findAll(
+        {
+          where: {
+            peopleId,
+          },
+        }
+      );
+      const data = await Promise.map(logins, getEUser);
+      return data;
+    } catch (e) {
+      console.log(e);
+      return e;
+    }
   },
   getUnconnectedLogins() {
     const getEUser = (login) => {

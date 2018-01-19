@@ -119,9 +119,22 @@ const thirdPartyLogin = (request, h) => {
       (results) => {
         let retVal;
         console.log(results);
-        if (results && request.payload.username) {
+        if (results) {
           const user = results;
           user.username = `${user.firstName} ${user.lastName}`;
+          result = Object.assign(
+            {},
+            result,
+            {
+              user: {
+                peopleId: user.id,
+                uid,
+                entityId: user.entityId,
+                type: 'google',
+              },
+              person: results,
+            }
+          );
           retVal = loginPayload(result);
         } else {
           result = Object.assign(

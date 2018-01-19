@@ -7,4 +7,7 @@ admin.initializeApp({
   databaseURL: settings.firebase.databaseURL,
 });
 
-export const getUser = (uid) => admin.auth().getUser(uid);
+export const getUser = async (uid) => {
+  const result = await admin.auth().getUser(uid);
+  return result;
+};
