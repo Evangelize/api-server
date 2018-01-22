@@ -98,6 +98,7 @@ export default {
     const bEntityId = (entityId) ? new Buffer(entityId, 'hex') : null;
     const exclude = [
       'thirdPartyLogins',
+      'errors',
     ];
     const keys = Object.keys(api).filter(k => !exclude.includes(k));
     const getTable = async (key) => {

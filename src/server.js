@@ -118,6 +118,9 @@ const server = Hapi.server({
   routes: {
     cors: {
       origin: 'ignore',
+      additionalHeaders: [
+        'jsnlog-requestid',
+      ],
     },
   }, 
 });
@@ -160,6 +163,7 @@ const start = async () => {
         console.log(req);
         const paths = [
           '/api/auth/thirdPartyLogin',
+          '/api/logging/add',
         ];
         let isValid = false;
         const credentials = { token };

@@ -6,6 +6,7 @@ import divisionClasses from './divisionClasses';
 import divisionClassTeachers from './divisionClassTeachers';
 import divisionConfigs from './divisionConfigs';
 import divisionYears from './divisionYears';
+import errors from './errors';
 import families from './families';
 import groups from './groups';
 import memberAttendance from './memberAttendance';
@@ -34,6 +35,7 @@ module.exports = {
   divisionClassTeachers,
   divisionConfigs,
   divisionYears,
+  errors,
   classes,
   divisions,
   families,

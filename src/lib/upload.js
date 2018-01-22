@@ -15,7 +15,7 @@ if (settings.s3) {
 }
 
 export default {
-  photo(bucket, fileName, mimeType, data) {
+  file(bucket, fileName, mimeType, data) {
     return minioClient.putObject(
       bucket,
       fileName,

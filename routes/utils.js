@@ -20,7 +20,7 @@ module.exports = [
           res = results;
           const img = Buffer.from(request.payload.file.split(',')[1], 'base64');
           url = `https://minio-eu1.evangelize.io/${request.payload.entityId}/${request.payload.fileName}`;
-          return upload.photo(
+          return upload.file(
             request.payload.entityId,
             request.payload.fileName,
             request.payload.mimeType,

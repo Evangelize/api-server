@@ -1,11 +1,11 @@
 import api from '../src/lib/server';
 import utils from '../src/lib/utils';
-const prefix = "/api/classes";
+const prefix = '/api/classes';
 
 module.exports = [
   {
     method: 'POST',
-    path: prefix + '/{classId}/teacher',
+    path: `${prefix}/{classId}/teacher`,
     handler: function (request, reply) {
       api
       .classes
@@ -16,7 +16,7 @@ module.exports = [
       )
       .then(
         function(results) {
-          utils.pushMessage("classes.UPDATE_DIVISION_CLASS_TEACHER_FULFILLED", results);
+          utils.pushMessage('classes.UPDATE_DIVISION_CLASS_TEACHER_FULFILLED', results);
           //reply( results ).code( 200 );
           return results;
         },
@@ -26,11 +26,11 @@ module.exports = [
           return err;
         }
       );
-    }
+    },
   },
   {
     method: 'PUT',
-    path: prefix + '/{classId}/teacher/{classTeacherId}',
+    path: `${prefix}/{classId}/teacher/{classTeacherId}`,
     handler: function (request, reply) {
       api
       .classes
@@ -40,7 +40,7 @@ module.exports = [
       )
       .then(
         function(results) {
-          utils.pushMessage("classes.UPDATE_DIVISION_CLASS_TEACHER_FULFILLED", results);
+          utils.pushMessage('classes.UPDATE_DIVISION_CLASS_TEACHER_FULFILLED', results);
           //reply( results ).code( 200 );
           return results;
         },
@@ -50,11 +50,11 @@ module.exports = [
           return err;
         }
       );
-    }
+    },
   },
   {
     method: 'DELETE',
-    path: prefix + '/{classId}/teacher/{classTeacherId}',
+    path: `${prefix}/{classId}/teacher/{classTeacherId}`,
     handler: function (request, reply) {
       //console.log(request.params);
       return api
@@ -62,11 +62,11 @@ module.exports = [
       .deleteTeacher(
         request.params.classTeacherId
       );
-    }
+    },
   },
   {
     method: 'POST',
-    path: prefix + '/{classId}/attendance/{day}',
+    path: `${prefix}/{classId}/attendance/{day}`,
     handler: function (request, reply) {
       api
       .classes
@@ -78,7 +78,7 @@ module.exports = [
       )
       .then(
         function(results) {
-          utils.pushMessage("attendance.UPDATE_DIVISION_CLASS_ATTENDANCE_FULFILLED", results);
+          utils.pushMessage('attendance.UPDATE_DIVISION_CLASS_ATTENDANCE_FULFILLED', results);
           utils.pushLast8Attenance().then(
             function(results) {
               //console.log(results);
@@ -104,6 +104,6 @@ module.exports = [
           return err;
         }
       );
-    }
+    },
   },
 ];
