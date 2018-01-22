@@ -18,8 +18,8 @@
     "package": "pkg -t node8-linux-x64 --output app src/server.js"
   },
   "dependencies": {
-    "@react-pdf/core": "^0.5.1",
-    "@react-pdf/node": "^0.5.1",
+    "@react-pdf/core": "^0.6.3",
+    "@react-pdf/node": "^0.6.3",
     "async": "^2.6.0",
     "axios": "^0.17.1",
     "babel-core": "^6.26.0",
@@ -67,6 +67,8 @@
     "innodb-optimized-uuid": "^1.1.1",
     "into-stream": "^3.1.0",
     "invariant": "^2.2.1",
+    "jsnlog": "^2.25.1",
+    "jsnlog-nodejs": "^2.25.1",
     "json-loader": "^0.5.4",
     "jsonwebtoken": "^8.1.0",
     "jszip": "^3.1.3",
