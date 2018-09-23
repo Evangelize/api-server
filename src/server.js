@@ -38,10 +38,10 @@ const pushResults = (message, result) => {
 };
 
 const setSubscription = (subClient) => {
-  subClient.psubscribe('evangelize:*');
+  subClient.psubscribe('evangelize:incoming:*');
   // console.log("Subscribing");
   subClient.on('pmessage', (pattern, channel, message) => {
-    const subChannel = channel.split(':')[1];
+    const subChannel = channel.split(':')[2];
     console.log('channel ', channel, ': ', message);
     if (subChannel === 'insert' || subChannel === 'update' || subChannel === 'delete'){
       message = JSON.parse(message);
@@ -117,12 +117,10 @@ const server = Hapi.server({
   port: settings.port,
   routes: {
     cors: {
-      origin: 'ignore',
-      additionalHeaders: [
-        'jsnlog-requestid',
-      ],
+      origin: ['*'],
+      additionalHeaders: ['Origin', 'X-Auth-Token', 'jsnlog-requestid', 'cache-control', 'x-requested-with'],
     },
-  }, 
+  },
 });
 
 const start = async () => {

@@ -50,7 +50,7 @@ export default {
     );
   },
   pushMessage(channel, message) {
-    pubClient.publish(`evangelize:${channel}`, JSON.stringify(message));
+    pubClient.publish(`evangelize:outgoing:${channel}`, JSON.stringify(message));
     return null;
   },
   getPeoplePassword(email) {
@@ -93,16 +93,24 @@ export default {
       );
     });
   },
-  getAllTables(entityId, lastUpdate) {
+  getAllTables(entityId, personId, lastUpdate) {
     const update = (lastUpdate) ? moment(lastUpdate, 'X').format('YYYY-MM-DD HH:mm:ss') : lastUpdate;
     const bEntityId = (entityId) ? new Buffer(entityId, 'hex') : null;
     const exclude = [
       'thirdPartyLogins',
       'errors',
     ];
+    const member = [
+      'memberSettings',
+    ];
     const keys = Object.keys(api).filter(k => !exclude.includes(k));
     const getTable = async (key) => {
-      const table = await api[key].all(bEntityId, update);
+      let table;
+      if (member.includes(key)) { 
+        table = await api[key].allPerson(personId, update);
+      } else {
+        table = await api[key].all(bEntityId, update);
+      }
       const values = table.map(t => t.get());
       return {
         key,

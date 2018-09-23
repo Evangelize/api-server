@@ -41,7 +41,8 @@ module.exports = [
     path: `${prefix}getAllTables`,
     handler(request, h) {
       const entityId = request.auth.artifacts.user.entityId;
-      return utils.getAllTables(entityId, request.payload.lastUpdate);
+      const personId = request.auth.artifacts.user.peopleId;
+      return utils.getAllTables(entityId, personId, request.payload.lastUpdate);
     },
   },
 ];

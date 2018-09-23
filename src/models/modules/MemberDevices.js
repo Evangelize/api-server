@@ -1,7 +1,7 @@
 const moduleUtils = require('../../lib/moduleUtils');
 module.exports = function (sequelize, DataTypes) {
-  const MemberSettings = sequelize.define(
-    'memberSettings',
+  const MemberDevices = sequelize.define(
+    'memberDevices',
     {
       id: {
         type: DataTypes.BLOB,
@@ -39,15 +39,11 @@ module.exports = function (sequelize, DataTypes) {
           }
         },
       },
-      platform: {
-        type: DataTypes.ENUM('web', 'android', 'ios', 'desktop'),
-        defaultValue: 'web',
-      },
-      platformId: {
+      deviceId: {
         type: DataTypes.STRING(255),
       },
-      settings: {
-        type: DataTypes.TEXT,
+      title: {
+        type: DataTypes.STRING(255),
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -92,5 +88,5 @@ module.exports = function (sequelize, DataTypes) {
     }
   );
 
-  return MemberSettings;
+  return MemberDevices;
 };

@@ -11,7 +11,7 @@ export default {
     if (entityId) {
       where.entityId = entityId;
     }
-    return models.MemberSettings.findAll({
+    return models.MemberDevices.findAll({
       where,
       order: [
         ['updatedAt', 'DESC'],
@@ -27,7 +27,7 @@ export default {
     if (personId) {
       where.personId = personId;
     }
-    return models.MemberSettings.findAll({
+    return models.MemberDevices.findAll({
       where,
       order: [
         ['updatedAt', 'DESC'],
@@ -41,7 +41,13 @@ export default {
     if (entityId) {
       where.entityId = new Buffer(entityId, 'hex');
     }
-    return models.MemberSettings.findOne({ where });
+    return models.MemberDevices.findOne({ where });
+  },
+  getByDeviceId(deviceId) {
+    const where = {
+      deviceId,
+    };
+    return models.MemberDevices.findOne({ where });
   },
   insert(record) {
     const newrecord = Object.assign(
@@ -54,7 +60,7 @@ export default {
       }
     );
 
-    return models.MemberSettings.create(
+    return models.MemberDevices.create(
       newrecord
     );
   },
@@ -68,7 +74,7 @@ export default {
         personId: (record.personId) ? new Buffer(record.personId, 'hex') : null,
       }
     );
-    return models.MemberSettings.update(
+    return models.MemberDevices.update(
       newrecord,
       {
         where: {
@@ -76,7 +82,7 @@ export default {
         },
       }
     ).then(
-      () => models.MemberSettings.findOne({
+      () => models.MemberDevices.findOne({
         where: {
           id: newrecord.id,
         },
@@ -84,7 +90,7 @@ export default {
     );
   },
   delete(record) {
-    return models.MemberSettings.destroy({
+    return models.MemberDevices.destroy({
       where: {
         id: new Buffer(record.id, 'hex'),
       },
